@@ -161,7 +161,7 @@ function user_is_authenticated() {
 }
 
 function user_current_username() {
-	return $GLOBALS['user']['username'];
+	return "edent";//$GLOBALS['user']['username'];
 }
 
 function user_is_current_user($username) {

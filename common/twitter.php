@@ -9,7 +9,6 @@ require_once 'menu.php';
 menu_register(array(
 	'' => array(
 		'callback' => 'twitter_home_page',
-		'accesskey' => '0',
 	),
 	'status' => array(
 		'hidden' => true,
@@ -29,9 +28,12 @@ menu_register(array(
 	'replies' => array(
 		'security' => true,
 		'callback' => 'twitter_replies_page',
-		'accesskey' => '1',
 	),
-	'favourite' => array(
+	'global' => array(
+		'security' => true,
+		'callback' => 'dabr_global_page',
+	),
+/*	'favourite' => array(
 		'hidden' => true,
 		'security' => true,
 		'callback' => 'twitter_mark_favourite_page',
@@ -46,10 +48,9 @@ menu_register(array(
 		'callback' => 'twitter_directs_page',
 		'accesskey' => '2',
 	),
-	'search' => array(
+*/	'search' => array(
 		'security' => true,
 		'callback' => 'twitter_search_page',
-		'accesskey' => '3',
 	),
 	'user' => array(
 		'hidden' => true,
@@ -91,10 +92,10 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'twitter_spam_page',
 	),
-	'favourites' => array(
+	/*'favourites' => array(
 		'security' => true,
 		'callback' =>  'twitter_favourites_page',
-	),
+	),*/
 	'followers' => array(
 		'security' => true,
 		'callback' => 'adn_users_page',
@@ -108,30 +109,30 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'twitter_delete_page',
 	),
-	'deleteDM' => array(
+/*	'deleteDM' => array(
 		'hidden' => true,
 		'security' => true,
 		'callback' => 'twitter_deleteDM_page',
 	),
-	'retweet' => array(
+*/	'retweet' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_retweet_page',
+		'callback' => 'dabr_retweet_page',//'twitter_retweet_page',
 	),
 	'hash' => array(
 		'security' => true,
 		'hidden' => true,
-		'callback' => 'twitter_hashtag_page',
+		'callback' => 'dabr_hashtag_page',
 	),
-	'Upload Picture' => array(
+/*	'Upload Picture' => array(
 		'security' => true,
 		'callback' => 'twitter_media_page',
 	),
-	'trends' => array(
+	'Trends' => array(
 		'security' => true,
 		'callback' => 'twitter_trends_page',
 	),
-	'retweets' => array(
+*//*	'retweets' => array(
 		'security' => true,
 		'callback' => 'twitter_retweets_page',
 	),
@@ -143,6 +144,11 @@ menu_register(array(
 	'Edit Profile' => array(
 		'security' => true,
 		'callback' => 'twitter_profile_page',
+	),
+*/	'raw' => array(
+		'security' => true,
+		'hidden' => true,
+		'callback' => 'dabr_raw_page',
 	)
 ));
 
@@ -612,11 +618,17 @@ function twitter_process($url, $post_data = false)
 	}
 }
 
-function twitter_fetch($url) {
+function dabr_fetch($url) 
+{
+	//	Track how long this is taking	
 	global $services_time;
+
+	//	Set up curl
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+	//	Set a user agent so that webmasters know where to send complaints :-)
 	$user_agent = "Mozilla/5.0 (compatible; dabr; " . BASE_URL . ")";
 	curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -660,140 +672,19 @@ function twitter_parse_tags($input, $entities = false) {
 
 	$out = $input;
 
-	//Linebreaks.  Some clients insert \n for formatting.
+	//	Linebreaks.  Some clients insert \n for formatting.
 	$out = nl2br($out);
 	
-	// Use the Entities to replace hyperlink URLs
-	// http://dev.twitter.com/pages/tweet_entities
-	if($entities) {
-		if($entities->urls) {
-			foreach($entities->urls as $urls) {
-				if($urls->expanded_url != "") {
-					$display_url = $urls->expanded_url;
-				}else {
-					$display_url = $urls->url;
-				}
-				
-				$url = $urls->url;
-				
-				$parsed_url = parse_url($url);
-				
-				if (empty($parsed_url['scheme']))
-				{
-					$url = 'http://' . $url;
-				}
-
-				if (setting_fetch('gwt') == 'on') // If the user wants links to go via GWT 
-				{
-					$encoded = urlencode($url);
-					$link = "http://google.com/gwt/n?u={$encoded}";
-				}
-				else {
-					$link = $url;
-				}
-			
-				$link_html = '<a href="' . $link . '" target="' . get_target() . '">' . $display_url . '</a>';
-				$url = $urls->url;
-			
-				// Replace all URLs *UNLESS* they have already been linked (for example to an image)
-				$pattern = '#((?<!href\=(\'|\"))'.preg_quote($url,'#').')#i';
-				$out = preg_replace($pattern,  $link_html, $out);
-			}
-		}
-		
-		if($entities->hashtags) {
-			foreach($entities->hashtags as $hashtag) {
-				$text = $hashtag->text;
-			
-				$pattern = '/(^|\s)([#＃]+)('. $text .')/iu';
-				$link_html = ' <a href="hash/' . $text . '">#' . $text . '</a> ';
-			
-				$out = preg_replace($pattern,  $link_html, $out, 1);
-			}
-		}
-	} else {  // If Entities haven't been returned (usually because of search or a bio) use Autolink
-		// Create an array containing all URLs
-		$urls = Twitter_Extractor::create($input)
-				->extractURLs();
-
-		// Hyperlink the URLs 
-		if (setting_fetch('gwt') == 'on') // If the user wants links to go via GWT 
-		{
-			foreach($urls as $url) 
-			{
-				$encoded = urlencode($url);
-				$out = str_replace($url, "<a href='http://google.com/gwt/n?u={$encoded}' target='" . get_target() . "'>{$url}</a>", $out);
-			}	
-		} else 
-		{
-				$out = Twitter_Autolink::create($out)
-							->addLinksToURLs();
-		}	
-		
-		// Hyperlink the #	
-		$out = Twitter_Autolink::create($out)
-					->setTarget('')
-					->addLinksToHashtags();
-	}
+	//	Hashtags and @ are internal links
+	$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToHashtags();
+	$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToUsernamesAndLists();
 	
-	// Hyperlink the @ and lists
-	$out = Twitter_Autolink::create($out)
-				->setTarget('')
-				->addLinksToUsernamesAndLists();
-
-	// Emails
-	$tok = strtok($out, " \n\t\n\r\0");	// Tokenise the string by whitespace
-
-	while ($tok !== false) {	// Go through all the tokens
-		$at = stripos($tok, "@");	// Does the string contain an "@"?
-
-		if ($at && $at > 0) { // @ is in the string & isn't the first character
-			$tok = trim($tok, "?.,!\"\'");	// Remove any trailing punctuation
-			
-			if (filter_var($tok, FILTER_VALIDATE_EMAIL)) {	// Use the internal PHP email validator
-				$email = $tok;
-				$out = str_replace($email, "<a href=\"mailto:{$email}\">{$email}</a>", $out);	// Create the mailto: link
-			}
-		}
-		$tok = strtok(" \n\t\n\r\0");	// Move to the next token
-	}
-
-	//	Add Emoticons :-)
-	if (setting_fetch('emoticons') != 'off') {
-		$out = emoticons($out);
-	}
+	//	URLs are external links
+	$out = Twitter_Autolink::create($out)->setExternal(true)->setNoFollow(true)->setTarget(true)->addLinksToURLs();
 
 	//Return the completed string
 	return $out;
 }
-
-function flickr_decode($num) {
-	$alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
-	$decoded = 0;
-	$multi = 1;
-	while (strlen($num) > 0) {
-		$digit = $num[strlen($num)-1];
-		$decoded += $multi * strpos($alphabet, $digit);
-		$multi = $multi * strlen($alphabet);
-		$num = substr($num, 0, -1);
-	}
-	return $decoded;
-}
-
-function flickr_encode($num) {
-	$alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
-	$base_count = strlen($alphabet);
-	$encoded = '';
-	while ($num >= $base_count) {
-		$div = $num/$base_count;
-		$mod = ($num-($base_count*intval($div)));
-		$encoded = $alphabet[$mod] . $encoded;
-		$num = intval($div);
-	}
-	if ($num) $encoded = $alphabet[$num] . $encoded;
-	return $encoded;
-}
-
 
 
 function format_interval($timestamp, $granularity = 2) {
@@ -825,8 +716,18 @@ function twitter_status_page($query) {
 		//$status = twitter_process($request);
 		
 		$app = new AppDotNet();	
-		if ($app->getSession()) {	
+		if ($app->getSession()) 
+		{	
+			//	Track how long the API call took
+			global $api_time;
+			$api_start = microtime(1);
+
 			$status = $app->getPost($id);
+			
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+
+			//print_r($status);
 
 			$text = $status['text'];	//	Grab the text before it gets formatted
 
@@ -856,8 +757,8 @@ function twitter_status_page($query) {
 
 function twitter_thread_timeline($thread_id) {
 	$request = "https://search.twitter.com/search/thread/{$thread_id}";
-	$tl = twitter_standard_timeline(twitter_fetch($request), 'thread');
-	return $tl;
+	//$tl = twitter_standard_timeline(twitter_fetch($request), 'thread');
+	//return $tl;
 }
 
 function twitter_retweet_page($query) {
@@ -885,8 +786,19 @@ function twitter_delete_page($query) {
 
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$request = API_URL."statuses/destroy/{$id}.json?page=".intval($_GET['page']);
+		/*$request = API_URL."statuses/destroy/{$id}.json?page=".intval($_GET['page']);
 		$tl = twitter_process($request, true);
+		*/
+
+		$app = new AppDotNet();
+
+		// check that the user is signed in
+		if ($app->getSession()) 
+		{
+			$deleted = $app->deletePost($id);
+		}
+
+
 		twitter_refresh('user/'.user_current_username());
 	}
 }
@@ -1044,6 +956,10 @@ function adn_users_page($query) {
 	$app = new AppDotNet();
 	if ($app->getSession()) 
 	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
 		if ($username == null)
 		{
 			// Must be the logged in user.
@@ -1057,78 +973,22 @@ function adn_users_page($query) {
 			$user_id = $app->getIdByUsername($username);
 		}
 		
-		$following = $app->getFollowing($user_id);
+		switch ($page_type) {
+			case "friends":
+				$users = $app->getFollowing($user_id);
+				break;
+			case "followers":
+				$users = $app->getFollowers($user_id);
+				break;
+		}
+	
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
 
 		// Format the output
-		$content = theme('followers', $following);
+		$content = theme('users', $users);
 		theme('page', $page_type, $content);
 	}
-}
-
-//  Shows every user who retweeted a specific status
-function twitter_retweeters_page($query) {
-	
-	// Which tweet are we looking for?
-	$id = $query[1];
-
-	// How many users to show	
-	$perPage = setting_fetch('perPage', 20);
-
-	//	Bug in Twitter (?) can't feth more than 100 users at a time
-	if ($perPage >= 100)	{
-		$perPage = 100;
-	}
-	
-	// Get all the user ID of the friends	
-	$request_ids = API_URL."statuses/{$id}/retweeted_by/ids.json?count=100";
-	
-	$json = twitter_process($request_ids);
-	
-	$ids = $json;	
-	
-	// Poor man's pagination to fix broken Twitter API
-	// retweeted_by/1234567980/20
-	$nextPage = $query[2];
-	$nextPageURL = "retweeted_by/" . $id . "/";
-	if (count($ids) < $nextPage + $perPage) {
-		$nextPageURL = null;
-	}	else {
-		$nextPageURL .= ($nextPage + $perPage);
-	}	
-	
-	// Paginate through the user IDs and build a API query
-	$user_ids = "";
-	for ($i=$nextPage;$i<($nextPage+$perPage);$i++) {
-		$user_ids .= $ids[$i] . ",";
-	}
-	
-	//	Twitter requests that we POST these User IDs
-	$user_id_array = array();
-	$user_id_array["user_id"] = $user_ids;
-	
-	// Construct the request
-	$request = API_URL."users/lookup.xml";
-
-	// Get the XML
-	$xml = twitter_process($request, $user_id_array);
-	$tl = simplexml_load_string($xml);
-
-	//	Place the users into an array
-	$sortedUsers = array();
-	
-	foreach ($tl as $user) {
-		$user_id = $user->id;
-		//	$tl is *unsorted* - but $ids is *sorted*. So we place the users from $tl into a new array based on how they're sorted in $ids
-		$key = array_search($user_id, $ids);
-		$sortedUsers[$key] = $user;
-	}
-
-	//	Sort the array by key so the most recent is at the top
-	ksort($sortedUsers);
-
-	// Format the output
-	$content = theme('followers', $sortedUsers, $nextPageURL);
-	theme('page', "Everyone who retweeted {$id}", $content);
 }
 
 function twitter_update() {
@@ -1209,14 +1069,20 @@ function twitter_replies_page() {
 
 	// check that the user is signed in
 	if ($app->getSession()) {
-	
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
 		// Create the form where users can enter text
-		$content = theme('status_form');
+		$content = dabr_post_form();//theme('status_form');
 	
 		// get the current user as JSON
 		$data = $app->getUser();
 
 		$stream = $app->getUserMentions($data['id']);
+
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
 		
 		//print_r($stream);
 		$content .= theme('timeline', $stream);
@@ -1230,6 +1096,47 @@ function twitter_replies_page() {
 	}
 
 }
+
+
+function dabr_global_page() 
+{
+	//	How many posts to get
+	$perPage = setting_fetch('perPage', 20);
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+	
+	
+	$app = new AppDotNet();
+
+	// check that the user is signed in
+	if ($app->getSession()) 
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		// Create the form where users can enter text
+		$content = dabr_post_form();
+	
+		// get the latest public posts
+		$stream = $app->getPublicPosts($perPage,$before_id,$since_id);
+
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
+		
+		//print_r($stream);
+		$content .= theme('timeline', $stream);
+			
+		theme('page', 'Global', $content);
+	// otherwise prompt to sign in
+	} else {
+		$url = $app->getAuthUrl();
+		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
+		$content .= about_page();
+	}
+
+}
+
 
 function twitter_retweets_page() {
 	$perPage = setting_fetch('perPage', 20);
@@ -1297,6 +1204,7 @@ function theme_directs_form($to) {
 }
 
 function twitter_search_page() {
+/*
 	$search_query = $_GET['query'];
 	
 	// Geolocation parameters
@@ -1320,7 +1228,8 @@ function twitter_search_page() {
 		}
 		$content .= theme('timeline', $tl);
 	}
-	theme('page', 'Search', $content);
+*/
+	theme('page', 'Search', "Not Yet Implemented. Sorry :-(");
 }
 
 function twitter_search($search_query, $lat = NULL, $long = NULL, $radius = NULL) {
@@ -1349,6 +1258,53 @@ function twitter_search($search_query, $lat = NULL, $long = NULL, $radius = NULL
 	return $tl;
 }
 
+function dabr_hashtag_page($query)
+{
+
+	$app = new AppDotNet();
+
+	// check that the user is signed in
+	if ($app->getSession()) 
+	{
+	
+
+		if (isset($query[1])) 
+		{
+			$hashtag = $query[1];
+			$perPage = setting_fetch('perPage', 20);
+			$before_id = $_GET['before_id'];
+			$since_id = $_GET['since_id'];
+
+			// Create the form where users can enter text prepopulated with the hashtag
+			$content = dabr_post_form("#".$hashtag);//theme('status_form', '#'.$hashtag.' ');
+			//	Track how long the API call took
+			global $api_time;
+			$api_start = microtime(1);
+
+			//	Search for hashtags
+			$stream = $app->searchHashtags($hashtag,$perPage,$before_id,$since_id);
+
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+
+
+			$content .= theme('timeline', $stream);
+			theme('page', '#'.$hashtag, $content);
+		} 
+		else 
+		{
+			theme('page', 'Hashtag', 'Hash hash!');
+		}
+	// otherwise prompt to sign in
+	} else {
+		$url = $app->getAuthUrl();
+		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
+		$content .= about_page();
+	}
+
+	theme('page', $page_title, $content);
+}
+
 function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 	// Parameter checks
 	if (!is_numeric($tweet_id) || !$tl) return;
@@ -1368,6 +1324,9 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 function twitter_user_page($query)
 {
 	$user_name = $query[1];
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+
 	/*
 	$subaction = $query[2];
 	$in_reply_to_id = (string) $query[3];
@@ -1432,9 +1391,13 @@ function twitter_user_page($query)
 	$app = new AppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) {
+	if ($app->getSession()) 
+	{
 	
 
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
 
 		// get the current user as JSON
 		$user_id = $app->getIdByUsername($user_name);
@@ -1448,17 +1411,21 @@ function twitter_user_page($query)
 	
 
 		// Create the form where users can enter text
-		$content = theme('status_form', $status, $in_reply_to_id);
-
+		$content = dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
 
 		$content .= theme('user_header', $user);
 
-		$stream = $app->getUserPosts($user_id);
+		$stream = $app->getUserPosts($user_id,20,$before_id,$since_id);
+		
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
 		
 		//print_r($stream);
 		$content .= theme('timeline', $stream);
 			
-		theme('page', 'Replies', $content);
+		$page_title = "@" . $user_name;
+
+		theme('page', $page_title, $content);
 	// otherwise prompt to sign in
 	} else {
 		$url = $app->getAuthUrl();
@@ -1516,19 +1483,30 @@ function twitter_home_page() {
 	$content .= theme('timeline', $tl);
 	*/
 	
-	
+
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+
 	$app = new AppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) {
 	
 		// Create the form where users can enter text
-		$content = theme('status_form');
+		$content = dabr_post_form();//theme('status_form');
+		
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
 	
 		// get the current user as JSON
 		$data = $app->getUser();
 
-		$stream = $app->getUserStream($data['id']);
+		//	get the stream
+		$stream = $app->getUserStream($data['id'],20,$before_id,$since_id);
+		
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
 		
 		//print_r($stream);
 		$content .= theme('timeline', $stream);
@@ -1556,8 +1534,22 @@ function twitter_hashtag_page($query) {
 	}
 }
 
-function theme_status_form($text = '', $in_reply_to_id = NULL) {
-	if (user_is_authenticated()) {
+function dabr_raw_page($query) {
+	if (isset($query[1])) 
+	{
+		$app = new AppDotNet();
+		if ($app->getSession()) 
+		{
+			// Dump the post to screen
+			print_r($app->getPost($query[1]));
+		}
+	}
+}
+
+function theme_status_form($text = '', $in_reply_to_id = NULL) 
+{
+	if (user_is_authenticated()) 
+	{
 		$icon = "images/twitter-bird-16x16.png";
 
 		//	adding ?status=foo will automaticall add "foo" to the text area.
@@ -1566,7 +1558,75 @@ function theme_status_form($text = '', $in_reply_to_id = NULL) {
 			$text = $_GET['status'];
 		}
 		
-		return "<fieldset><legend><img src='{$icon}' width='16' height='16' /> What's Happening?</legend><form method='post' action='update'><input name='status' value='{$text}' maxlength='256' /> <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' /><input type='submit' value='Tweet' /></form></fieldset>";
+		return "<fieldset>
+					<legend>
+						&alpha; Post to App.Net
+					</legend>
+					<form method='post' action='update'>
+						<input name='status' value='{$text}' maxlength='256' />
+						<input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' />
+						<input type='submit' value='Tweet' />
+					</form>
+				</fieldset>";
+	}
+}
+
+
+function dabr_post_form($text = '', $in_reply_to_id = NULL) 
+{
+
+	$geoJS = '<script type="text/javascript">
+				started = false;
+				chkbox = document.getElementById("geoloc");
+				if (navigator.geolocation) {
+					geoStatus("Share my location");
+					if ("'.$_COOKIE['geo'].'"=="Y") {
+						chkbox.checked = true;
+						goGeo();
+					}
+				}
+				function goGeo(node) {
+					if (started) return;
+					started = true;
+					geoStatus("Locating...");
+					navigator.geolocation.getCurrentPosition(geoSuccess, geoStatus , { enableHighAccuracy: true });
+				}
+				function geoStatus(msg) {
+					document.getElementById("geo").style.display = "inline";
+					document.getElementById("lblGeo").innerHTML = msg;
+				}
+				function geoSuccess(position) {
+					geoStatus("Share my <a href=\'http://maps.google.co.uk/m?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=\'blank\'>location</a>");
+					chkbox.value = position.coords.latitude + "," + position.coords.longitude;
+				}
+			</script>';
+
+	if (user_is_authenticated()) 
+	{
+		//	adding ?status=foo will automaticall add "foo" to the text area.
+		if ($_GET['status'])
+		{
+			$text = $_GET['status'];
+		}
+		
+		return "<fieldset>
+					<legend>
+						<strong>&alpha;</strong> Post to App.Net
+					</legend>
+				
+					<form method=\"post\" action=\"update\">
+						<textarea id=\"status\" name=\"status\" rows=\"4\" style=\"width:95%; max-width: 400px;\">$text</textarea>
+						<div>
+							<input name=\"in_reply_to_id\" value=\"$in_reply_to_id\" type=\"hidden\" />
+							<input type=\"submit\" value=\"Post\" />
+							<span id=\"remaining\">254</span> 
+							<span id=\"geo\" style=\"display: none;\">
+								<input onclick=\"goGeo()\" type=\"checkbox\" id=\"geoloc\" name=\"location\" />
+								<label for=\"geoloc\" id=\"lblGeo\"></label>
+							</span>
+						</div>
+					</form>
+				</fieldset>" . $geoJS . js_counter('status');
 	}
 }
 
@@ -1580,38 +1640,45 @@ function theme_status($status) {
 	return $content;
 }
 
-function theme_retweet($status)
+
+function dabr_retweet_page($query)
 {
-	$text = "RT @{$status->user->screen_name}: {$status->text}";
+	$id = (string) $query[1];
+	
+	if (is_numeric($id)) 
+	{
+		$app = new AppDotNet();
+		if ($app->getSession()) 
+		{
+			//	Track how long the API call took
+			global $api_time;
+			$api_start = microtime(1);
+
+			$post = $app->getPost($id);
+
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+		}
+	}
+
+	$text = "»@{$post['user']['username']}: {$post['text']}";
 	$length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
 	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
 
-	if($status->user->protected == 0)
-	{
-		$content.="<p>Twitter's new style retweet:</p>
-					<form action='twitter-retweet/{$status->id_str}' method='post'>
-						<input type='hidden' name='from' value='$from' />
-						<input type='submit' value='Twitter Retweet' />
-					</form>
-					<hr />";
-	}
-	else
-	{
-		$content.="<p>@{$status->user->screen_name} doesn't allow you to retweet them. You will have to use the  use the old style editable retweet</p>";
-	}
-
-	$content .= "<p>Old style editable retweet:</p>
+	$content .= "<p>Repost:</p>
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
-						<textarea name='status' style='width:90%; max-width: 400px;' rows='3' id='status'>$text</textarea>
+						<textarea name='status' style='width:90%; max-width: 400px;' rows='6' id='status'>$text</textarea>
 						<br/>
-						<input type='submit' value='Retweet' />
-						<span id='remaining'>" . (140 - $length) ."</span>
+						<input type='submit' value='Repost' />
+						<span id='remaining'>" . (256 - $length) ."</span>
 					</form>";
 	$content .= js_counter("status");
 
-	return $content;
+	theme('page', 'Repost', $content);
+
 }
+
 
 function twitter_tweets_per_day($user, $rounding = 1) {
 	// Helper function to calculate an average count of tweets per day
@@ -1632,14 +1699,14 @@ function theme_user_header($user) {
 	$raw_date_joined = strtotime($user['created_at']);
 	$date_joined = date('jS M Y', $raw_date_joined);
 	//$tweets_per_day = twitter_tweets_per_day($user, 1);
-	$bio = $user['description']['html']; //twitter_parse_tags($user->description);
+	$bio = twitter_parse_tags($user['description']['text']);//$user['description']['html']; //twitter_parse_tags($user->description);
 
 	$out = "<div class='profile'>";
 	$out .= "<span class='avatar'>
 				<img src='" . IMAGE_PROXY_URL . "48/48/{$full_avatar}' />
 			</span>";
 	$out .= "<span class='status shift'>
-				<b>{$name}</b>
+				<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
 				<br />";
 	$out .= "	<span class='about'>";
 
@@ -1775,7 +1842,7 @@ function twitter_standard_timeline($feed, $source) {
 		case 'replies':
 		case 'retweets':
 		case 'user':
-			foreach ($feed as $status) {
+		/*	foreach ($feed as $status) {
 				$new = $status;
 				if ($new->retweeted_status) {
 					$retweet = $new->retweeted_status;
@@ -1789,7 +1856,7 @@ function twitter_standard_timeline($feed, $source) {
 				$output[(string) $new->id] = $new;
 			}
 			return $output;
-
+*/			return $feed;
 		case 'search':
 			foreach ($feed as $status) {
 				$output[(string) $status->id] = (object) array(
@@ -1900,11 +1967,11 @@ function theme_timeline($feed)
 	$page = menu_current_page();
 	$date_heading = false;
 	$first=0;
-/*	
+
 	// Add the hyperlinks *BEFORE* adding images
 	foreach ($feed as &$status)
 	{
-		$status->text = twitter_parse_tags($status->text, $status->entities);
+		$status['html'] = twitter_parse_tags($status['text'], $status['entities']);
 	}
 	unset($status);
 	
@@ -1916,7 +1983,7 @@ function theme_timeline($feed)
 			embedly_embed_thumbnails($feed);
 		}
 	}
-*/
+
 	foreach ($feed as $status)
 	{
 	/*	if ($first==0)
@@ -1933,100 +2000,109 @@ function theme_timeline($feed)
 			}
 		}
 	*/
-		$time = strtotime($status['created_at']);
-
-		if ($time > 0)
+		if (!$status['is_deleted'])	//	Don't display deleted posts
 		{
-			$date = twitter_date('l jS F Y', strtotime($status['created_at']));
-			if ($date_heading !== $date)
+			$time = strtotime($status['created_at']);
+
+			if ($time > 0)
 			{
-				$date_heading = $date;
-				$rows[] = array('data'  => array($date), 'class' => 'date');
+				$date = twitter_date('l jS F Y', strtotime($status['created_at']));
+				if ($date_heading !== $date)
+				{
+					$date_heading = $date;
+					$rows[] = array('data'  => array($date), 'class' => 'date');
+				}
 			}
-		}
-		else
-		{
-			$date = $status['created_at'];
-		}
-		$text = nl2br($status['html']);
-/*		if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
-			$media = twitter_get_media($status);
-		}
-		$link = theme('status_time_link', $status, !$status->is_direct);
-		$actions = theme('action_icons', $status);
-		$avatar = theme('avatar', theme_get_avatar($status->from));
-		$source = $status->source ? " from ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; //need to replace & in links with &amps and force new window on links
-		if ($status->place->name) {
-			$source .= " " . $status->place->name . ", " . $status->place->country;
-		}
-		if ($status->in_reply_to_status_id)	{
-			$source .= " <a href='status/{$status->in_reply_to_status_id_str}'>in reply to {$status->in_reply_to_screen_name}</a>";
-		}
-		if ($status->retweet_count)	{
-			$source .= " <a href='retweeted_by/{$status->id}'>retweeted ";
-			switch($status->retweet_count) {
-				case(1) : $source .= "once</a>"; break;
-				case(2) : $source .= "twice</a>"; break;
-				//	Twitter are uncapping the retweet count (https://dev.twitter.com/discussions/5129) will need to correctly format large numbers
-				case(is_int($status->retweet_count)) : $source .= number_format($status->retweet_count) . " times</a>"; break;
-				//	Legacy for old tweets where the retweet count is a string (usually "100+")
-				default : $source .= $status->retweet_count . " times</a>";
+			else
+			{
+				$date = $status['created_at'];
 			}
-		}
-		if ($status->retweeted_by) {
-			$retweeted_by = $status->retweeted_by->user->screen_name;
-			$source .= "<br /><a href='retweeted_by/{$status->id}'>retweeted</a> by <a href='user/{$retweeted_by}'>{$retweeted_by}</a>";
-		}
-*/		
-		//$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text}<br />$media<small>$source</small>";
 
-		$actions = theme('action_icons', $status);
-		$link = theme('status_time_link', $status, true);
+			$text = $status['html'];
+			 //nl2br($status['html']);
+	/*		if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
+				$media = twitter_get_media($status);
+			}
+			$link = theme('status_time_link', $status, !$status->is_direct);
+			$actions = theme('action_icons', $status);
+			$avatar = theme('avatar', theme_get_avatar($status->from));
+			$source = $status->source ? " from ".str_replace('rel="nofollo	w"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; //need to replace & in links with &amps and force new window on links
+			if ($status->place->name) {
+				$source .= " " . $status->place->name . ", " . $status->place->country;
+			}
+			if ($status->in_reply_to_status_id)	{
+				$source .= " <a href='status/{$status->in_reply_to_status_id_str}'>in reply to {$status->in_reply_to_screen_name}</a>";
+			}
+			if ($status->retweet_count)	{
+				$source .= " <a href='retweeted_by/{$status->id}'>retweeted ";
+				switch($status->retweet_count) {
+					case(1) : $source .= "once</a>"; break;
+					case(2) : $source .= "twice</a>"; break;
+					//	Twitter are uncapping the retweet count (https://dev.twitter.com/discussions/5129) will need to correctly format large numbers
+					case(is_int($status->retweet_count)) : $source .= number_format($status->retweet_count) . " times</a>"; break;
+					//	Legacy for old tweets where the retweet count is a string (usually "100+")
+					default : $source .= $status->retweet_count . " times</a>";
+				}
+			}
+			if ($status->retweeted_by) {
+				$retweeted_by = $status->retweeted_by->user->screen_name;
+				$source .= "<br /><a href='retweeted_by/{$status->id}'>retweeted</a> by <a href='user/{$retweeted_by}'>{$retweeted_by}</a>";
+			}
+	*/		
+			//$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text}<br />$media<small>$source</small>";
 
-		$avatar = "<img src=\"" . IMAGE_PROXY_URL . "48/48/{$status['user']['avatar_image']['url']}\" />";
-		$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
-		$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
-				<br />
-				{$text}
-				<br />
-				<small>$source</small>";
-		unset($row);
-		$class = 'status';
-		
-		if ($page != 'user' && $avatar)
-		{
-			$row[] = array('data' => $avatar, 'class' => 'avatar');
-			$class .= ' shift';
+			$actions = theme('action_icons', $status);
+			$link = theme('status_time_link', $status, true);
+
+			$avatar = "<img src=\"" . IMAGE_PROXY_URL . "48/48/{$status['user']['avatar_image']['url']}\" />";
+			$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
+
+			$conversation = "";
+			if ($status['reply_to'])
+			{
+				$conversation .= "| <a href='status/{$status['reply_to']}'>View Conversation</a>";
+			}
+
+			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
+					<br />
+					{$text}
+					<br />
+					<small>Sent via $source $conversation</small>";
+			unset($row);
+			$class = 'status';
+			
+			if ($page != 'user' && $avatar)
+			{
+				$row[] = array('data' => $avatar, 'class' => 'avatar');
+				$class .= ' shift';
+			}
+			
+			$row[] = array('data' => $html, 'class' => $class);
+
+			$class = 'tweet';
+			if ($page != 'replies' && twitter_is_reply($status))
+			{
+				$class .= ' reply';
+			}
+			$row = array('data' => $row, 'class' => $class);
+
+			$rows[] = $row;
 		}
-		
-		$row[] = array('data' => $html, 'class' => $class);
-
-		$class = 'tweet';
-		if ($page != 'replies' && twitter_is_reply($status))
-		{
-			$class .= ' reply';
-		}
-		$row = array('data' => $row, 'class' => $class);
-
-		$rows[] = $row;
 	}
 	$content = theme('table', array(), $rows, array('class' => 'timeline'));
-
+/*
 	if ($page != '' && !$hide_pagination)
 	{
 		$content .= theme('pagination');
 	}
 	else if (!$hide_pagination)  // Don't show pagination if there's only one item
 	{
-		//Doesn't work. since_id returns the most recent tweets up to since_id, not since. Grrr
-		//$links[] = "<a href='{$_GET['q']}?since_id=$since_id'>Newer</a>";
+*/		//	Get the IDs of the first and last statuses
+		$last = end($feed);
+		$first = reset($feed);
 
-		if(is_64bit()) $max_id = intval($max_id) - 1; //stops last tweet appearing as first tweet on next page
-		$links[] = "<a href='{$_GET['q']}?max_id=$max_id' accesskey='9'>Older</a> 9";
-		$content .= '<p>'.implode(' | ', $links).'</p>';
-	}
-
-
+		$content .= theme_pagination($last['id'],$first['id']);//'<p>'.implode(' | ', $links).'</p>';
+//	}
 
 	return $content;
 }
@@ -2068,19 +2144,20 @@ function twitter_is_reply($status) {
 	return false;
 }
 
-function theme_followers($feed, $nextPageURL=null) {
+function theme_users($feed, $nextPageURL=null) {
 	$rows = array();
 	if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
 
 	foreach ($feed as $user) {
 
-		$name = $user['name']; //theme('full_name', $user);
+		$name = $user['name'];
+		$username = $user['username'];
 
 		$tweets_per_day = twitter_tweets_per_day($user);
 
 //		$last_tweet = strtotime($user->status->created_at);
 
-		$content = "{$name}<br /><span class='about'>";
+		$content = "<a href=\"user/$username/$id\">$name (@$username)</a><br /><span class='about'>";
 
 		if($user['description']['text'] != "")
 			$content .= "Bio: " . twitter_parse_tags($user['description']['text']) . "<br />";
@@ -2215,20 +2292,27 @@ function theme_external_link($url, $content = null) {
 
 }
 
-function theme_pagination()
+function theme_pagination($before_id=null,$since_id=null)
 {
 
+	if ($since_id || $before_id)  // Don't show pagination if there's only one item
+	{
+		$links[] = "<a href='{$_GET['q']}?before_id=$before_id'>Older</a>";
+		$links[] = "<a href='{$_GET['q']}?since_id=$since_id'>Newer</a>";
+		
+		return '<p>'.implode(' | ', $links).'</p>';
+	}
+/*
 	$page = intval($_GET['page']);
 	if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches))
 	{
 		$query = $matches[0];
 	}
 	if ($page == 0) $page = 1;
-	$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
-	if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
+	$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query'>Older</a>";
+	if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query'>Newer</a>";
 	return '<p>'.implode(' | ', $links).'</p>';
 
-	/*
 	 if ($_GET['max_id'])
 	 {
 		$id = intval($_GET['max_id']);
@@ -2252,60 +2336,36 @@ function theme_pagination()
 
 function theme_action_icons($status) {
 	$from = $status['user']['username'];
-	$retweeted_by = $status->retweeted_by->user->screen_name;
-	$retweeted_id = $status->retweeted_by->id;
-	$geo = $status->geo;
+
 	$actions = array();
 
-	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status['id']}", 'images/reply.png', '@');
-	}
-	//Reply All functionality.
-	if( $status->entities->user_mentions )
+	//	Reply
+	$actions[] = theme('action_icon', "user/{$from}/reply/{$status['id']}", 'images/reply.png', '@');
+
+	//	Reply All functionality.
+	if( $status['entities']['mentions'] )
 	{
 		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status['id']}", 'images/replyall.png', 'REPLY ALL');
 	}
 
-	if (!user_is_current_user($from)) {
-		$actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
-	}
-	if (!$status->is_direct) {
-		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status['id']}", 'images/star.png', 'UNFAV');
-		} else {
-			$actions[] = theme('action_icon', "favourite/{$status['id']}", 'images/star_grey.png', 'FAV');
-		}
-		if ($retweeted_by) // Show a diffrent retweet icon to indicate to the user this is an RT
-		{
-			$actions[] = theme('action_icon', "retweet/{$status['id']}", 'images/retweeted.png', 'RT');
-		}
-		else
-		{
-			$actions[] = theme('action_icon', "retweet/{$status['id']}", 'images/retweet.png', 'RT');
-		}
-		if (user_is_current_user($from))
-		{
-			$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", 'images/trash.gif', 'DEL');
-		}
-		if ($retweeted_by) //Allow users to delete what they have retweeted
-		{
-			if (user_is_current_user($retweeted_by))
-			{
-				$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", 'images/trash.gif', 'DEL');
-			}
-		}
+	//	Re-post	
+	$actions[] = theme('action_icon', "retweet/{$status['id']}", 'images/retweet.png', 'RT');
 
-	} else {
-		$actions[] = theme('action_icon', "confirm/deleteDM/{$status['id']}", 'images/trash.gif', 'DEL');
+	// Delete
+	if (user_is_current_user($from))
+	{
+		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", 'images/trash.gif', 'DEL');
 	}
-	if ($geo !== null)
+
+/*	if ($geo !== null)
 	{
 		$latlong = $geo->coordinates;
 		$lat = $latlong[0];
 		$long = $latlong[1];
 		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", 'images/map.png', 'MAP');
 	}
-	//Search for @ to a user
+*/
+	//	Search for @ to a user
 	$actions[] = theme('action_icon',"search?query=%40{$from}",'images/q.png','?');
 
 	return implode(' ', $actions);

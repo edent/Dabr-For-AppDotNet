@@ -29,7 +29,7 @@ function touch_theme_avatar($url, $force_large = false) {
 
 function touch_theme_menu_top() {
 	$links = array();
-	$main_menu_titles = array('home', 'replies', 'directs', 'search');
+	$main_menu_titles = array('home', 'replies', 'search');
 	foreach (menu_visible_items() as $url => $page) {
 		$title = $url ? $url : 'home';
 		$type = in_array($title, $main_menu_titles) ? 'main' : 'extras';
