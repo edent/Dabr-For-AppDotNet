@@ -12,21 +12,32 @@
 */
 
 // comment these two lines out in production
-error_reporting(E_ALL);
+error_reporting(E_ALL ^ E_NOTICE);
 ini_set('display_errors', 1);
 
 session_start();
 
+class AppDotNetException extends Exception {}
+
 class AppDotNet {
 
 	// 1.) Enter your Client ID
-	var $_clientId = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+	// The new preferred way of doing this is to send this as the first 
+	// parameter when constructing your AppDotNet object. 
+	// ie: $app = new AppDotNet($clientId,$clientSecret,$redirectUri);
+	var $_clientId = '';
 
 	// 2.) Enter your Client Secret
-	var $_clientSecret = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+	// The new preferred way of doing this is to send this as the second
+	// parameter when constructing your AppDotNet object. 
+	// ie: $app = new AppDotNet($clientId,$clientSecret,$redirectUri);
+	var $_clientSecret = '';
 
 	// 3.) Enter your Callback URL
-	var $_redirectUri = 'http://your-website.com/callback.php';
+	// The new preferred way of doing this is to send this as the third 
+	// parameter when constructing your AppDotNet object. 
+	// ie: $app = new AppDotNet($clientId,$clientSecret,$redirectUri);
+	var $_redirectUri = '';
 	
 	// 4.) Add or remove scopes
 	var $_scope = array(
@@ -39,8 +50,26 @@ class AppDotNet {
 	var $_authSignInUrl;
 	var $_authPostParams=array();
 
+	// stores the access token after login
+	var $_accessToken = null;
+
+	// The total number of requests you're allowed within the alloted time period
+	var $_rateLimit = null;
+
+	// The number of requests you have remaining within the alloted time period
+	var $_rateLimitRemaining = null;
+
+	// The number of seconds remaining in the alloted time period
+	var $_rateLimitReset = null;
+
 	// constructor
-	function AppDotNet() {
+	function AppDotNet($clientId=null,$clientSecret=null,$redirectUri=null) {
+
+		if ($clientId && $clientSecret && $redirectUri) {
+			$this->_clientId = $clientId;
+			$this->_clientSecret = $clientSecret;
+			$this->_redirectUri = $redirectUri;
+		}
 
 		$this->_scope = implode('+',$this->_scope);
 
@@ -66,44 +95,114 @@ class AppDotNet {
 			$code = $_GET['code'];
 			$this->_authPostParams['code']=$code;
 			$res = $this->httpPost($this->_authUrl.'access_token', $this->_authPostParams);
-			$access_token = $res['access_token'];
-			$_SESSION['AppDotNetPHPAccessToken']=$access_token;
-			return $access_token;
+			$this->_accessToken = $res['access_token'];
+			$_SESSION['AppDotNetPHPAccessToken']=$this->_accessToken;
+			return $this->_accessToken;
 		}
 		return false;
 	}
 
 	// check if user is logged in
 	function getSession() {
+		// else check the session for the token (from a previous page load)
 		if (isset($_SESSION['AppDotNetPHPAccessToken'])) {
+			$this->_accessToken = $_SESSION['AppDotNetPHPAccessToken'];
 			return $_SESSION['AppDotNetPHPAccessToken'];
-		} else {
-			return false;
-		}
+		} 
+		return false;
 	}
 
 	// log the user out
 	function deleteSession() {
-		session_unset();
+		unset($_SESSION['AppDotNetPHPAccessToken']);
+		$this->_accessToken = null;
 		return false;
+	}
+
+	// return the access token (eg: for offline storage)
+	function getAccessToken() {
+		return $this->_accessToken;
+	}
+
+	// set the access token (eg: after retrieving it from offline storage)
+	function setAccessToken($token) {
+		$this->_accessToken = $token;
+	}
+
+	// The total number of requests you're allowed within the alloted time period
+	function getRateLimit() {
+		return $this->_rateLimit;
+	}
+
+	// The number of requests you have remaining within the alloted time period
+	function getRateLimitRemaining() {
+		return $_rateLimitRemaining;
+	}
+
+	// The number of seconds remaining in the alloted time period
+	// When this time is up you'll have getRateLimit() available again
+	function getRateLimitReset() {
+		return $_rateLimitReset;
+	}
+
+	function parseHeaders($response) {
+		// take out the headers
+		// set internal variables
+		// return the body/content
+		$this->rateLimit = null;
+		$this->rateLimitRemaining = null;
+		$this->rateLimitReset = null;
+
+		list($headers,$content) = explode("\r\n\r\n",$response,2);
+
+		// this is not a good way to parse http headers
+		// it will not (for example) take into account multiline headers
+		// but what we're looking for is pretty basic, so we can ignore those shortcomings
+		$headers = explode("\r\n",$headers);
+		foreach ($headers as $header) {
+			$header = explode(': ',$header,2);
+			if (count($header)<2) {
+				continue;
+			}
+			list($k,$v) = $header;
+			switch ($k) {
+				case 'X-RateLimit-Remaining':
+					$this->rateLimitRemaining = $v;
+					break;
+				case 'X-RateLimit-Limit':
+					$this->rateLimit = $v;
+					break; 
+				case 'X-RateLimit-Reset':
+					$this->rateLimitReset = $v;
+					break;
+
+			}
+		}
+		return $content;
 	}
 
 	// function to handle all POST requests
 	function httpPost($req, $params=array()) {
 		$ch = curl_init($req); 
 		curl_setopt($ch, CURLOPT_POST, true);
-		$access_token = $this->getSession();
-		if ($access_token) {
-			curl_setopt($ch,CURLOPT_HTTPHEADER,array('Authorization: Bearer '.$access_token));
+		if ($this->_accessToken) {
+			curl_setopt($ch,CURLOPT_HTTPHEADER,array('Authorization: Bearer '.$this->_accessToken));
 		}
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HEADER, true);
 		$qs = http_build_query($params);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $qs);
 		$response = curl_exec($ch); 
 		curl_close($ch);
+		$response = $this->parseHeaders($response);
 		$response = json_decode($response,true);
 		if (isset($response['error'])) {
-			exit('AppDotNetPHP<br>Error accessing: <br>'.$req.'<br>Error code: '.$response['error']['code']);
+			if (is_array($response['error'])) {
+				throw new AppDotNetException($response['error']['message'],$response['error']['code']);
+			}
+			else {
+				throw new AppDotNetException($response['error']);
+			}
 		} else {
 			return $response;
 		}
@@ -113,16 +212,22 @@ class AppDotNet {
 	function httpGet($req) {
 		$ch = curl_init($req); 
 		curl_setopt($ch, CURLOPT_POST, false);
-		$access_token = $this->getSession();
-		if ($access_token) {
-			curl_setopt($ch,CURLOPT_HTTPHEADER,array('Authorization: Bearer '.$access_token));
+		if ($this->_accessToken) {
+			curl_setopt($ch,CURLOPT_HTTPHEADER,array('Authorization: Bearer '.$this->_accessToken));
 		}
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HEADER, true);
 		$response = curl_exec($ch); 
 		curl_close($ch);
+		$response = $this->parseHeaders($response);
 		$response = json_decode($response,true);
 		if (isset($response['error'])) {
-			exit('AppDotNetPHP<br>Error accessing: <br>'.$req.'<br>Error code: '.$response['error']['code']);
+			if (is_array($response['error'])) {
+				throw new AppDotNetException($response['error']['message'],$response['error']['code']);
+			}
+			else {
+				throw new AppDotNetException($response['error']);
+			}
 		} else {
 			return $response;
 		}
@@ -130,14 +235,30 @@ class AppDotNet {
 	}
 
 	// function to handle all DELETE requests
-	function httpDelete($req) {
-		$access_token = $this->getSession();
-		if ($access_token) {
-			$r = exec('curl --request DELETE --header "Authorization: Bearer '
-					.$access_token.'" "'.$req.'"');
-			return true;
+	function httpDelete($req, $params=array()) {
+		$ch = curl_init($req); 
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+		if ($this->_accessToken) {
+			curl_setopt($ch,CURLOPT_HTTPHEADER,array('Authorization: Bearer '.$this->_accessToken));
+		}
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HEADER, true);
+		$qs = http_build_query($params);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $qs);
+		$response = curl_exec($ch); 
+		curl_close($ch);
+		$response = $this->parseHeaders($response);
+		$response = json_decode($response,true);
+		if (isset($response['error'])) {
+			if (is_array($response['error'])) {
+				throw new AppDotNetException($response['error']['message'],$response['error']['code']);
+			}
+			else {
+				throw new AppDotNetException($response['error']);
+			}
 		} else {
-			return false;
+			return $response;
 		}
 	}
 
@@ -203,34 +324,37 @@ class AppDotNet {
 	}
 
 	// Retrieve the Posts that are 'in reply to' a specific Post.
-	function getPostReplies($post_id=null) {
-
-		return $this->httpGet($this->_baseUrl.'posts/'.$post_id.'/replies');
-
+	function getPostReplies($post_id=null,$count=20,$before_id=null,$since_id=null) {
+	
+		return $this->httpGet($this->_baseUrl.'posts/'.$post_id.'/replies?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
+	
 	}
-
+	
 	// Get the most recent Posts created by a specific User in reverse 
 	// chronological order.
-	function getUserPosts($user_id='me') {
-
-		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/posts');
-
+	function getUserPosts($user_id='me',$count=20,$before_id=null,$since_id=null) {
+	
+		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/posts?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
+	
 	}
-
+	
 	// Get the most recent Posts mentioning by a specific User in reverse 
 	// chronological order.
-	function getUserMentions($user_id='me') {
-
-		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/mentions');
-
+	function getUserMentions($user_id='me',$count=20,$before_id=null,$since_id=null) {
+	
+		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/mentions?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
+	
 	}
 
 	// Return the 20 most recent Posts from the current User and 
 	// the Users they follow.
-	function getUserStream($user_id='me') {
-		return $this->httpGet($this->_baseUrl.'posts/stream/global');
-		//return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/stream');
-
+	function getUserStream($user_id='me',$count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'posts/stream/?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
+	
 	}
 
 	// Returns a specific User object.
@@ -255,48 +379,43 @@ class AppDotNet {
 	}
 
 	// Returns an array of User objects the specified user is following.
-	function getFollowing($user_id='me') {
-
-		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/following');
-
+	function getFollowing($user_id='me',$count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/following?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
 	}
-
+	
 	// Returns an array of User objects for users following the specified user.
-	function getFollowers($user_id='me') {
-
-		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/followers');
-
+	function getFollowers($user_id='me',$count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'users/'.$user_id.'/followers?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
 	}
-
+	
 	// Return the 20 most recent Posts for a specific hashtag.
-	function searchHashtags($hashtag=null) {
-
-		return $this->httpGet($this->_baseUrl.'posts/tag/'.$hashtag);
-
+	function searchHashtags($hashtag=null,$count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'posts/tag/'.$hashtag.'?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
 	}
-
+	
 	// Retrieve a personalized Stream for the current authorized User. This endpoint 
 	// is similar to the 'Retrieve a User's personalized stream' endpoint.
-	function getUserRealTimeStream() {
-		return $this->httpGet($this->_baseUrl.'posts/stream/global');
-		//return $this->httpGet($this->_baseUrl.'streams/user');
-
+	function getUserRealTimeStream($count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'posts/stream?count='.$count
+			.'&before_id='.$before_id.'&since_id='.$since_id);
+	
 	}
-
-	// Retrieve a personalized Stream for the specified users. This endpoint is similar 
+	
+	// Retrieve a personalized Stream for the specified users. This endpoint is similar
 	// to the 'Retrieve a User's personalized stream' endpoint.
-	function getUsersRealTimeStream($user_ids=null) {
-
+	function getUsersRealTimeStream($user_ids=null,$count=20,$before_id=null,$since_id=null) {
 		$str = json_encode($user_ids);
-		return $this->httpGet($this->_baseUrl.'streams/app?user_ids='.$str);
-
+		return $this->httpGet($this->_baseUrl.'streams/app?user_ids='.$str.'&count='
+				.$count.'&before_id='.$before_id.'&since_id='.$since_id);
 	}
-
+	
 	// Retrieve a Stream of all public Posts on App.net.
-	function getPublicPosts() {
-		return $this->httpGet($this->_baseUrl.'posts/stream/global');
-		//return $this->httpGet($this->_baseUrl.'streams/public');
-
+	function getPublicPosts($count=20,$before_id=null,$since_id=null) {
+		return $this->httpGet($this->_baseUrl.'posts/stream/global?count='
+					.$count.'&before_id='.$before_id.'&since_id='.$since_id);
 	}
 
 	// Retrieve the current status for a specific Stream
