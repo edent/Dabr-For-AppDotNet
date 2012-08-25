@@ -1528,10 +1528,10 @@ function twitter_user_page($query)
 					$status .= "@" . $mention['name'] . " ";	
 				}
 			}
+		
+			$content .= "<p>In reply to:<br />" . $reply_post['text'] . "</p>";
 		}
 		
-		$content .= "<p>In reply to:<br />" . $reply_post['text'] . "</p>";
-
 		// Create the form where users can enter text
 		$content .= dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
 
@@ -2174,7 +2174,7 @@ function theme_timeline($feed)
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
 
-			$avatar = "<img src=\"" . IMAGE_PROXY_URL . "48/48/{$status['user']['avatar_image']['url']}\" />";
+			$avatar = theme('avatar', $status['user']['avatar_image']['url']);//"<img src=\"" . IMAGE_PROXY_URL . "48/48/{$status['user']['avatar_image']['url']}\" />";
 			$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
 
 			$conversation = "";
@@ -2277,7 +2277,9 @@ function theme_users($feed, $nextPageURL=null) {
 
 //		$last_tweet = strtotime($user->status->created_at);
 
-		$content = "<a href=\"user/$username/$id\">$name (@$username)</a><br /><span class='about'>";
+		$content = "<a href=\"user/$username/$id\">$name (@$username)</a>
+					<br />
+					<span class='about'>";
 
 		if($user['description']['text'] != "")
 			$content .= "Bio: " . twitter_parse_tags($user['description']['text']) . "<br />";
@@ -2298,50 +2300,24 @@ function theme_users($feed, $nextPageURL=null) {
 //			$content .= twitter_date('l jS F Y', $last_tweet);
 		$content .= "</span>";
 
-		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
+		$rows[] = 	array(
+						'data' => 
+							array(
+								array(
+										'data' => theme('avatar',	theme_get_avatar($user)), 
+										'class' => 'avatar'
+									),
+								array(
+									'data' => $content, 
+									'class' => 'status shift')
+								),
+							'class' => 'tweet'
+					);
 	}
 
 	$content = theme('table', array(), $rows, array('class' => 'followers'));
 	if ($nextPageURL)
 		$content .= "<a href='{$nextPageURL}'>Next</a>";
-	return $content;
-}
-
-// Annoyingly, retweeted_by.xml and followers.xml are subtly different. 
-// TODO merge theme_retweeters with theme_followers
-function theme_retweeters($feed, $hide_pagination = false) {
-	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return '<p>No one has retweeted this status.</p>';
-
-	foreach ($feed->user as $user) {
-
-		$name = theme('full_name', $user);
-		$tweets_per_day = twitter_tweets_per_day($user);
-		$last_tweet = strtotime($user->status->created_at);
-		$content = "{$name}<br /><span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: " . twitter_parse_tags($user->description) . "<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
-		$content .= "Info: ";
-		$content .= pluralise('tweet', (int)$user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', (int)$user->friends_count, true) . ", ";
-		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
-		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
-		$content .= "</span>";
-
-		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
-	}
-
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if (!$hide_pagination)
-	$content .= theme('list_pagination', $feed);
 	return $content;
 }
 
