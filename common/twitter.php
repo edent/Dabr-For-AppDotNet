@@ -27,7 +27,7 @@ menu_register(array(
 	),
 	'replies' => array(
 		'security' => true,
-		'callback' => 'twitter_replies_page',
+		'callback' => 'dabr_replies_page',
 	),
 	'global' => array(
 		'security' => true,
@@ -1071,16 +1071,17 @@ function twitter_retweet($query) {
 	twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
-function twitter_replies_page() {
-	/*$perPage = setting_fetch('perPage', 20);	
-	$request = API_URL.'statuses/mentions.json?page='.intval($_GET['page']).'&include_entities=true&count='.$perPage;
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'replies');
-	*/
+function dabr_replies_page() 
+{
+	$perPage = setting_fetch('perPage', 20);	
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+	
 	$app = new AppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) {
+	if ($app->getSession()) 
+	{
 		//	Track how long the API call took
 		global $api_time;
 		$api_start = microtime(1);
@@ -1091,7 +1092,7 @@ function twitter_replies_page() {
 		// get the current user as JSON
 		$data = $app->getUser();
 
-		$stream = $app->getUserMentions($data['id']);
+		$stream = $app->getUserMentions($data['id'], $perPage,$before_id,$since_id);
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
