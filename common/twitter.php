@@ -1513,25 +1513,24 @@ function twitter_user_page($query)
 		if ($subaction == "reply" || $subaction == "replyall")
 		{
 			$reply_post = dabr_find_post_in_timeline($in_reply_to_id,$stream);
+
+			// Add in the hashtags they've used
+			foreach ($reply_post['entities']['hashtags'] as $hashtag) 
+			{
+				$status .= "#" . $hashtag['name'] . " ";
+			}
+
+			//	Is this a reply all?		
+			if ($subaction == "replyall")
+			{
+				foreach ($reply_post['entities']['mentions'] as $mention)
+				{
+					$status .= "@" . $mention['name'] . " ";	
+				}
+			}
 		}
 		
 		$content .= "<p>In reply to:<br />" . $reply_post['text'] . "</p>";
-
-		//	Is this a reply all?		
-		if ($subaction == "replyall")
-		{
-			foreach ($reply_post['entities']['mentions'] as $mention)
-			{
-				$status .= "@" . $mention['name'] . " ";	
-			}
-		}
-
-		// Add in the hashtags they've used
-		foreach ($reply_post['entities']['hashtags'] as $hashtag) 
-		{
-			$status .= "#" . $hashtag['name'] . " ";
-		}
-
 
 		// Create the form where users can enter text
 		$content .= dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
