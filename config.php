@@ -16,6 +16,9 @@ define('EMBEDLY_KEY', '');
 // API key for InMobi adverts - sign up at http://inmobi.com/
 define('INMOBI_API_KEY', '');
 
+//	Search Key http://appnet.herokuapp.com/api
+define('SEARCH_KEY', base64_encode("user:password"));
+
 // Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
 // Uncomment to enable.
 // define('LONGURL_KEY', 'true');

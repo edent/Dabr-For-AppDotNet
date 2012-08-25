@@ -50,7 +50,7 @@ menu_register(array(
 	),
 */	'search' => array(
 		'security' => true,
-		'callback' => 'twitter_search_page',
+		'callback' => 'dabr_search_page',
 	),
 	'user' => array(
 		'hidden' => true,
@@ -631,11 +631,23 @@ function dabr_fetch($url)
 	//	Set a user agent so that webmasters know where to send complaints :-)
 	$user_agent = "Mozilla/5.0 (compatible; dabr; " . BASE_URL . ")";
 	curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+
+	// Send the authorisation for search
+	if(strpos($url,"nanek.net")>1)
+	{
+		$basic = 'Authorization: Basic ' . SEARCH_KEY;
+		curl_setopt($ch,CURLOPT_HTTPHEADER,array($basic));
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+	}
+
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
 	$fetch_start = microtime(1);
 	$response = curl_exec($ch);
 	curl_close($ch);
-	
+
 	$services_time += microtime(1) - $fetch_start;
 	return $response;
 }
@@ -1204,7 +1216,7 @@ function theme_directs_form($to) {
 }
 
 function twitter_search_page() {
-/*
+
 	$search_query = $_GET['query'];
 	
 	// Geolocation parameters
@@ -1228,8 +1240,8 @@ function twitter_search_page() {
 		}
 		$content .= theme('timeline', $tl);
 	}
-*/
-	theme('page', 'Search', "Not Yet Implemented. Sorry :-(");
+
+	theme('page', 'Search', $content);
 }
 
 function twitter_search($search_query, $lat = NULL, $long = NULL, $radius = NULL) {
@@ -1256,6 +1268,61 @@ function twitter_search($search_query, $lat = NULL, $long = NULL, $radius = NULL
 	$tl = twitter_process($request);
 	$tl = twitter_standard_timeline($tl->results, 'search');
 	return $tl;
+}
+
+
+function dabr_search_page() 
+{
+	$search_query = $_GET['query'];
+
+	// Geolocation parameters
+	list($lat, $long) = explode(',', $_GET['location']);
+	$loc = $_GET['location'];
+	$radius = $_GET['radius'];
+
+	$content = theme('search_form', $search_query);
+
+	if (isset($_POST['query'])) 
+	{
+		$duration = time() + (3600 * 24 * 365);
+		setcookie('search_favourite', $_POST['query'], $duration, '/');
+		twitter_refresh('search');
+	}
+	
+	if (!isset($search_query) && array_key_exists('search_favourite', $_COOKIE)) 
+	{
+		$search_query = $_COOKIE['search_favourite'];
+	}
+	
+	if ($search_query) 
+	{
+		$tl = dabr_search($search_query);//, $lat, $long, $radius);
+
+		if ($search_query !== $_COOKIE['search_favourite']) 
+		{
+			$content .= '<form action="search/bookmark" method="post">
+							<input type="hidden" name="query" value="'.$search_query.'" />
+							<input type="submit" value="Save as default search" />
+						</form>';
+		}
+		$content .= theme('timeline', $tl);
+	}
+
+	theme('page', 'Search', $content);
+}
+
+function dabr_search($search_query) 
+{
+	$perPage = setting_fetch('perPage', 20);
+	$page = (int) $_GET['page'];
+	if ($page == 0) $page = 1;
+	
+	$request =	'https://api.nanek.net/search?per_page='.'20'.//$perPage.
+				'&q=' . urlencode($search_query).
+				'&page='.$page;
+	$tl = json_decode(dabr_fetch($request),true);
+
+	return $tl['results'];
 }
 
 function dabr_hashtag_page($query)
