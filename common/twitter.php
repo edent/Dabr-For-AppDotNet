@@ -1388,12 +1388,38 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 	return $tweet;
 }
 
+function dabr_find_post_in_timeline($id, $tl) 
+{
+	// Parameter checks
+	if (!is_numeric($id) || !$tl) return;
+
+	// Check if the tweet exists in the timeline given
+	if (array_key_exists($id, $tl)) 
+	{
+		// Found the tweet
+		$post = $tl[$id];
+	} 
+	else 
+	{
+		// Not found, fetch it specifically from the API
+		if ($app->getSession()) 
+		{
+			$post = $app->getPost($id);
+		}
+	}
+	
+	return $post;
+}
+
 function twitter_user_page($query)
 {
 	$user_name = $query[1];
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
-
+	$subaction = $query[2];
+	// Get the ID of the post to which we are replying
+	$in_reply_to_id = (string) $query[3];
+		
 	/*
 	$subaction = $query[2];
 	$in_reply_to_id = (string) $query[3];
@@ -1460,8 +1486,6 @@ function twitter_user_page($query)
 	// check that the user is signed in
 	if ($app->getSession()) 
 	{
-	
-
 		//	Track how long the API call took
 		global $api_time;
 		$api_start = microtime(1);
@@ -1469,25 +1493,36 @@ function twitter_user_page($query)
 		// get the current user as JSON
 		$user_id = $app->getIdByUsername($user_name);
 
+		//	Get the user's name
 		$user = $app->getUser($user_id);
 
+		//	Start building the status
 		$status = "@" . $user['username'] . " ";
 
-		// Get the ID of the post to which we are replying
-		$in_reply_to_id = (string) $query[3];
-	
+		// get the user stream early, so we can search for reply to all.
+		$stream = $app->getUserPosts($user_id,20,$before_id,$since_id);
+
+		//	Look through the stream & see if the post we're replying to is in there.
+		foreach ($stream as $post) 
+		{
+			if ($post['id'] == $in_reply_to_id) 
+			{
+				foreach ($post['entities']['mentions'] as $mention)
+				{
+					$status .= "@" . $mention['name'] . " ";	
+				}
+			}
+		}
 
 		// Create the form where users can enter text
 		$content = dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
 
 		$content .= theme('user_header', $user);
 
-		$stream = $app->getUserPosts($user_id,20,$before_id,$since_id);
 		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
 		
-		//print_r($stream);
 		$content .= theme('timeline', $stream);
 			
 		$page_title = "@" . $user_name;
