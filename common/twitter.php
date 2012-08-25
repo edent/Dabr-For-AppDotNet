@@ -1389,27 +1389,34 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 	return $tweet;
 }
 
-function dabr_find_post_in_timeline($id, $tl) 
+function dabr_find_post_in_timeline($id, $stream) 
 {
 	// Parameter checks
-	if (!is_numeric($id) || !$tl) return;
+	//if (!is_numeric($id) || !$stream) return;
 
 	// Check if the tweet exists in the timeline given
-	if (array_key_exists($id, $tl)) 
+	//	Look through the stream & see if the post we're replying to is in there.
+	foreach ($stream as $post) 
 	{
-		// Found the tweet
-		$post = $tl[$id];
-	} 
-	else 
+		if ($post['id'] == $id) 
+		{	
+			$found_post = $post;
+		}
+	}
+
+	//	If it wasn't found, grab it directly
+	if (!$reply_post)
 	{
+		$app = new AppDotNet();
+
 		// Not found, fetch it specifically from the API
 		if ($app->getSession()) 
 		{
-			$post = $app->getPost($id);
+			$found_post = $app->getPost($id);
 		}
 	}
 	
-	return $post;
+	return $found_post;
 }
 
 function twitter_user_page($query)
@@ -1502,21 +1509,26 @@ function twitter_user_page($query)
 
 		// get the user stream early, so we can search for reply to all.
 		$stream = $app->getUserPosts($user_id,20,$before_id,$since_id);
-
-		//	Look through the stream & see if the post we're replying to is in there.
-		foreach ($stream as $post) 
+		
+		if ($subaction == "reply" || $subaction == "replyall")
 		{
-			if ($post['id'] == $in_reply_to_id) 
+			$reply_post = dabr_find_post_in_timeline($in_reply_to_id,$stream);
+		}
+		
+		$content .= "<p>In reply to:<br />" . $reply_post['text'] . "</p>";
+
+		//	Is this a reply all?		
+		if ($subaction == "replyall")
+		{
+			foreach ($reply_post['entities']['mentions'] as $mention)
 			{
-				foreach ($post['entities']['mentions'] as $mention)
-				{
-					$status .= "@" . $mention['name'] . " ";	
-				}
+				$status .= "@" . $mention['name'] . " ";	
 			}
 		}
 
+
 		// Create the form where users can enter text
-		$content = dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
+		$content .= dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
 
 		$content .= theme('user_header', $user);
 
