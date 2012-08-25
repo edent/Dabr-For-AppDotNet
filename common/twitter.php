@@ -1822,9 +1822,9 @@ function theme_user_header($user) {
 	$bio = twitter_parse_tags($user['description']['text']);//$user['description']['html']; //twitter_parse_tags($user->description);
 
 	$out = "<div class='profile'>";
-	$out .= "<span class='avatar'>
-				<img src='" . IMAGE_PROXY_URL . "48/48/{$full_avatar}' />
-			</span>";
+	$out .= "<span class='avatar'>";
+	$out .=		theme('avatar', $full_avatar);
+	$out .= "</span>";
 	$out .= "<span class='status shift'>
 				<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
 				<br />";
@@ -1891,9 +1891,10 @@ function theme_user_header($user) {
 	return $out;
 }
 
-function theme_avatar($url, $force_large = false) {
+function theme_avatar($url, $force_large = false) 
+{
 	$size = $force_large ? 48 : 24;
-	return "<img src='$url' height='$size' width='$size' />";
+	return "<img src='" . IMAGE_PROXY_URL . "$size/$size/$url' height='$size' width='$size' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -2174,7 +2175,7 @@ function theme_timeline($feed)
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
 
-			$avatar = theme('avatar', $status['user']['avatar_image']['url']);//"<img src=\"" . IMAGE_PROXY_URL . "48/48/{$status['user']['avatar_image']['url']}\" />";
+			$avatar = theme('avatar', $status['user']['avatar_image']['url']);
 			$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
 
 			$conversation = "";
@@ -2304,7 +2305,7 @@ function theme_users($feed, $nextPageURL=null) {
 						'data' => 
 							array(
 								array(
-										'data' => theme('avatar',	theme_get_avatar($user)), 
+										'data' => theme('avatar',	$user['avatar_image']['url']), 
 										'class' => 'avatar'
 									),
 								array(
@@ -2331,8 +2332,8 @@ function theme_full_name($user) {
 	return $name;
 }
 
-// http://groups.google.com/group/twitter-development-talk/browse_thread/thread/50fd4d953e5b5229#
-function theme_get_avatar($object) {
+function theme_get_avatar($object) 
+{
 	return IMAGE_PROXY_URL . "png/48/48/" . $object['avatar_image']['url'];
 }
 
