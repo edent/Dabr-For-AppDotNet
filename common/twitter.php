@@ -1526,6 +1526,12 @@ function twitter_user_page($query)
 			}
 		}
 
+		// Add in the hashtags they've used
+		foreach ($reply_post['entities']['hashtags'] as $hashtag) 
+		{
+			$status .= "#" . $hashtag['name'] . " ";
+		}
+
 
 		// Create the form where users can enter text
 		$content .= dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
