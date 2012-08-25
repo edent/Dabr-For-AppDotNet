@@ -13,7 +13,6 @@ require 'common/menu.php';
 require 'common/user.php';
 require 'common/theme.php';
 require 'common/twitter.php';
-require 'common/lists.php';
 require 'common/settings.php';
 
 require_once 'AppDotNet.php';
