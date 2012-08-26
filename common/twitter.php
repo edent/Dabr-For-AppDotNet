@@ -1806,88 +1806,116 @@ function twitter_tweets_per_day($user, $rounding = 1) {
 	return round($user['counts']['posts'] / $days_on_twitter, $rounding);
 }
 
-function theme_user_header($user) {
-	$following = $user['you_follow']; //friendship($user->screen_name);
-	$followed_by = $user['follows_you']; //$following->relationship->target->followed_by; //The $user is followed by the authenticating
+function dabr_user_bio($user)
+{
+	$name = $user['name'];
+	$username = $user['username'];
+	$follows_you = $user['follows_you'];
+	$you_follow = $user['you_follow'];
+	$you_muted = $user['you_muted'];
 
+	$tweets_per_day = twitter_tweets_per_day($user);
+
+	$raw_date_joined = strtotime($user['created_at']);
+	$date_joined = date('jS M Y', $raw_date_joined);
+
+	$bio = "";
+
+	if($user['description']['text'] != "")
+			$bio .= twitter_parse_tags($user['description']['text']) . "<br />";
+		
+	$bio .= "Joined on " . $date_joined . " - ";
+	$bio .= pluralise('post', (int)$user['counts']['posts'], true) . " ";
+	$bio .= "(~" . pluralise('post', $tweets_per_day, true) . " per day). ";
+	
+	if ($follows_you && $you_follow)
+	{
+		$bio .= "YOU ARE BEST FRIENDS! ";			
+	}
+	else if ($follows_you)
+	{
+		$bio .= "Follows you. ";
+	}
+	else if ($you_follow)
+	{
+		$bio .= "You are following. ";
+	}
+
+	if ($you_muted)
+	{
+		$bio .= " Shhh! Muted. ";
+	}
+
+	return $bio;
+}
+
+function dabr_user_actions($user, $link=TRUE)
+{
+	$username = $user['username'];
+	$you_muted = $user['you_muted'];
+	$you_follow = $user['you_follow'];
+
+	$actions ="";
+
+	if ($link)
+	{
+		$actions .= "<a href='followers/{$username}'>" . pluralise('follower', $user['counts']['followers'], true) . "</a>";
+		$actions .= " | <a href='friends/{$username}'>" . pluralise('friend', $user['counts']['following'], true) . "</a>";
+		
+		//	User cannot perform certain actions on herself
+		if (strtolower($username) !== strtolower(user_current_username())) 
+		{
+		
+			if ($you_follow == false) {
+				$actions .= " | <a href='follow/{$id}'>Follow</a>";
+			}
+			else {
+				$actions .= " | <a href='unfollow/{$id}'>Unfollow</a>";
+			}
+
+			if ($you_muted)
+			{
+				$actions .= " | <a href='confirm/unmute/{$username}'>Unmute</a>";
+			}else
+			{
+				$actions .= " | <a href='confirm/mute/{$username}'>Mute</a>";
+			}
+			
+			$actions .= " | <a href='confirm/spam/{$username}/{$id}'>Report Spam</a>";
+		}
+		
+		$actions .= " | <a href='search?query=%40{$username}'>Search @{$username}</a>";
+	}else
+	{
+		$actions .= pluralise('follower', $user['counts']['followers'], true);
+		$actions .= ". " . pluralise('friend', $user['counts']['following'], true) . ".";
+	}	
+	return $actions;
+}
+
+function theme_user_header($user) 
+{
 	$name = $user['name']; //theme('full_name', $user);
 	$username = $user['username'];
 	$id = $user['id'];
 
 	$full_avatar = $user['avatar_image']['url']; //theme_get_full_avatar($user);
-	//$cleanLocation = str_replace(array("iPhone: ","ÜT: "),"",$user->location);
-	$raw_date_joined = strtotime($user['created_at']);
-	$date_joined = date('jS M Y', $raw_date_joined);
-	//$tweets_per_day = twitter_tweets_per_day($user, 1);
-	$bio = twitter_parse_tags($user['description']['text']);//$user['description']['html']; //twitter_parse_tags($user->description);
-
+	
 	$out = "<div class='profile'>";
-	$out .= "<span class='avatar'>";
-	$out .=		theme('avatar', $full_avatar);
-	$out .= "</span>";
-	$out .= "<span class='status shift'>
-				<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
-				<br />";
-	$out .= "	<span class='about'>";
-
-	$out .= "		Bio: {$bio}<br />";
-	$out .= "		Joined: {$date_joined}";
-	$out .= "	</span>
-			</span>";
-	$out .= "<div class='features'>";
-	$out .= pluralise('tweet', $user['counts']['posts'], true);
-
-	//If the authenticated user is not following the protected used, the API will return a 401 error when trying to view friends, followers and favourites
-	//This is not the case on the Twitter website
-	//To avoid the user being logged out, check to see if she is following the protected user. If not, don't create links to friends, followers and favourites
-/*	if ($user->protected == true && $followed_by == false) {
-		$out .= " | " . pluralise('follower', $user->followers_count, true);
-	ff	$out .= " | " . pluralise('friend', $user->friends_count, true);
-		$out .= " | " . pluralise('favourite', $user->favourites_count, true);
-	}
-	else {
-*/		$out .= " | <a href='followers/{$username}'>" . pluralise('follower', $user['counts']['followers'], true) . "</a>";
-		$out .= " | <a href='friends/{$username}'>" . pluralise('friend', $user['counts']['following'], true) . "</a>";
-//		$out .= " | <a href='favourites/{$user['name']'>" . pluralise('favourite', $user->favourites_count, true) . "</a>";
-//	}
-
-//	$out .= " | <a href='lists/{$user->screen_name}'>" . pluralise('list', $user->listed_count, true) . "</a>";
-//	$out .=	" | <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
-	//NB we can tell if the user can be sent a DM $following->relationship->target->following;
-	//Would removing this link confuse users?
-
-	
-	//	One cannot follow, block, nor report spam oneself.
-		// FIXME
-	if (strtolower($username) !== strtolower(user_current_username())) {
-	
-		if ($following == false) {
-			$out .= " | <a href='follow/{$id}'>Follow</a>";
-		}
-		else {
-			$out .= " | <a href='unfollow/{$id}'>Unfollow</a>";
-		}
-	
-		//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
-		$out.= " | <a href='confirm/block/{$username}/{$id}'>(Un)Block</a>";
-		/*
-		//This should work, but it doesn't. Grrr.
-		$blocked = $following->relationship->source->blocking; //The $user is blocked by the authenticating
-		if ($blocked == true)
-		{
-			$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Unblock</a>";
-		}
-		else
-		{
-			$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block</a>";
-		}
-		*/
-
-		$out .= " | <a href='confirm/spam/{$username}/{$id}'>Report Spam</a>";
-	}
-	
-	$out .= " | <a href='search?query=%40{$username}'>Search @{$username}</a>";
-	$out .= "</div></div>";
+	$out .= "	<span class='avatar'>";
+	$out .=			theme('avatar', $full_avatar);
+	$out .= "	</span>";
+	$out .= "	<span class='status shift'>
+					<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
+					<br />";
+	$out .= "		<span class='about'>";
+	$out .= "			Bio: " . dabr_user_bio($user)."<br />";
+	$out .= "		</span>
+				</span>";
+	$out .= "	<div class='features'>";
+	$out .= 		dabr_user_actions($user);
+	$out .= "	</div>
+			</div>";
 	return $out;
 }
 
@@ -2265,7 +2293,8 @@ function twitter_is_reply($status) {
 	return false;
 }
 
-function theme_users($feed, $nextPageURL=null) {
+function theme_users($feed, $nextPageURL=null) 
+{
 	$rows = array();
 	if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
 
@@ -2273,24 +2302,49 @@ function theme_users($feed, $nextPageURL=null) {
 
 		$name = $user['name'];
 		$username = $user['username'];
+		$follows_you = $user['follows_you'];
+		$you_follow = $user['you_follow'];
+		$you_muted = $user['you_muted'];
 
 		$tweets_per_day = twitter_tweets_per_day($user);
 
-//		$last_tweet = strtotime($user->status->created_at);
-
+		$raw_date_joined = strtotime($user['created_at']);
+		$date_joined = date('jS M Y', $raw_date_joined);
+	
 		$content = "<a href=\"user/$username/$id\">$name (@$username)</a>
 					<br />
 					<span class='about'>";
 
 		if($user['description']['text'] != "")
-			$content .= "Bio: " . twitter_parse_tags($user['description']['text']) . "<br />";
-		
-		$content .= "Info: ";
-		$content .= pluralise('post', (int)$user['counts']['posts'], true) . ", ";
+			$content .= "Bio: " . dabr_user_bio($user);//twitter_parse_tags($user['description']['text']) . "<br />";
+
+		$content .= dabr_user_actions($user,false);		
+/*		$content .= "Info: ";
+		$content .= "Joined on " . $date_joined . ". ";
+		$content .= pluralise('post', (int)$user['counts']['posts'], true) . " ";
+		$content .= "(~" . pluralise('post', $tweets_per_day, true) . " per day), ";
 		$content .= pluralise('friend', (int)$user['counts']['following'], true) . ", ";
 		$content .= pluralise('follower', (int)$user['counts']['followers'], true) . ", ";
-		$content .= "~" . pluralise('post', $tweets_per_day, true) . " per day<br />";
 
+		if ($follows_you && $you_follow)
+		{
+			$content .= "YOU ARE BEST FRIENDS!";			
+		}
+		else if ($follows_you)
+		{
+			$content .= "Follows you.";
+		}
+		else if ($you_follow)
+		{
+			$content .= "You are following.";
+		}
+
+		if ($you_muted)
+		{
+			$content .= " Shhh! Muted.";
+		}
+*/
+		$content .= "<br />";
 /*		$content .= "Last tweet: ";
 		if($user->protected == 'true' && $last_tweet == 0)
 			$content .= "Private";
