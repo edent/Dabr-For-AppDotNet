@@ -1867,10 +1867,10 @@ function dabr_user_actions($user, $link=TRUE)
 		{
 		
 			if ($you_follow == false) {
-				$actions .= " | <a href='follow/{$id}'>Follow</a>";
+				$actions .= " | <a href='follow/{$username}'>Follow</a>";
 			}
 			else {
-				$actions .= " | <a href='unfollow/{$id}'>Unfollow</a>";
+				$actions .= " | <a href='unfollow/{$username}'>Unfollow</a>";
 			}
 
 			if ($you_muted)
