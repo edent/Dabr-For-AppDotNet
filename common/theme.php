@@ -195,30 +195,87 @@ function theme_colours() {
 
 function theme_css() {
 	$c = theme('colours');
-	return "<style type='text/css'>
-	a{color:#{$c->links}}
-	table{border-collapse:collapse}
-	form{margin:.3em;}
-	td{vertical-align:top;padding:0.3em}
-	img{border:0}
-	small,small a{color:#{$c->small}}
-	body{background:#{$c->bodybg};
-	color:#{$c->bodyt};margin:0;font:90% sans-serif}
-	.odd{background:#{$c->odd}}
-	.even{background:#{$c->even}}
-	.reply{background:#{$c->replyodd}}
-	.reply.even{background: #{$c->replyeven}}
-	.menu{color:#{$c->menut};background:#{$c->menubg};padding: 2px}
-	.menu a{color:#{$c->menua};text-decoration: none}
-	.tweet,.features{padding:5px}
-	.date{padding:5px;font-size:0.8em;font-weight:bold;color:#{$c->small}}
-	.about,.time{font-size:0.75em;color:#{$c->small}}
-	.avatar{display:block; height:26px; width:26px; left:0.3em; margin:0; overflow:hidden; position:absolute;}
-	.status{display:block;word-wrap:break-word;}
-	.shift{margin-left:30px;min-height:24px;}
-	.from{font-size:0.75em;color:#{$c->small};font-family:serif;}
-	.from a{color:#{$c->small};}
-</style>";
+	return "
+	<style type='text/css'>
+		a{color:#{$c->links}}
+		table{border-collapse:collapse}
+		form{margin:.3em;}
+		td{vertical-align:top;padding:0.3em}
+		img{border:0}
+		small,small a{color:#{$c->small}}
+		body
+		{	
+			background:#{$c->bodybg};
+			color:#{$c->bodyt};margin:0;font:90% sans-serif
+		}
+		.odd{background:#{$c->odd}}
+		.even{background:#{$c->even}}
+		.reply{background:#{$c->replyodd}}
+		.reply.even{background: #{$c->replyeven}}
+		.menu
+		{
+			color:#{$c->menut};
+			background:#{$c->menubg};
+			padding: 2px}
+		.menu a
+		{
+			color:#{$c->menua};
+			text-decoration: none
+		}
+		.tweet,.features
+		{
+			padding:5px
+		}
+		
+		.date
+		{
+			padding:5px;
+			font-size:0.8em;
+			font-weight:bold;
+			color:#{$c->small}
+		}
+		.about,.time
+		{
+			font-size:0.75em;
+			color:#{$c->small}
+		}
+		.avatar
+		{
+			display:block; 
+			height:50px; 
+			width:50px; 
+			left:5px; 
+			margin:0; 
+			overflow:hidden; 
+			position:absolute;
+		}
+		.status{
+			display:block;
+			word-wrap:break-word;
+		}
+		.shift{
+			margin-left:58px;
+			min-height:48px;
+		}
+		.from{
+			font-size:0.75em;
+			color:#{$c->small};
+			font-family:serif;
+		}
+		.from a	{
+			color:#{$c->small};
+		}
+
+		#menu ul, #menu li { margin: 0; padding: 0; list-style: none; }
+		#menu ul { overflow: auto; }
+		#menu li { float: left; }
+		#menu a { display: block; padding: 0.5em; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
+		body.show-menu #menu-extras { display: block; }
+		#menu-extras { display: none; border-top: 1px solid #eee; }
+		#menu-extras li { float: none; }
+		#menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }
+		img.bigger { height: 22px; width: 22px; }
+	</style>";
 }
 
 function theme_google_analytics() {

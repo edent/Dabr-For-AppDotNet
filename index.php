@@ -42,7 +42,7 @@ function about_page() {
 			<h3>What is Dabr for AppDotNet?</h3>
 		<ul>
 			<li>A mobile web interface for AppDotNet</li>
-			<li>Bassed on the <a href="http://code.google.com/p/dabr/">open source Dabr project</a> originally by <a href="http://twitter.com/davidcarrington">@davidcarrington</a>, <a href="http://twitter.com/whatleydude">@whatleydude</a>, and <a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a></li>
+			<li>Based on the <a href="http://code.google.com/p/dabr/">open source Dabr project</a> originally by <a href="http://twitter.com/davidcarrington">@davidcarrington</a>, <a href="http://twitter.com/whatleydude">@whatleydude</a>, and <a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a></li>
 		</ul>
 
 		<p>If you have any comments, suggestions or questions then feel free to get in touch.</p>

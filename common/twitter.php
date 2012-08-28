@@ -1854,6 +1854,7 @@ function dabr_user_actions($user, $link=TRUE)
 	$username = $user['username'];
 	$you_muted = $user['you_muted'];
 	$you_follow = $user['you_follow'];
+	$id = $user['id'];
 
 	$actions ="";
 
@@ -1867,10 +1868,10 @@ function dabr_user_actions($user, $link=TRUE)
 		{
 		
 			if ($you_follow == false) {
-				$actions .= " | <a href='follow/{$username}'>Follow</a>";
+				$actions .= " | <a href='follow/{$id}'>Follow</a>";
 			}
 			else {
-				$actions .= " | <a href='unfollow/{$username}'>Unfollow</a>";
+				$actions .= " | <a href='unfollow/{$id}'>Unfollow</a>";
 			}
 
 			if ($you_muted)
@@ -1919,10 +1920,11 @@ function theme_user_header($user)
 	return $out;
 }
 
-function theme_avatar($url, $force_large = false) 
+function theme_avatar($url, $force_large = TRUE) 
 {
 	$size = $force_large ? 48 : 24;
-	return "<img src='" . IMAGE_PROXY_URL . "$size/$size/$url' height='$size' width='$size' />";
+
+	return "<img src=\"" . IMAGE_PROXY_URL . "$size/$size/$url\" height='$size' width='$size' alt='gggg' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -2388,7 +2390,8 @@ function theme_full_name($user) {
 
 function theme_get_avatar($object) 
 {
-	return IMAGE_PROXY_URL . "png/48/48/" . $object['avatar_image']['url'];
+	$avatar_url = $object['avatar_image']['url'];
+	return IMAGE_PROXY_URL . "png/48/48/" . $avatar_url;
 }
 
 function theme_get_full_avatar($object) {
