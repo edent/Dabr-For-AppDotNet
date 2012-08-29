@@ -160,8 +160,28 @@ function user_is_authenticated() {
 	*/
 }
 
-function user_current_username() {
-	return "edent";//$GLOBALS['user']['username'];
+function user_current_username() 
+{
+	if ($_COOKIE["username"])
+	{
+		return $_COOKIE["username"];
+	}
+
+	else
+	{
+		$app = new EZAppDotNet();
+
+		// check that the user is signed in
+		if ($app->getSession())
+		{
+			$user = $app->getUser();
+
+			$username = $user['username'];
+
+			setcookie("username", $username, $duration, '/');
+			return $username;
+		}
+	}
 }
 
 function user_is_current_user($username) {
