@@ -727,7 +727,7 @@ function twitter_status_page($query) {
 		//$request = API_URL."statuses/show/{$id}.json?include_entities=true";
 		//$status = twitter_process($request);
 		
-		$app = new AppDotNet();	
+		$app = new EZAppDotNet();	
 		if ($app->getSession()) 
 		{	
 			//	Track how long the API call took
@@ -802,7 +802,7 @@ function twitter_delete_page($query) {
 		$tl = twitter_process($request, true);
 		*/
 
-		$app = new AppDotNet();
+		$app = new EZAppDotNet();
 
 		// check that the user is signed in
 		if ($app->getSession()) 
@@ -837,7 +837,7 @@ function twitter_ensure_post_action() {
 
 function twitter_follow_page($query) {
 
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 	
 	if ($app->getSession())
 	{
@@ -965,7 +965,7 @@ function adn_users_page($query) {
 	// Belt & Braces :-)
 	$user_id = $query[2];
 	
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 	if ($app->getSession()) 
 	{
 		//	Track how long the API call took
@@ -1007,7 +1007,7 @@ function twitter_update() {
 	twitter_ensure_post_action();
 	$status = stripslashes(trim($_POST['status']));
 	if ($status) {
-		$app = new AppDotNet();
+		$app = new EZAppDotNet();
 		if ($app->getSession()) {
 			$in_reply_to_id = (string) $_POST['in_reply_to_id'];
 			$app->createPost($status,$in_reply_to_id);
@@ -1077,7 +1077,7 @@ function dabr_replies_page()
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
 	
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) 
@@ -1119,7 +1119,7 @@ function dabr_global_page()
 	$since_id = $_GET['since_id'];
 	
 	
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) 
@@ -1329,7 +1329,7 @@ function dabr_search($search_query)
 function dabr_hashtag_page($query)
 {
 
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) 
@@ -1407,7 +1407,7 @@ function dabr_find_post_in_timeline($id, $stream)
 	//	If it wasn't found, grab it directly
 	if (!$reply_post)
 	{
-		$app = new AppDotNet();
+		$app = new EZAppDotNet();
 
 		// Not found, fetch it specifically from the API
 		if ($app->getSession()) 
@@ -1489,7 +1489,7 @@ function twitter_user_page($query)
 	$content .= theme('timeline', $tl);
 */
 
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) 
@@ -1607,7 +1607,7 @@ function twitter_home_page() {
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
 
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession()) {
@@ -1657,7 +1657,7 @@ function twitter_hashtag_page($query) {
 function dabr_raw_page($query) {
 	if (isset($query[1])) 
 	{
-		$app = new AppDotNet();
+		$app = new EZAppDotNet();
 		if ($app->getSession()) 
 		{
 			// Dump the post to screen
@@ -1767,7 +1767,7 @@ function dabr_retweet_page($query)
 	
 	if (is_numeric($id)) 
 	{
-		$app = new AppDotNet();
+		$app = new EZAppDotNet();
 		if ($app->getSession()) 
 		{
 			//	Track how long the API call took
@@ -2265,15 +2265,15 @@ function twitter_is_reply($status) {
 	$user = user_current_username();
 
 	//	Use Twitter Entities to see if this contains a mention of the user
-	if ($status->entities)	// If there are entities
+	if ($status['entities'])	// If there are entities
 	{
-		if ($status->entities->user_mentions)
+		if ($status['entities']['mentions'])
 		{
-			$entities = $status->entities;
+			$entities = $status['entities'];
 			
-			foreach($entities->user_mentions as $mentions)
+			foreach($entities['mentions'] as $mentions)
 			{
-				if ($mentions->screen_name == $user) 
+				if ($mentions['name'] == $user) 
 				{
 					return true;
 				}
@@ -2488,8 +2488,16 @@ function theme_pagination($before_id=null,$since_id=null)
 }
 
 
-function theme_action_icons($status) {
+function theme_action_icons($status) 
+{
 	$from = $status['user']['username'];
+
+	if (setting_fetch('browser') == "bigtouch")
+	{
+		$L = "L";
+		echo "ttttttt touch me!";
+	}
+
 
 	$actions = array();
 

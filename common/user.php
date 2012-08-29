@@ -96,7 +96,7 @@ function user_oauth_sign(&$url, &$args = false) {
 }
 
 function user_ensure_authenticated() {
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if (!$app->getSession()) {
@@ -114,7 +114,7 @@ function user_logout() {
 }
 
 function user_is_authenticated() {
-	$app = new AppDotNet();
+	$app = new EZAppDotNet();
 	if ($app->getSession()) {
 		return true;
 	}
@@ -229,7 +229,7 @@ function user_login() {
 }
 
 function theme_login() {
-	$app = new AppDotNet();		
+	$app = new EZAppDotNet();		
 	$url = $app->getAuthUrl();
 	
 	$content = '<div style="margin:1em; font-size: 1.2em">

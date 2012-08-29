@@ -15,7 +15,8 @@ require 'common/theme.php';
 require 'common/twitter.php';
 require 'common/settings.php';
 
-require_once 'AppDotNet.php';
+require_once 'EZAppDotNet.php';
+
 
 //	Set Up the default menu
 menu_register(array (
@@ -57,7 +58,7 @@ browser_detect();
 menu_execute_active_handler();
 
 
-$app = new AppDotNet();
+$app = new EZAppDotNet();
 
 // check that the user is signed in
 if ($app->getSession()) {
