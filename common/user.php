@@ -162,9 +162,9 @@ function user_is_authenticated() {
 
 function user_current_username() 
 {
-	if ($_COOKIE["username"])
+	if ($_SESSION['app_username'])
 	{
-		return $_COOKIE["username"];
+		return $_SESSION['app_username'];
 	}
 
 	else
@@ -177,8 +177,9 @@ function user_current_username()
 			$user = $app->getUser();
 
 			$username = $user['username'];
-
-			setcookie("username", $username, $duration, '/');
+			
+			$_SESSION['app_username'] = $username;
+			
 			return $username;
 		}
 	}
