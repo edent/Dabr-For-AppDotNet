@@ -54,7 +54,6 @@ function about_page() {
         //theme('page', 'About', $content); 
  }
 
-browser_detect();
 menu_execute_active_handler();
 
 

@@ -1968,7 +1968,7 @@ function theme_avatar($url, $force_large = TRUE)
 {
 	$size = $force_large ? 48 : 24;
 
-	return "<img src=\"" . IMAGE_PROXY_URL . "$size/$size/$url\" height='$size' width='$size' alt='gggg' />";
+	return "<img src=\"" . IMAGE_PROXY_URL . "$size/$size/$url\" height='$size' width='$size' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -2539,28 +2539,27 @@ function theme_action_icons($status)
 	if (setting_fetch('browser') == "bigtouch")
 	{
 		$L = "L";
-		echo "ttttttt touch me!";
 	}
 
 
 	$actions = array();
 
 	//	Reply
-	$actions[] = theme('action_icon', "user/{$from}/reply/{$status['id']}", 'images/reply.png', '@');
+	$actions[] = theme('action_icon', "user/{$from}/reply/{$status['id']}", "images/reply{$L}.png", '@');
 
 	//	Reply All functionality.
 	if( $status['entities']['mentions'] )
 	{
-		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status['id']}", 'images/replyall.png', 'REPLY ALL');
+		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status['id']}", "images/replyall{$L}.png", 'REPLY ALL');
 	}
 
 	//	Re-post	
-	$actions[] = theme('action_icon', "retweet/{$status['id']}", 'images/retweet.png', 'RT');
+	$actions[] = theme('action_icon', "retweet/{$status['id']}", "images/retweet{$L}.png", 'RT');
 
 	// Delete
 	if (user_is_current_user($from))
 	{
-		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", 'images/trash.gif', 'DEL');
+		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", "images/trash{$L}.png", 'DEL');
 	}
 
 /*	if ($geo !== null)
@@ -2572,7 +2571,7 @@ function theme_action_icons($status)
 	}
 */
 	//	Search for @ to a user
-	$actions[] = theme('action_icon',"search?query=%40{$from}",'images/q.png','?');
+	$actions[] = theme('action_icon',"search?query=%40{$from}","images/q{$L}.png",'?');
 
 	return implode(' ', $actions);
 }
