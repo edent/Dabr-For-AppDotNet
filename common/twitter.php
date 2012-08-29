@@ -13,7 +13,7 @@ menu_register(array(
 	'status' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_status_page',
+		'callback' => 'dabr_status_page',
 	),
 	'update' => array(
 		'hidden' => true,
@@ -763,6 +763,50 @@ function twitter_status_page($query) {
 			theme('page', "Status $id", $content);
 		}
 		else{
+		}
+	}
+}
+
+
+function dabr_status_page($query) 
+{
+	$id = (string) $query[1];
+	
+	if (is_numeric($id)) // Are all IDs numeric?
+	{
+		
+		$app = new EZAppDotNet();	
+		if ($app->getSession()) 
+		{	
+			//	Track how long the API call took
+			global $api_time;
+			$api_start = microtime(1);
+
+			//	Get the post
+			$status = $app->getPost($id);			
+			
+			//	Grab the text before it gets formatted
+			$text = $status['text'];	
+
+			$content = theme('status', $status);
+
+			//	Show a link to the original tweet		
+			$username = $status['user']['username'];
+			$content .= '<p><a href="https://alpha.app.net/' . $username . '/post/' . $id . '" target="'. get_target() . '">View orginal post on AppDotNet</a> | ';
+			
+			//	Translate the tweet
+			$content .= '<a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this post</a></p>';
+			
+			if ($status['reply_to']) 
+			{
+				$thread = array_reverse($app->getPostReplies($id, setting_fetch('perPage', 20)));//twitter_thread_timeline($id);
+				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
+			}
+			
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+
+			theme('page', "Status $id", $content);
 		}
 	}
 }
