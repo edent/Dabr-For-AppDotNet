@@ -56,7 +56,6 @@ function about_page() {
 
 menu_execute_active_handler();
 
-
 $app = new EZAppDotNet();
 
 // check that the user is signed in
@@ -88,7 +87,8 @@ if ($app->getSession()) {
 } else {
 
 	$url = $app->getAuthUrl();
-	echo '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
+	$content = $app->getSession();
+	echo '<a href="'.$url.'"><h2>Sign in using App.net - '.$content.'</h2></a>';
 	about_page();
 
 }

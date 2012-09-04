@@ -149,6 +149,11 @@ menu_register(array(
 		'security' => true,
 		'hidden' => true,
 		'callback' => 'dabr_raw_page',
+	),
+	'hyper' => array(
+		'security' => true,
+		'hidden' => true,
+		'callback' => 'dabr_hyper_page',
 	)
 ));
 
@@ -799,7 +804,7 @@ function dabr_status_page($query)
 			
 			if ($status['reply_to']) 
 			{
-				$thread = array_reverse($app->getPostReplies($id, setting_fetch('perPage', 20)));//twitter_thread_timeline($id);
+				$thread = array_reverse($app->getPostReplies($id, array('count'=>setting_fetch('perPage', 20))));//twitter_thread_timeline($id);
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
 			}
 			
@@ -1136,7 +1141,7 @@ function dabr_replies_page()
 		// get the current user as JSON
 		$data = $app->getUser();
 
-		$stream = $app->getUserMentions($data['id'], $perPage,$before_id,$since_id);
+		$stream = $app->getUserMentions($data['id'], array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1176,7 +1181,7 @@ function dabr_global_page()
 		$content = dabr_post_form();
 	
 		// get the latest public posts
-		$stream = $app->getPublicPosts($perPage,$before_id,$since_id);
+		$stream = $app->getPublicPosts(array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1394,7 +1399,7 @@ function dabr_hashtag_page($query)
 			$api_start = microtime(1);
 
 			//	Search for hashtags
-			$stream = $app->searchHashtags($hashtag,$perPage,$before_id,$since_id);
+			$stream = $app->searchHashtags($hashtag,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -1552,7 +1557,7 @@ function twitter_user_page($query)
 		$status = "@" . $user['username'] . " ";
 
 		// get the user stream early, so we can search for reply to all.
-		$stream = $app->getUserPosts($user_id,20,$before_id,$since_id);
+		$stream = $app->getUserPosts($user_id,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 		
 		if ($subaction == "reply" || $subaction == "replyall")
 		{
@@ -1667,7 +1672,7 @@ function twitter_home_page() {
 		$data = $app->getUser();
 
 		//	get the stream
-		$stream = $app->getUserStream($data['id'],20,$before_id,$since_id);
+		$stream = $app->getUserStream(array('count'=>setting_fetch('perPage', 20),'before_id'=>$before_id,'since_id'=>$since_id));
 		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1705,7 +1710,86 @@ function dabr_raw_page($query) {
 		if ($app->getSession()) 
 		{
 			// Dump the post to screen
-			print_r($app->getPost($query[1]));
+			//print_r($app->getPost($query[1]));
+			//$thread = $app->getPost($query[1]);
+			$thread = $app->getPostReplies($query[1],array('count'=>200));
+			$thread[] = $app->getPost($query[1]);
+			print_r($thread);
+
+			echo json_encode($thread);
+		}
+	}
+}
+
+
+function dabr_hyper_page($query) 
+{
+	if (isset($query[1])) 
+	{
+		$app = new EZAppDotNet();
+		if ($app->getSession()) 
+		{
+			$thread = $app->getPostReplies($query[1],array('count'=>200));
+			$thread[] = $app->getPost($query[1]);
+
+			$json_string = json_encode($thread);
+
+			$data=json_decode($json_string,true);
+
+			$array  = array();
+
+			// first throw everything into an associative array for easy access
+			$references = array();
+			foreach ($data as $post) 
+			{
+			    $id = $post['id'];
+			    $post['children'] = array();
+
+			    $parent = $post['reply_to'];
+			    $text = $post['text'];
+			    $user = $post['user']['username'];
+			    $name = $post['user']['name'];
+			    $avatar = $post['user']['avatar_image']['url'];
+
+			    $references[$id] = array(
+			        "id" => $id,
+			        "name" => htmlspecialchars($name),
+			        "reply_to" => $parent, 
+			        "data" => array(
+			            "text" => htmlspecialchars($text), 
+			            "user" => htmlspecialchars($user), 
+			            "avatar" => $avatar
+			            )
+			        );
+
+			}
+
+			// now create the tree
+			$tree = array();
+			foreach ($references as &$post) 
+			{
+			    $id = $post['id'];
+			    $parentId = $post['reply_to'];
+			    // if it's a top level object, add it to the tree
+			    if (!$parentId) 
+			    {
+			        $tree[] =& $references[$id];
+			    }
+			    // else add it to the parent
+			    else 
+			    {
+			        $references[$parentId]['children'][] =& $post;
+			    }
+			    // avoid bad things by clearing the reference
+			    unset($post);
+			}
+
+			//trim the []
+			$output = json_encode($tree);
+			$output = substr($output, 1, -1);
+			// encode it
+			header("Content-type: application/json");
+			print $output;
 		}
 	}
 }
