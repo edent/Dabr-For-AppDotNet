@@ -269,6 +269,7 @@ function embedly_embed_thumbnails(&$feed)
 						if (preg_match_all($pattern, $urls['url'], $matches, PREG_PATTERN_ORDER) > 0)
 						{
 							$matched_urls[$urls['url']][] = $i;
+							break;	//	Once found, stop searching
 						}
 					}
 				}
