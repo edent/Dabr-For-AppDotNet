@@ -114,6 +114,11 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'adn_users_page',
 	),
+	'muted' => array(
+		'hidden' => false,
+		'security' => true,
+		'callback' => 'adn_users_page',
+	),
 	'delete' => array(
 		'hidden' => true,
 		'security' => true,
@@ -1095,6 +1100,10 @@ function adn_users_page($query) {
 			case "followers":
 				$users = $app->getFollowers($username);
 				break;
+			case "muted":
+				$users = $app->getMuted(); // Can only get the current user's muted list
+				break;
+
 		}
 	
 		//	Track how long the API call took
