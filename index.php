@@ -17,6 +17,19 @@ require 'common/settings.php';
 
 require_once 'EZAppDotNet.php';
 
+// checking if the 'Remember me' checkbox was clicked
+if (isset($_GET['rem'])) 
+{
+	session_start();
+	if ($_GET['rem']=='1') 
+	{
+		$_SESSION['rem']=1;
+	} else 
+	{
+		unset($_SESSION['rem']);
+	}
+	header('Location: index.php');
+}
 
 //	Set Up the default menu
 menu_register(array (
@@ -88,7 +101,17 @@ if ($app->getSession()) {
 
 	$url = $app->getAuthUrl();
 	$content = $app->getSession();
-	echo '<a href="'.$url.'"><h2>Sign in using App.net - '.$content.'</h2></a>';
+	echo '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
+	echo 'Remember me <input type="checkbox" id="rem" value="1" checked/>';
+	echo "<script>
+			document.getElementById('rem').onclick = function(e){
+				if (document.getElementById('rem').value=='1') {
+					window.location='?rem=2';
+				} else {
+					window.location='?rem=1';
+				};
+			}
+		</script>";
 	about_page();
 
 }
