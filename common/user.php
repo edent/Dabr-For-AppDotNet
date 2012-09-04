@@ -108,9 +108,13 @@ function user_ensure_authenticated() {
 	}
 }
 
-function user_logout() {
-	unset($GLOBALS['user']);
-	setcookie('USER_AUTH', '', time() - 3600, '/');
+function user_logout() 
+{
+	$app = new EZAppDotNet();
+	// log out user
+	$app->deleteSession();
+	// redirect user after logging out
+	header('Location: index.php');
 }
 
 function user_is_authenticated() {
