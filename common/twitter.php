@@ -70,12 +70,12 @@ menu_register(array(
 	'confirm' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_confirmation_page',
+		'callback' => 'dabr_confirmation_page',
 	),
 	'confirmed' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_confirmed_page',
+		'callback' => 'dabr_confirmed_page',
 	),
 	'block' => array(
 		'hidden' => true,
@@ -86,6 +86,16 @@ menu_register(array(
 		'hidden' => true,
 		'security' => true,
 		'callback' => 'twitter_block_page',
+	),
+	'mute' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'dabr_mute_page',
+	),
+	'unmute' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'dabr_mute_page',
 	),
 	'spam' => array(
 		'hidden' => true,
@@ -932,26 +942,24 @@ function twitter_block_page($query) {
 
 function dabr_mute_page($query) {
 	dabr_ensure_post_action();
-	$user = $query[1];
+	$username = $query[1];
 
-	if ($user) 
+	if ($username) 
 	{
 		$app = new EZAppDotNet();
-		
+		$username = "@" . $username;
 		if ($app->getSession()) 
 		{
 			if($query[0] == 'mute')
 			{
-				$app->muteUser($user);
-				twitter_refresh("confirmed/mute/{$user}");
+				$app->muteUser($username);
+				twitter_refresh("confirmed/mute/{$username}");
 			} else 
 			{
-				$app->muteUser($user);
-				twitter_refresh("confirmed/unmute/{$user}");
+				$app->unmuteUser($username);
+				twitter_refresh("confirmed/unmute/{$username}");
 			}
-
 		}
-
 	}
 }
 
@@ -974,67 +982,82 @@ function twitter_spam_page($query)
 }
 
 
-function twitter_confirmation_page($query)
+function dabr_confirmation_page($query)
 {
 	// the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
 	$action = $query[1];
 	$target = $query[2];	//The name of the user we are doing this action on
-	$target_id = $query[3];	//The targets's ID.  Needed to check if they are being blocked.
-
+//echo $action . " " . $target;
 	switch ($action) {
-		case 'block':
-			if (twitter_block_exists($target_id)) //Is the target blocked by the user?
-			{
-				$action = 'unblock';
-				$content  = "<p>Are you really sure you want to <strong>Unblock $target</strong>?</p>";
-				$content .= '<ul><li>They will see your updates on their home page if they follow you again.</li><li>You <em>can</em> block them again if you want.</li></ul>';
-			}
-			else
-			{
-				$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
-				$content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
-			}
+		case 'mute':
+			$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<ul>
+							<li>You won't see any of their posts in your timeline</li>
+							<li>They won't appear in your replies</li>
+							<li>They <em>will still be able to follow you and see your posts</em></li>
+							<li>You <em>can</em> unmute them later</li>
+						</ul>";
 			break;
-
+		case 'unmute':
+			$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<ul>
+							<li>You will see their posts in your timeline if you follow them.</li>
+							<li>Their posts will appear in your replies</li>
+							<li>You <em>can</em> mute them later</li>
+						</ul>";
+			break;
 		case 'delete':
-			$content = '<p>Are you really sure you want to delete your tweet?</p>';
-			$content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li></ul>";
-			break;
-
-		case 'deleteDM':
-			$content = '<p>Are you really sure you want to delete that DM?</p>';
-			$content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li><li>The DM will be deleted from both the sender's outbox <em>and</em> receiver's inbox.</li></ul>";
+			$content = "<p>Are you really sure you want to delete your post?</p>";
+			$content .= "<ul>
+							<li>Post ID: <strong>$target</strong></li>
+							<li>There is <strong>no way to undo this action</strong>.</li>
+						</ul>";
 			break;
 
 		case 'spam':
 			$content  = "<p>Are you really sure you want to report <strong>$target</strong> as a spammer?</p>";
 			$content .= "<p>They will also be blocked from following you.</p>";
 			break;
-
 	}
+
 	$content .= "<form action='$action/$target' method='post'>
-						<input type='submit' value='Yes please' />
-					</form>";
+					<input type='submit' value='Yes please' />
+				</form>";
+	
 	theme('Page', 'Confirm', $content);
 }
 
-function twitter_confirmed_page($query)
+function dabr_confirmed_page($query)
 {
         // the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
         $action = $query[1]; // The action. block, unblock, spam
         $target = $query[2]; // The username of the target
 	
-	switch ($action) {
-                case 'block':
-			$content  = "<p><span class='avatar'><img src='images/dabr.png' width='48' height='48' /></span><span class='status shift'>Bye-bye @$target - you are now <strong>blocked</strong>.</span></p>";
-                        break;
-                case 'unblock':
-                        $content  = "<p><span class='avatar'><img src='images/dabr.png' width='48' height='48' /></span><span class='status shift'>Hello again @$target - you have been <strong>unblocked</strong>.</span></p>";
-                        break;
-                case 'spam':
-                        $content = "<p><span class='avatar'><img src='images/dabr.png' width='48' height='48' /></span><span class='status shift'>Yum! Yum! Yum! Delicious spam! Goodbye @$target.</span></p>";
-                        break;
-	}
+		switch ($action) {
+			case 'mute':
+				$content  = "<p>
+								<span class='avatar'>
+									<img src='images/dabr.png' width='48' height='48' />
+								</span>
+								<span class='status shift'>
+									Shhhhhh $target! You are now <strong>muted</strong>.
+								</span>
+							</p>";
+				break;
+			case 'unmute':
+				$content  = "<p>
+								<span class='avatar'>
+									<img src='images/dabr.png' width='48' height='48' />
+								</span>
+								<span class='status shift'>
+									Hello again $target - you have been <strong>unmuted</strong>.
+								</span>
+							</p>";
+				break;
+			case 'spam':
+				$content = "<p><span class='avatar'><img src='images/dabr.png' width='48' height='48' /></span><span class='status shift'>Yum! Yum! Yum! Delicious spam! Goodbye @$target.</span></p>";
+				break;
+		}
  	theme ('Page', 'Confirmed', $content);
 }
 
