@@ -843,7 +843,7 @@ function twitter_refresh($page = NULL) {
 }
 
 function twitter_delete_page($query) {
-	twitter_ensure_post_action();
+	dabr_ensure_post_action();
 
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
@@ -884,6 +884,14 @@ function twitter_ensure_post_action() {
 	}
 }
 
+function dabr_ensure_post_action() {
+	// This function is used to make sure the user submitted their action as an HTTP POST request
+	// It slightly increases security for actions such as Delete, Block and Spam
+	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+		die('Error: Invalid HTTP request method for this action.');
+	}
+}
+
 function twitter_follow_page($query) {
 
 	$app = new EZAppDotNet();
@@ -906,7 +914,7 @@ function twitter_follow_page($query) {
 }
 
 function twitter_block_page($query) {
-	twitter_ensure_post_action();
+	dabr_ensure_post_action();
 	$user = $query[1];
 	if ($user) {
 		if($query[0] == 'block'){
@@ -920,6 +928,33 @@ function twitter_block_page($query) {
 		}
 	}
 }
+
+
+function dabr_mute_page($query) {
+	dabr_ensure_post_action();
+	$user = $query[1];
+
+	if ($user) 
+	{
+		$app = new EZAppDotNet();
+		
+		if ($app->getSession()) 
+		{
+			if($query[0] == 'mute')
+			{
+				$app->muteUser($user);
+				twitter_refresh("confirmed/mute/{$user}");
+			} else 
+			{
+				$app->muteUser($user);
+				twitter_refresh("confirmed/unmute/{$user}");
+			}
+
+		}
+
+	}
+}
+
 
 function twitter_spam_page($query)
 {
@@ -1024,22 +1059,18 @@ function adn_users_page($query) {
 		if ($username == null)
 		{
 			// Must be the logged in user.
-			$user = $app->getUser();
-			$user_id = $user['id'];
-		}
-
-		//	Should be /friends/edent/12345 - if user_id not present, find it.
-		if ($user_id == null)
+			$username = "me"; // NOTE! Not "@me"!
+		}else
 		{
-			$user_id = $app->getIdByUsername($username);
+			$username = "@" . $username;
 		}
 		
 		switch ($page_type) {
 			case "friends":
-				$users = $app->getFollowing($user_id);
+				$users = $app->getFollowing($username);
 				break;
 			case "followers":
-				$users = $app->getFollowers($user_id);
+				$users = $app->getFollowers($username);
 				break;
 		}
 	
@@ -1053,7 +1084,7 @@ function adn_users_page($query) {
 }
 
 function twitter_update() {
-	twitter_ensure_post_action();
+	dabr_ensure_post_action();
 	$status = stripslashes(trim($_POST['status']));
 	if ($status) {
 		$app = new EZAppDotNet();
@@ -1139,9 +1170,9 @@ function dabr_replies_page()
 		$content = dabr_post_form();//theme('status_form');
 	
 		// get the current user as JSON
-		$data = $app->getUser();
+		//$data = $app->getUser();
 
-		$stream = $app->getUserMentions($data['id'], array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1476,67 +1507,6 @@ function twitter_user_page($query)
 	$subaction = $query[2];
 	// Get the ID of the post to which we are replying
 	$in_reply_to_id = (string) $query[3];
-		
-	/*
-	$subaction = $query[2];
-	$in_reply_to_id = (string) $query[3];
-	$content = '';
-
-	if (!$screen_name) theme('error', 'No username given');
-
-	// Load up user profile information and one tweet
-	$user = twitter_user_info($screen_name);
-
-	// If the user has at least one tweet
-	if (isset($user->status)) {
-		// Fetch the timeline early, so we can try find the tweet they're replying to
-		$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&include_rts=true&include_entities=true&page=".intval($_GET['page']);
-		$tl = twitter_process($request);
-		$tl = twitter_standard_timeline($tl, 'user');
-	}
-
-	// Build an array of people we're talking to
-	$to_users = array($user->screen_name);
-
-	// Build an array of hashtags being used
-	$hashtags = array();
-
-	// Are we replying to anyone?
-	if (is_numeric($in_reply_to_id)) {
-		$tweet = twitter_find_tweet_in_timeline($in_reply_to_id, $tl);
-		
-		$out = twitter_parse_tags($tweet->text);
-
-		$content .= "<p>In reply to:<br />{$out}</p>";
-
-		if ($subaction == 'replyall') {
-			$found = Twitter_Extractor::create($tweet->text)
-				->extractMentionedUsernames();
-			$to_users = array_unique(array_merge($to_users, $found));
-		}
-				
-		if ($tweet->entities->hashtags) {
-			$hashtags = $tweet->entities->hashtags;
-		}		
-	}
-
-	// Build a status message to everyone we're talking to
-	$status = '';
-	foreach ($to_users as $username) {
-		if (!user_is_current_user($username)) {
-			$status .= "@{$username} ";
-		}
-	}
-
-	// Add in the hashtags they've used
-	foreach ($hashtags as $hashtag) {
-		$status .= "#{$hashtag->text} ";
-	}
-
-	$content .= theme('status_form', $status, $in_reply_to_id);
-	$content .= theme('user_header', $user);
-	$content .= theme('timeline', $tl);
-*/
 
 	$app = new EZAppDotNet();
 
@@ -1548,16 +1518,16 @@ function twitter_user_page($query)
 		$api_start = microtime(1);
 
 		// get the current user as JSON
-		$user_id = $app->getIdByUsername($user_name);
+		//$user_id = $app->getIdByUsername($user_name);
 
 		//	Get the user's name
-		$user = $app->getUser($user_id);
+		$user = $app->getUser("@".$user_name);
 
 		//	Start building the status
-		$status = "@" . $user['username'] . " ";
+		$status = "@" . $user_name . " ";
 
 		// get the user stream early, so we can search for reply to all.
-		$stream = $app->getUserPosts($user_id,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getUserPosts("@" . $user_name,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 		
 		if ($subaction == "reply" || $subaction == "replyall")
 		{
@@ -1631,28 +1601,8 @@ function twitter_mark_favourite_page($query) {
 	twitter_refresh();
 }
 
-function twitter_home_page() {
-/*	user_ensure_authenticated();
-	$perPage = setting_fetch('perPage', 20);
-	$request = API_URL.'statuses/home_timeline.json?include_rts=true&include_entities=true&count='.$perPage;
-
-	if ($_GET['max_id'])
-	{
-		$request .= '&max_id='.$_GET['max_id'];
-	}
-
-	if ($_GET['since_id'])
-	{
-		$request .= '&since_id='.$_GET['since_id'];
-	}
-	//echo $request;
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'friends');
-	$content = theme('status_form');
-	$content .= theme('timeline', $tl);
-	*/
-	
-
+function twitter_home_page() 
+{
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
 
@@ -1669,7 +1619,7 @@ function twitter_home_page() {
 		$api_start = microtime(1);
 	
 		// get the current user as JSON
-		$data = $app->getUser();
+		//$data = $app->getUser();
 
 		//	get the stream
 		$stream = $app->getUserStream(array('count'=>setting_fetch('perPage', 20),'before_id'=>$before_id,'since_id'=>$since_id));
