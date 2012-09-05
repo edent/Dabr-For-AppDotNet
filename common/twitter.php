@@ -803,21 +803,42 @@ function dabr_status_page($query)
 			$api_start = microtime(1);
 
 			//	Get the post
-			$status = $app->getPost($id);			
+			$post = $app->getPost($id);			
 			
 			//	Grab the text before it gets formatted
-			$text = $status['text'];	
+			$text = $post['text'];	
 
-			$content = theme('status', $status);
+			$content = theme('status', $post);
 
 			//	Show a link to the original tweet		
-			$username = $status['user']['username'];
+			$username = $post['user']['username'];
 			$content .= '<p><a href="https://alpha.app.net/' . $username . '/post/' . $id . '" target="'. get_target() . '">View orginal post on AppDotNet</a> | ';
 			
 			//	Translate the tweet
 			$content .= '<a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this post</a></p>';
 			
-			if ($status['reply_to']) 
+			//	Add the reply box
+			//	Text to pre-populate
+			$status = "@" . $post['user']['username'] . " ";
+
+			//	Reply all by default
+			foreach ($post['entities']['mentions'] as $mention)
+			{
+				//	Don't add ourselves in the reply all
+				if (strtolower($mention['name']) !== strtolower(user_current_username()))
+					$status .= "@" . $mention['name'] . " ";	
+			}
+
+			// Add in the hashtags they've used
+			foreach ($post['entities']['hashtags'] as $hashtag) 
+			{
+				$status .= "#" . $hashtag['name'] . " ";
+			}
+
+			// Create the form where users can enter text
+			$content .= dabr_post_form($status, $id);
+
+			if ($post['reply_to']) 
 			{
 				$thread = array_reverse($app->getPostReplies($id, array('count'=>setting_fetch('perPage', 20))));//twitter_thread_timeline($id);
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
@@ -1122,7 +1143,7 @@ function twitter_update() {
 		$app = new EZAppDotNet();
 		if ($app->getSession()) {
 			$in_reply_to_id = (string) $_POST['in_reply_to_id'];
-			$app->createPost($status,$in_reply_to_id);
+			$app->createPost($status,array('reply_to' => $in_reply_to_id));
 		}
 	}
 		/*
@@ -1780,17 +1801,22 @@ function theme_status_form($text = '', $in_reply_to_id = NULL)
 {
 	if (user_is_authenticated()) 
 	{
-		$icon = "images/twitter-bird-16x16.png";
-
 		//	adding ?status=foo will automaticall add "foo" to the text area.
 		if ($_GET['status'])
 		{
 			$text = $_GET['status'];
 		}
+
+		if ($in_reply_to_id !== NULL)
+		{
+			$title = "Reply on App.net";
+		} else {
+			$title = "Post to App.net";
+		}
 		
 		return "<fieldset>
 					<legend>
-						&alpha; Post to App.Net
+						&alpha; {$title}
 					</legend>
 					<form method='post' action='update'>
 						<input name='status' value='{$text}' maxlength='256' />
@@ -1838,10 +1864,17 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 		{
 			$text = $_GET['status'];
 		}
+
+		if ($in_reply_to_id !== NULL)
+		{
+			$title = "Reply on App.net";
+		} else {
+			$title = "Post to App.net";
+		}
 		
 		return "<fieldset>
 					<legend>
-						<strong>&alpha;</strong> Post to App.Net
+						<strong>&alpha;</strong> {$title}
 					</legend>
 				
 					<form method=\"post\" action=\"update\">
@@ -1861,9 +1894,6 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 }
 
 function theme_status($status) {
-	//32bit int / snowflake patch
-	if($status->id_str) $status->id = $status->id_str;
-	
 	$feed[] = $status;
 	$tl = twitter_standard_timeline($feed, 'status');
 	$content = theme('timeline', $tl);
@@ -1898,6 +1928,7 @@ function dabr_retweet_page($query)
 	$content .= "<p>Repost:</p>
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
+						<input name='in_reply_to_id' value='$id' type='hidden' />
 						<textarea name='status' style='width:90%; max-width: 400px;' rows='6' id='status'>$text</textarea>
 						<br/>
 						<input type='submit' value='Repost' />
@@ -2359,11 +2390,13 @@ function theme_timeline($feed)
 	else if (!$hide_pagination)  // Don't show pagination if there's only one item
 	{
 */		//	Get the IDs of the first and last statuses
+	if (!$hide_pagination)
+	{
 		$last = end($feed);
 		$first = reset($feed);
 
 		$content .= theme_pagination($last['id'],$first['id']);//'<p>'.implode(' | ', $links).'</p>';
-//	}
+	}
 
 	return $content;
 }
@@ -2566,35 +2599,6 @@ function theme_pagination($before_id=null,$since_id=null)
 		
 		return '<p>'.implode(' | ', $links).'</p>';
 	}
-/*
-	$page = intval($_GET['page']);
-	if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches))
-	{
-		$query = $matches[0];
-	}
-	if ($page == 0) $page = 1;
-	$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query'>Older</a>";
-	if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query'>Newer</a>";
-	return '<p>'.implode(' | ', $links).'</p>';
-
-	 if ($_GET['max_id'])
-	 {
-		$id = intval($_GET['max_id']);
-		}
-		elseif ($_GET['since_id'])
-		{
-		$id = intval($_GET['since_id']);
-		}
-		else
-		{
-		$id = 17090863233;
-		}
-
-		$links[] = "<a href='{$_GET['q']}?max_id=$id' accesskey='9'>Older</a> 9";
-		$links[] = "<a href='{$_GET['q']}?since_id=$id' accesskey='8'>Newer</a> 8";
-
-		return '<p>'.implode(' | ', $links).'</p>';
-		*/
 }
 
 
@@ -2611,14 +2615,14 @@ function theme_action_icons($status)
 	$actions = array();
 
 	//	Reply
-	$actions[] = theme('action_icon', "user/{$from}/reply/{$status['id']}", "images/reply{$L}.png", '@');
-
+	$actions[] = theme('action_icon', "status/{$status['id']}", "images/reply{$L}.png", '@');
+/*
 	//	Reply All functionality.
 	if( $status['entities']['mentions'] )
 	{
 		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status['id']}", "images/replyall{$L}.png", 'REPLY ALL');
 	}
-
+*/
 	//	Re-post	
 	$actions[] = theme('action_icon', "retweet/{$status['id']}", "images/retweet{$L}.png", 'RT');
 
