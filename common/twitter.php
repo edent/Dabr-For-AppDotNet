@@ -838,7 +838,7 @@ function dabr_status_page($query)
 			// Create the form where users can enter text
 			$content .= dabr_post_form($status, $id);
 
-			if ($post['reply_to']) 
+			if ($post['thread_id']) 
 			{
 				$thread = array_reverse($app->getPostReplies($id, array('count'=>setting_fetch('perPage', 20))));//twitter_thread_timeline($id);
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
