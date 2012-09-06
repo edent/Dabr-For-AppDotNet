@@ -718,6 +718,101 @@ function twitter_parse_tags($input, $entities = false) {
 	return $out;
 }
 
+function dabr_parse_tags($input, $entities = false) 
+{	
+	$out = $input;
+
+	if (!entities)	// Use the Autolink.
+	{
+		//	Hashtags and @ are internal links
+		$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToHashtags();
+		$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToUsernamesAndLists();
+		
+		//	URLs are external links
+		$out = Twitter_Autolink::create($out)->setExternal(true)->setNoFollow(true)->setTarget(true)->addLinksToURLs();
+	} else
+	{
+		$entities_array = array();
+
+		//	Place the mention, hashtag, and link entities in the array. The key will be their position
+		$offset = 0;
+
+		foreach ($entities as $entity) 
+		{
+			foreach ($entity as $item) 
+			{
+				$position = $item['pos'];
+				$entities_array[$position] = $item;
+			}
+			
+		}
+		
+		//	Sort the array by key. First entity will be first, etc.
+		ksort($entities_array);
+
+		foreach ($entities_array as $item) 
+		{
+			if($item['id']) //	A user
+			{
+				$username = $item['name'];
+				$position = $item['pos'];
+				$length = $item['len'];
+				$userURL = '@<a href="' . BASE_URL . 'user/' . $username . '">' . $username . '</a>';
+				
+				$newPosition = ($position + $offset);
+				
+				//	PHP doesn't have a multibyte substr replace!
+				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
+				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
+
+				$out = $startString . $userURL . $endString;
+
+				//	Calculate the new offset		
+				$offset += mb_strlen($userURL, "UTF-8") - $length;
+			} else if($item['text']) //	A url
+			{
+				$display = $item['text'];
+				$position = $item['pos'];
+				$length = $item['len'];
+				$url = $item['url'];
+				$linkURL = "<a href=\"{$url}\">{$display}</a>";
+				
+				$newPosition = ($position + $offset);
+				
+				//	PHP doesn't have a multibyte substr replace!
+				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
+				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
+
+				$out = $startString . $linkURL . $endString;
+
+				//	Calculate the new offset
+				$offset += mb_strlen($linkURL, "UTF-8") - $length;
+			} else {
+				$hashtag = $item['name'];	//	A hashtag
+				$position = $item['pos'];
+				$length = $item['len'];
+				$hashtagURL = '#<a href="' . BASE_URL . 'hash/' . $hashtag . '">' . $hashtag . '</a>';
+				
+				$newPosition = ($position + $offset);
+				
+				//	PHP doesn't have a multibyte substr replace!
+				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
+				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
+
+				$out = $startString . $hashtagURL . $endString;
+
+				//	Calculate the new offset
+				$offset += mb_strlen($hashtagURL, "UTF-8") - $length;
+			}		
+		}
+	}
+
+	//	Linebreaks.  Some clients insert \n for formatting.
+	$out = nl2br($out);
+
+	//Return the completed string
+	return $out;
+}
 
 function format_interval($timestamp, $granularity = 2) {
 	$units = array(
@@ -803,7 +898,10 @@ function dabr_status_page($query)
 			$api_start = microtime(1);
 
 			//	Get the post
-			$post = $app->getPost($id);			
+			$post = $app->getPost($id);	
+
+			//	Get the Thread 
+			$thread_id = $post['thread_id'];
 			
 			//	Grab the text before it gets formatted
 			$text = $post['text'];	
@@ -838,9 +936,10 @@ function dabr_status_page($query)
 			// Create the form where users can enter text
 			$content .= dabr_post_form($status, $id);
 
-			if ($post['thread_id']) 
+			//	If this isn't the head of the thread, show the thread. If this is the head of the thread, only show if there are replies
+			if ($thread_id != $id || $post['num_replies'] > 0) 
 			{
-				$thread = array_reverse($app->getPostReplies($id, array('count'=>setting_fetch('perPage', 20))));//twitter_thread_timeline($id);
+				$thread = array_reverse($app->getPostReplies($thread_id, array('count'=>setting_fetch('perPage', 20))));
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
 			}
 			
@@ -2263,7 +2362,7 @@ function theme_timeline($feed)
 	// Add the hyperlinks *BEFORE* adding images
 	foreach ($feed as &$status)
 	{
-		$status['html'] = twitter_parse_tags($status['text'], $status['entities']);
+		$status['html'] = dabr_parse_tags($status['text'], $status['entities']);
 	}
 	unset($status);
 	
