@@ -767,7 +767,9 @@ function dabr_parse_tags($input, $entities = false)
 				$username = $item['name'];
 				$position = $item['pos'];
 				$length = $item['len'];
-				$userURL = '@<a href="' . BASE_URL . 'user/' . $username . '">' . $username . '</a>';
+				$userURL = '@' . chr(91). 'a href="' . BASE_URL . 'user/' . $username . '"' .chr(92) . 
+								$username . 
+							chr(91). '/a'. chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 
@@ -781,7 +783,9 @@ function dabr_parse_tags($input, $entities = false)
 				$position = $item['pos'];
 				$length = $item['len'];
 				$url = $item['url'];
-				$linkURL = "<a href=\"{$url}\" rel=\"external\" target=\"_blank\">{$display}</a>";
+				$linkURL = 	chr(91) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(92) .
+								"{$display}" . 
+							chr(91) . "/a" . chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 				
@@ -793,7 +797,9 @@ function dabr_parse_tags($input, $entities = false)
 				$hashtag = $item['name'];	//	A hashtag
 				$position = $item['pos'];
 				$length = $item['len'];
-				$hashtagURL = '#<a href="' . BASE_URL . 'hash/' . $hashtag . '">' . $hashtag . '</a>';
+				$hashtagURL = 	'#' . chr(91) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(92) . 
+									$hashtag . 
+								chr(91) . '/a' . chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 				
@@ -804,6 +810,13 @@ function dabr_parse_tags($input, $entities = false)
 			}		
 		}
 	}
+
+	//	Make the string safe to display
+	$out = htmlspecialchars($out, ENT_NOQUOTES, 'UTF-8');
+
+	//	Replace the control characters so that *our* markup stays present.
+	$out = str_replace(chr(91), "<", $out);
+	$out = str_replace(chr(92), ">", $out);			
 
 	//	Linebreaks.  Some clients insert \n for formatting.
 	$out = nl2br($out);
