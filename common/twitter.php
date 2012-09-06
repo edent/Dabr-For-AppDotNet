@@ -718,6 +718,16 @@ function twitter_parse_tags($input, $entities = false) {
 	return $out;
 }
 
+function utf8_substr_replace($original, $replacement, $position, $length)
+{
+	$startString = mb_substr($original, 0, $position, "UTF-8");
+	$endString = mb_substr($original, $position + $length, mb_strlen($original), "UTF-8");
+
+	$out = $startString . $replacement . $endString;
+
+	return $out;
+}
+
 function dabr_parse_tags($input, $entities = false) 
 {	
 	$out = $input;
@@ -760,12 +770,8 @@ function dabr_parse_tags($input, $entities = false)
 				$userURL = '@<a href="' . BASE_URL . 'user/' . $username . '">' . $username . '</a>';
 				
 				$newPosition = ($position + $offset);
-				
-				//	PHP doesn't have a multibyte substr replace!
-				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
-				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
 
-				$out = $startString . $userURL . $endString;
+				$out = utf8_substr_replace($out, $userURL, $newPosition, $length);
 
 				//	Calculate the new offset		
 				$offset += mb_strlen($userURL, "UTF-8") - $length;
@@ -775,15 +781,11 @@ function dabr_parse_tags($input, $entities = false)
 				$position = $item['pos'];
 				$length = $item['len'];
 				$url = $item['url'];
-				$linkURL = "<a href=\"{$url}\">{$display}</a>";
+				$linkURL = "<a href=\"{$url}\" rel=\"external\" target=\"_blank\">{$display}</a>";
 				
 				$newPosition = ($position + $offset);
 				
-				//	PHP doesn't have a multibyte substr replace!
-				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
-				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
-
-				$out = $startString . $linkURL . $endString;
+				$out = utf8_substr_replace($out, $linkURL, $newPosition, $length);
 
 				//	Calculate the new offset
 				$offset += mb_strlen($linkURL, "UTF-8") - $length;
@@ -795,11 +797,7 @@ function dabr_parse_tags($input, $entities = false)
 				
 				$newPosition = ($position + $offset);
 				
-				//	PHP doesn't have a multibyte substr replace!
-				$startString = mb_substr($out, 0, $newPosition, "UTF-8");
-				$endString = mb_substr($out, $newPosition + $length, mb_strlen($out), "UTF-8");
-
-				$out = $startString . $hashtagURL . $endString;
+				$out = utf8_substr_replace($out, $hashtagURL, $newPosition, $length);
 
 				//	Calculate the new offset
 				$offset += mb_strlen($hashtagURL, "UTF-8") - $length;
@@ -2062,7 +2060,7 @@ function dabr_user_bio($user)
 	$bio = "";
 
 	if($user['description']['text'] != "")
-			$bio .= twitter_parse_tags($user['description']['text']) . "<br />";
+			$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . "<br />";
 		
 	$bio .= "Joined on " . $date_joined . " - ";
 	$bio .= pluralise('post', (int)$user['counts']['posts'], true) . " ";
