@@ -377,10 +377,13 @@ class AppDotNet {
 	/**
 	 * Returns a specific Post.
 	 * @param integer $post_id The ID of the post to retrieve
+	 * @param array $params An associative array of optional general parameters. 
+	 * This will likely change as the API evolves, as of this writing allowed keys 
+	 * are: include_annoations.
 	 * @return array An associative array representing the post
 	 */
-	public function getPost($post_id=null) {
-		return $this->httpGet($this->_baseUrl.'posts/'.urlencode($post_id));
+	public function getPost($post_id=null,$params = array()) {
+		return $this->httpGet($this->_baseUrl.'posts/'.urlencode($post_id).'?'.$this->buildQueryString($params));
 	}
 
 	/**
@@ -574,6 +577,40 @@ class AppDotNet {
 	 */
 	public function getMuted() {
 		return $this->httpGet($this->_baseUrl.'users/me/muted');
+	}
+
+	/**
+	* Star a post
+	* @param integer $post_id The post ID to star
+	*/
+	public function starPost($post_id=null) {
+		return $this->httpPost($this->_baseUrl.'posts/'.urlencode($post_id).'/star');
+	}
+
+	/**
+	* Unstar a post
+	* @param integer $post_id The post ID to unstar
+	*/
+	public function unstarPost($post_id=null) {
+		return $this->httpDelete($this->_baseUrl.'posts/'.urlencode($post_id).'/star');
+	}
+
+	/**
+	* List the posts starred by the current user
+	* @return array An array of associative arrays, each representing a single 
+	* user who has starred a post
+	*/
+	public function getStarred($user_id='me') {
+		return $this->httpGet($this->_baseUrl.'users/'.urlencode($user_id).'/stars');
+	}
+
+	/**
+	* List the users who have starred a post
+	* @param integer $post_id the post ID to get stars from
+	* @return array An array of associative arrays, each representing one user.
+	*/
+	public function getStars($post_id=null) {
+		return $this->httpGet($this->_baseUrl.'posts/'.$post_id.'/stars');
 	}
 
 	public function getLastRequest() {

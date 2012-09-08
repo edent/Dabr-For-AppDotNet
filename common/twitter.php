@@ -33,17 +33,22 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'dabr_global_page',
 	),
-/*	'favourite' => array(
+	'star' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_mark_favourite_page',
+		'callback' => 'dabr_star_page',
 	),
-	'unfavourite' => array(
+	'unstar' => array(
 		'hidden' => true,
 		'security' => true,
-		'callback' => 'twitter_mark_favourite_page',
+		'callback' => 'dabr_star_page',
 	),
-	'directs' => array(
+	'stars' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'dabr_stars_page',
+	),
+/*	'directs' => array(
 		'security' => true,
 		'callback' => 'twitter_directs_page',
 		'accesskey' => '2',
@@ -102,22 +107,22 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'twitter_spam_page',
 	),
-	/*'favourites' => array(
+	'starred' => array(
 		'security' => true,
-		'callback' =>  'twitter_favourites_page',
-	),*/
+		'callback' =>  'dabr_starred_page',
+	),
 	'followers' => array(
 		'security' => true,
-		'callback' => 'adn_users_page',
+		'callback' => 'dabr_users_page',
 	),
 	'friends' => array(
 		'security' => true,
-		'callback' => 'adn_users_page',
+		'callback' => 'dabr_users_page',
 	),
 	'muted' => array(
 		'hidden' => false,
 		'security' => true,
-		'callback' => 'adn_users_page',
+		'callback' => 'dabr_users_page',
 	),
 	'delete' => array(
 		'hidden' => true,
@@ -1197,7 +1202,7 @@ function dabr_confirmed_page($query)
  	theme ('Page', 'Confirmed', $content);
 }
 
-function adn_users_page($query) {
+function dabr_users_page($query) {
 	
 	//friends, followers, something else?
 	$page_type = $query[0]; 
@@ -1206,7 +1211,7 @@ function adn_users_page($query) {
 	$username = $query[1];
 
 	// Belt & Braces :-)
-	$user_id = $query[2];
+	$id = $query[2];
 	
 	$app = new EZAppDotNet();
 	if ($app->getSession()) 
@@ -1231,10 +1236,12 @@ function adn_users_page($query) {
 			case "followers":
 				$users = $app->getFollowers($username);
 				break;
+			case "starred":
+				$users = $app->getStars($id);
+				break;
 			case "muted":
 				$users = $app->getMuted(); // Can only get the current user's muted list
 				break;
-
 		}
 	
 		//	Track how long the API call took
@@ -1245,6 +1252,31 @@ function adn_users_page($query) {
 		theme('page', $page_type, $content);
 	}
 }
+
+
+function dabr_stars_page($query) 
+{	
+	// Which post are looking for?
+	$id = $query[1];
+
+	$app = new EZAppDotNet();
+	if ($app->getSession()) 
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		$users = $app->getStars($id);
+	
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
+
+		// Format the output
+		$content = theme('users', $users);
+		theme('page', $page_type, $content);
+	}
+}
+
 
 function twitter_update() {
 	dabr_ensure_post_action();
@@ -1353,6 +1385,49 @@ function dabr_replies_page()
 
 }
 
+function dabr_starred_page($query) 
+{
+	$perPage = setting_fetch('perPage', 20);	
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+	
+	$username = $query[1];
+
+	if ($username == null)
+	{
+		// Must be the logged in user.
+		$username = "me"; // NOTE! Not "@me"!
+	}else
+	{
+		$username = "@" . $username;
+	}
+
+	$app = new EZAppDotNet();
+
+	// check that the user is signed in
+	if ($app->getSession()) 
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		$stream = $app->getStarred($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
+		
+		//print_r($stream);
+		$content .= theme('timeline', $stream);
+			
+		theme('page', 'Posts Starred by ' . $username, $content);
+	// otherwise prompt to sign in
+	} else {
+		$url = $app->getAuthUrl();
+		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
+		$content .= about_page();
+	}
+
+}
 
 function dabr_global_page() 
 {
@@ -1764,6 +1839,24 @@ function twitter_mark_favourite_page($query) {
 	twitter_refresh();
 }
 
+function dabr_star_page($query) 
+{
+	$id = (string) $query[1];
+
+	$app = new EZAppDotNet();
+	
+	if ($app->getSession())
+	{
+		if ($query[0] == 'unstar') 
+		{
+			$app->unstarPost($id);
+		} else {
+			$app->starPost($id);
+		}	
+		twitter_refresh();
+	}
+}
+
 function twitter_home_page() 
 {
 	$before_id = $_GET['before_id'];
@@ -2113,6 +2206,7 @@ function dabr_user_actions($user, $link=TRUE)
 	{
 		$actions .= "<a href='followers/{$username}'>" . pluralise('follower', $user['counts']['followers'], true) . "</a>";
 		$actions .= " | <a href='friends/{$username}'>" . pluralise('friend', $user['counts']['following'], true) . "</a>";
+		$actions .= " | <a href='starred/{$username}'>Starred Posts</a>";
 		
 		//	User cannot perform certain actions on herself
 		if (strtolower($username) !== strtolower(user_current_username())) 
@@ -2652,7 +2746,7 @@ function theme_get_full_avatar($object) {
 }
 
 function theme_no_tweets() {
-	return '<p>No tweets to display.</p>';
+	return '<p>No posts to display.</p>';
 }
 
 function theme_search_results($feed) {
@@ -2735,6 +2829,22 @@ function theme_action_icons($status)
 */
 	//	Re-post	
 	$actions[] = theme('action_icon', "retweet/{$status['id']}", "images/retweet{$L}.png", 'RT');
+
+	//	Star
+	if ($status['you_starred']) 
+	{
+		$actions[] = theme('action_icon', "unstar/{$status['id']}", "images/star{$L}.png", 'STARRED');
+	} else {
+		$actions[] = theme('action_icon', "star/{$status['id']}", "images/star_grey{$L}.png", 'UNSTAR');
+	}
+
+	if ($status['num_stars']>0)
+	{
+		$actions[] = "<a href=stars/{$status['id']}>{$status['num_stars']}</a>";	
+	}
+
+
+	
 
 	// Delete
 	if (user_is_current_user($from))
