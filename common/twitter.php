@@ -772,9 +772,9 @@ function dabr_parse_tags($input, $entities = false)
 				$username = $item['name'];
 				$position = $item['pos'];
 				$length = $item['len'];
-				$userURL = '@' . chr(91). 'a href="' . BASE_URL . 'user/' . $username . '"' .chr(92) . 
+				$userURL = '@' . chr(7). 'a href="' . BASE_URL . 'user/' . $username . '"' .chr(27) . 
 								$username . 
-							chr(91). '/a'. chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
+							chr(7). '/a'. chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 
@@ -788,9 +788,9 @@ function dabr_parse_tags($input, $entities = false)
 				$position = $item['pos'];
 				$length = $item['len'];
 				$url = $item['url'];
-				$linkURL = 	chr(91) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(92) .
+				$linkURL = 	chr(7) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(27) .
 								"{$display}" . 
-							chr(91) . "/a" . chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
+							chr(7) . "/a" . chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 				
@@ -802,9 +802,9 @@ function dabr_parse_tags($input, $entities = false)
 				$hashtag = $item['name'];	//	A hashtag
 				$position = $item['pos'];
 				$length = $item['len'];
-				$hashtagURL = 	'#' . chr(91) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(92) . 
+				$hashtagURL = 	'#' . chr(7) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(27) . 
 									$hashtag . 
-								chr(91) . '/a' . chr(92);	// Using ASCII controll characters so our < & > don't get eaten later
+								chr(7) . '/a' . chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
 				
 				$newPosition = ($position + $offset);
 				
@@ -820,8 +820,8 @@ function dabr_parse_tags($input, $entities = false)
 	$out = htmlspecialchars($out, ENT_NOQUOTES, 'UTF-8');
 
 	//	Replace the control characters so that *our* markup stays present.
-	$out = str_replace(chr(91), "<", $out);
-	$out = str_replace(chr(92), ">", $out);			
+	$out = str_replace(chr(7), "<", $out);
+	$out = str_replace(chr(27), ">", $out);			
 
 	//	Linebreaks.  Some clients insert \n for formatting.
 	$out = nl2br($out);
@@ -1411,7 +1411,7 @@ function dabr_starred_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$stream = $app->getStarred($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->cded($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
