@@ -1411,7 +1411,7 @@ function dabr_starred_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$stream = $app->cded($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getStarred($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
