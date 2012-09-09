@@ -297,10 +297,15 @@ function embedly_embed_thumbnails(&$feed)
 	{
 		if ($thumb = $oembeds[$index]->thumbnail_url) 
 		{
-			$html = theme('external_link', urldecode($url), "<img src='" . IMAGE_PROXY_URL . "x50/" . $thumb . "' />");
+			$html = "</span>
+			<span class=\"embed\">
+				<a href=\"" . urldecode($url) . "\" rel=\"external\" target=\"_blank\">
+					<img src='" . IMAGE_PROXY_URL . "x50/" . $thumb . "' class=\"embeded\" />
+				</a>"; 	
+				//	Span will be closed in theme
 			foreach ($matched_urls[$url] as $statusId) 
 			{
-				$feed[$statusId]['html'] =  $feed[$statusId]['html'] . '<br />' . $html;
+				$feed[$statusId]['html'] =  $feed[$statusId]['html'] . $html;
 			}
 		}
 	}
