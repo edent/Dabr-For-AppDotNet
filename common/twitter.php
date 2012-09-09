@@ -914,7 +914,7 @@ function dabr_status_page($query)
 			$api_start = microtime(1);
 
 			//	Get the post
-			$post = $app->getPost($id);	
+			$post = $app->getPost($id, array('include_annotations' => 1));	
 
 			//	Get the Thread 
 			$thread_id = $post['thread_id'];
@@ -955,7 +955,13 @@ function dabr_status_page($query)
 			//	If this isn't the head of the thread, show the thread. If this is the head of the thread, only show if there are replies
 			if ($thread_id != $id || $post['num_replies'] > 0) 
 			{
-				$thread = array_reverse($app->getPostReplies($thread_id, array('count'=>setting_fetch('perPage', 20))));
+				$thread = array_reverse($app->getPostReplies($thread_id, 
+												array(
+													'count'=>setting_fetch('perPage', 20),
+													'include_annotations' => 1
+													)
+												)
+										);
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
 			}
 			
@@ -1367,7 +1373,13 @@ function dabr_replies_page()
 		// get the current user as JSON
 		//$data = $app->getUser();
 
-		$stream = $app->getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getUserMentions('me', array(
+												'count'=>$perPage,
+												'before_id'=>$before_id,
+												'since_id'=>$since_id,
+												'include_annotations' => 1
+												)
+										);
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1730,7 +1742,7 @@ function dabr_find_post_in_timeline($id, $stream)
 		// Not found, fetch it specifically from the API
 		if ($app->getSession()) 
 		{
-			$found_post = $app->getPost($id);
+			$found_post = $app->getPost($id, array('include_annotations' => 1));
 		}
 	}
 	
@@ -1765,7 +1777,14 @@ function twitter_user_page($query)
 		$status = "@" . $user_name . " ";
 
 		// get the user stream early, so we can search for reply to all.
-		$stream = $app->getUserPosts("@" . $user_name,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getUserPosts("@" . $user_name,
+										array(
+											'count'=>$perPage,
+											'before_id'=>$before_id,
+											'since_id'=>$since_id, 
+											'include_annotations'=>1
+										)
+									);
 		
 		if ($subaction == "reply" || $subaction == "replyall")
 		{
@@ -1918,11 +1937,13 @@ function dabr_raw_page($query) {
 			// Dump the post to screen
 			//print_r($app->getPost($query[1]));
 			//$thread = $app->getPost($query[1]);
-			$thread = $app->getPostReplies($query[1],array('count'=>200));
-			$thread[] = $app->getPost($query[1]);
-			print_r($thread);
-
-			echo json_encode($thread);
+			$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
+			$thread[] = $app->getPost($query[1],array('include_annotations' => 1));
+			echo "<pre>";
+				print_r($thread);
+			
+				echo json_encode($thread);
+			echo "/<pre>";
 		}
 	}
 }
@@ -1935,8 +1956,8 @@ function dabr_hyper_page($query)
 		$app = new EZAppDotNet();
 		if ($app->getSession()) 
 		{
-			$thread = $app->getPostReplies($query[1],array('count'=>200));
-			$thread[] = $app->getPost($query[1]);
+			$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
+			$thread[] = $app->getPost($query[1], array('include_annotations' => 1));
 
 			$json_string = json_encode($thread);
 
@@ -2117,7 +2138,7 @@ function dabr_retweet_page($query)
 			global $api_time;
 			$api_start = microtime(1);
 
-			$post = $app->getPost($id);
+			$post = $app->getPost($id,array('include_annotations' => 1));
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -2557,6 +2578,11 @@ function theme_timeline($feed)
 			if ($status['reply_to'])
 			{
 				$conversation .= "| <a href='status/{$status['reply_to']}'>View Conversation</a>";
+			}
+
+			if ($status['annotations'])
+			{
+				$conversation .= " | <a href='raw/{$status['id']}'>View Annotations</a>";
 			}
 
 			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
