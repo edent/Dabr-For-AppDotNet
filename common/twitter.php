@@ -1289,11 +1289,45 @@ function twitter_update() {
 	$status = stripslashes(trim($_POST['status']));
 	if ($status) {
 		$app = new EZAppDotNet();
-		if ($app->getSession()) {
+		if ($app->getSession()) 
+		{
 			$in_reply_to_id = (string) $_POST['in_reply_to_id'];
-			$app->createPost($status,array('reply_to' => $in_reply_to_id));
+
+			// Geolocation parameters
+			list($lat, $long) = explode(',', $_POST['location']);
+			$annotations;
+			if (is_numeric($lat) && is_numeric($long)) 
+			{
+				$post_data['lat'] = $lat;
+				$post_data['long'] = $long;
+			
+				$locationValues = array(
+										"latitude" => $lat,
+										"longitude" => $long,
+										"altitude" => 0, 
+										"horizontal_accuracy" => 0, 
+										"vertical_accuracy" => 0
+									);
+
+				$locationAnnotation =  array(	"type" => "net.app.core.geolocation",
+												"value" => $locationValues
+											);
+
+				$annotations[] = $locationAnnotation;
+
+				$app->createPost($status,array('reply_to' => $in_reply_to_id, 'annotations' =>$annotations));
+			}
+			else{
+				$app->createPost($status,array('reply_to' => $in_reply_to_id));	
+			}
+			
 		}
 	}
+
+
+
+	
+
 		/*
 
 		$request = API_URL.'statuses/update.json';
@@ -1462,7 +1496,7 @@ function dabr_global_page()
 		$content = dabr_post_form();
 	
 		// get the latest public posts
-		$stream = $app->getPublicPosts(array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getPublicPosts(array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id,'include_annotations'=>1));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1897,7 +1931,7 @@ function twitter_home_page()
 		//$data = $app->getUser();
 
 		//	get the stream
-		$stream = $app->getUserStream(array('count'=>setting_fetch('perPage', 20),'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getUserStream(array('count'=>setting_fetch('perPage', 20),'before_id'=>$before_id,'since_id'=>$since_id,'include_annotations' => 1));
 		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -2076,7 +2110,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 					document.getElementById("lblGeo").innerHTML = msg;
 				}
 				function geoSuccess(position) {
-					geoStatus("Share my <a href=\'http://maps.google.co.uk/m?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=\'blank\'>location</a>");
+					geoStatus("Share my <a href=\'http://maps.google.co.uk/?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=\'blank\'>location</a>");
 					chkbox.value = position.coords.latitude + "," + position.coords.longitude;
 				}
 			</script>';
@@ -2846,13 +2880,7 @@ function theme_action_icons($status)
 
 	//	Reply
 	$actions[] = theme('action_icon', "status/{$status['id']}", "images/reply{$L}.png", '@');
-/*
-	//	Reply All functionality.
-	if( $status['entities']['mentions'] )
-	{
-		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status['id']}", "images/replyall{$L}.png", 'REPLY ALL');
-	}
-*/
+
 	//	Re-post	
 	$actions[] = theme('action_icon', "retweet/{$status['id']}", "images/retweet{$L}.png", 'RT');
 
@@ -2869,23 +2897,26 @@ function theme_action_icons($status)
 		$actions[] = "<a href=stars/{$status['id']}>{$status['num_stars']}</a>";	
 	}
 
-
-	
-
 	// Delete
 	if (user_is_current_user($from))
 	{
 		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", "images/trash{$L}.png", 'DEL');
 	}
 
-/*	if ($geo !== null)
+	//	Map
+	if ($status['annotations'] > 0)
 	{
-		$latlong = $geo->coordinates;
-		$lat = $latlong[0];
-		$long = $latlong[1];
-		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", 'images/map.png', 'MAP');
+		foreach($status['annotations'] as $annotation) 
+		{
+			if ($annotation['type'] == "net.app.core.geolocation")
+			{
+				$lat = $annotation['value']['latitude'];
+				$long = $annotation['value']['longitude'];
+				$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", "images/map{$L}.png", 'MAP');
+			}
+		}
 	}
-*/
+
 	//	Search for @ to a user
 	$actions[] = theme('action_icon',"search?query=%40{$from}","images/q{$L}.png",'?');
 
