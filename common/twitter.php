@@ -1457,7 +1457,7 @@ function dabr_starred_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$stream = $app->getStarred($username);//getUserMentions('me', array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+		$stream = $app->getStarred($username, array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id, 'include_annotations'=>1));
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1714,7 +1714,13 @@ function dabr_hashtag_page($query)
 			$api_start = microtime(1);
 
 			//	Search for hashtags
-			$stream = $app->searchHashtags($hashtag,array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id));
+			$stream = $app->searchHashtags($hashtag, 
+											array('count'=>$perPage,
+												'before_id'=>$before_id,
+												'since_id'=>$since_id, 
+												'include_annotations'=>1
+											)
+										);
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -2324,7 +2330,7 @@ function theme_avatar($url, $force_large = TRUE)
 {
 	$size = $force_large ? 48 : 24;
 
-	return "<img src=\"" . IMAGE_PROXY_URL . "$size/$size/$url\" height='$size' width='$size' />";
+	return "<img src=\"$url?w=$size\" height='$size' width='$size' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -2798,7 +2804,7 @@ function theme_full_name($user) {
 function theme_get_avatar($object) 
 {
 	$avatar_url = $object['avatar_image']['url'];
-	return IMAGE_PROXY_URL . "png/48/48/" . $avatar_url;
+	return $avatar_url . "?w=48";
 }
 
 function theme_get_full_avatar($object) {
