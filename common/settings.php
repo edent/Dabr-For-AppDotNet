@@ -150,7 +150,7 @@ function settings_page($args) {
 					</p>';
 	$content .= '	<p>
 						<label>
-							<input type="checkbox" name="timestamp" value="yes" '. (setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .' /> Show the timestamp ' . twitter_date('H:i') . ' instead of 25 sec ago
+							<input type="checkbox" name="timestamp" value="yes" '. (setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .' /> Show the timestamp ' . dabr_date('H:i') . ' instead of 25 sec ago
 						</label>
 					</p>';
 	$content .= '	<p>
@@ -159,7 +159,7 @@ function settings_page($args) {
 						</label>
 					</p>';
 	$content .= '	<p>
-						<label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . twitter_date('H:i') . '.<br />
+						<label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br />
 							It is worth adjusting this value if the time appears to be wrong.
 						</label>
 					</p>';
