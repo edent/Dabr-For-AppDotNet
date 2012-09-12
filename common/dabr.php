@@ -565,7 +565,7 @@ function dabr_confirmed_page($query)
 			case 'mute':
 				$content  = "<p>
 								<span class='avatar'>
-									<img src='images/dabr.png' width='48' height='48' />
+									<img src='images/dabr.png' width='48' height='48' alt='Dabr Muted Icon' />
 								</span>
 								<span class='status shift'>
 									Shhhhhh $target! You are now <strong>muted</strong>.
@@ -575,7 +575,7 @@ function dabr_confirmed_page($query)
 			case 'unmute':
 				$content  = "<p>
 								<span class='avatar'>
-									<img src='images/dabr.png' width='48' height='48' />
+									<img src='images/dabr.png' width='48' height='48' alt='Dabr Unmuted Icon' />
 								</span>
 								<span class='status shift'>
 									Hello again $target - you have been <strong>unmuted</strong>.
@@ -583,7 +583,14 @@ function dabr_confirmed_page($query)
 							</p>";
 				break;
 			case 'spam':
-				$content = "<p><span class='avatar'><img src='images/dabr.png' width='48' height='48' /></span><span class='status shift'>Yum! Yum! Yum! Delicious spam! Goodbye @$target.</span></p>";
+				$content = "<p>
+								<span class='avatar'>
+									<img src='images/dabr.png' width='48' height='48' alt='Dabr Spam Icon'/>
+								</span>
+								<span class='status shift'>
+									Yum! Yum! Yum! Delicious spam! Goodbye @$target.
+								</span>
+							</p>";
 				break;
 		}
  	theme ('Page', 'Confirmed', $content);
@@ -745,9 +752,7 @@ function dabr_replies_page()
 		theme('page', 'Replies', $content);
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 }
@@ -789,9 +794,7 @@ function dabr_starred_page($query)
 		theme('page', 'Posts Starred by ' . $username, $content);
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 }
@@ -828,9 +831,7 @@ function dabr_global_page()
 		theme('page', 'Global', $content);
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 }
@@ -934,9 +935,7 @@ function dabr_hashtag_page($query)
 		}
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 	theme('page', $page_title, $content);
@@ -1047,9 +1046,7 @@ function dabr_user_page($query)
 		theme('page', $page_title, $content);
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 	theme('page', "User {$screen_name}", $content);
@@ -1105,9 +1102,7 @@ function dabr_home_page()
 
 	// otherwise prompt to sign in
 	} else {
-		$url = $app->getAuthUrl();
-		$content = '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-		$content .= about_page();
+		$content = sign_in();
 	}
 
 	theme('page', 'Home', $content);
@@ -1416,7 +1411,7 @@ function theme_user_header($user)
 	
 	$out = "<div class='profile'>";
 	$out .= "	<span class='avatar'>";
-	$out .=			theme('avatar', $full_avatar);
+	$out .=			theme('avatar', $full_avatar, $name);
 	$out .= "	</span>";
 	$out .= "	<span class='status shift'>
 					<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
@@ -1432,11 +1427,10 @@ function theme_user_header($user)
 	return $out;
 }
 
-function theme_avatar($url, $force_large = TRUE) 
+function theme_avatar($url, $name = "") 
 {
-	$size = $force_large ? 48 : 24;
-
-	return "<img src=\"$url?w=$size\" height='$size' width='$size' />";
+	$size = 48;
+	return "<img src=\"$url?w=$size\" height='$size' width='$size' alt='$name' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -1520,7 +1514,7 @@ function theme_timeline($feed)
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
 
-			$avatar = theme('avatar', $status['user']['avatar_image']['url']);
+			$avatar = theme('avatar', $status['user']['avatar_image']['url'], $status['user']['name']);
 			$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
 
 			$conversation = "";
@@ -1652,7 +1646,7 @@ function theme_users($feed, $nextPageURL=null)
 						'data' => 
 							array(
 								array(
-										'data' => theme('avatar',	$user['avatar_image']['url']), 
+										'data' => theme('avatar',	$user['avatar_image']['url'], $name), 
 										'class' => 'avatar'
 									),
 								array(
@@ -1790,7 +1784,7 @@ function theme_action_icon($url, $image_url, $text) {
 	// alt attribute left off to reduce bandwidth by about 720 bytes per page
 	if ($text == 'MAP')
 	{
-		return "<a href='$url' alt='$text' target='" . get_target() . "'><img src='$image_url' /></a>";
+		return "<a href='$url' target='" . get_target() . "'><img src='$image_url' alt='$text' /></a>";
 	}
 
 	return "<a href='$url'><img src='$image_url' alt='$text' /></a>";

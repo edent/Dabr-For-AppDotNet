@@ -297,10 +297,11 @@ function embedly_embed_thumbnails(&$feed)
 	{
 		if ($thumb = $oembeds[$index]->thumbnail_url) 
 		{
+			$title = htmlspecialchars($oembeds[$index]->title);
 			$html = "</span>
 			<span class=\"embed\">
 				<a href=\"" . urldecode($url) . "\" rel=\"external\" target=\"_blank\">
-					<img src='" . IMAGE_PROXY_URL . "x50/" . $thumb . "' class=\"embeded\" />
+					<img src='" . IMAGE_PROXY_URL . "x50/" . $thumb . "' class=\"embeded\" alt=\"" . $title . "\" />
 				</a>"; 	
 				//	Span will be closed in theme
 			foreach ($matched_urls[$url] as $statusId) 

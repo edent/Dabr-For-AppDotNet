@@ -12,24 +12,10 @@ require 'common/browser.php';
 require 'common/menu.php';
 require 'common/user.php';
 require 'common/theme.php';
-require 'common/twitter.php';
+require 'common/dabr.php';
 require 'common/settings.php';
 
 require_once 'EZAppDotNet.php';
-
-// checking if the 'Remember me' checkbox was clicked
-if (isset($_GET['rem'])) 
-{
-	session_start();
-	if ($_GET['rem']=='1') 
-	{
-		$_SESSION['rem']=1;
-	} else 
-	{
-		unset($_SESSION['rem']);
-	}
-	header('Location: index.php');
-}
 
 //	Set Up the default menu
 menu_register(array (
@@ -51,21 +37,35 @@ function logout_page() {
 
 //	Show the about page
 function about_page() {
-	$content = //file_get_contents('about.html');
+	$content .= //file_get_contents('about.html');
 		'<div id="about" >
 			<h3>What is Dabr for AppDotNet?</h3>
 		<ul>
 			<li>A mobile web interface for AppDotNet</li>
-			<li>Based on the <a href="http://code.google.com/p/dabr/">open source Dabr project</a> originally by <a href="http://twitter.com/davidcarrington">@davidcarrington</a>, <a href="http://twitter.com/whatleydude">@whatleydude</a>, and <a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a></li>
+			<li>Created by <a href="https://alpha.app.net/edent">Terence Eden</a></li>
+			<li><a href="https://github.com/edent/Dabr-For-AppDotNet">Open Source on GitHub</a></li>
+			<li>Based on <a href="http://code.google.com/p/dabr/">Dabr for Twitter</a> originally by <a href="http://twitter.com/davidcarrington">@davidcarrington</a>, <a href="http://twitter.com/whatleydude">@whatleydude</a>, and <a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a></li>
 		</ul>
 
-		<p>If you have any comments, suggestions or questions then feel free to get in touch.</p>
+		<p>If you have any comments, suggestions or questions then feel free to <a href="http://edent.tel/">get in touch</a>.</p>
 
         </div>';  
 
        return $content;
         //theme('page', 'About', $content); 
  }
+
+function sign_in() 
+{
+	$app = new EZAppDotNet();
+	$url = $app->getAuthUrl();
+	$url = htmlspecialchars($url);
+	$content = "<a href=\"$url\"><h2>Sign in using App.net</h2></a>";
+
+	$content .= about_page();
+
+	return $content;
+}
 
 menu_execute_active_handler();
 
@@ -100,23 +100,18 @@ if ($app->getSession()) {
 } else {
 
 	$url = $app->getAuthUrl();
-	$content = $app->getSession();
-	echo '<a href="'.$url.'"><h2>Sign in using App.net</h2></a>';
-	echo 'Remember me <input type="checkbox" id="rem" value="1" checked/>';
-	echo "<script>
-			document.getElementById('rem').onclick = function(e){
-				if (document.getElementById('rem').value=='1') {
-					window.location='?rem=2';
-				} else {
-					window.location='?rem=1';
-				};
-			}
-		</script>";
+	//$content = $app->getSession();
+	$content = "<a href=\"$url\"><h2>Sign in using App.net</h2></a>".
+				"Remember me <input type=\"checkbox\" id=\"rem\" value=\"1\" checked/>".
+				"<script>
+					document.getElementById('rem').onclick = function(e){
+						if (document.getElementById('rem').value=='1') {
+							window.location='?rem=2';
+						} else {
+							window.location='?rem=1';
+						};
+					}
+				</script>";
 	about_page();
 
 }
-
-?>
-
-
-
