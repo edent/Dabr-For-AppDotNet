@@ -70,7 +70,7 @@ function settings_page($args) {
 		$settings['emoticons']   = $_POST['emoticons'];
 				
 		setcookie_year('settings', base64_encode(serialize($settings)));
-		twitter_refresh('');
+		dabr_refresh('');
 	}
 
 	$modes = array(
