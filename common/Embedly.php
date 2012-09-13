@@ -288,21 +288,29 @@ function embedly_embed_thumbnails(&$feed)
 		$justUrls = array_chunk ($justUrls, 20);
 		$justUrls = $justUrls[0];
 	}
-	$url = 'http://api.embed.ly/1/oembed?key='.EMBEDLY_KEY.'&urls=' . implode(',', $justUrls) . '&format=json';
+	$url = 'http://api.embed.ly/1/oembed?key='.EMBEDLY_KEY.'&urls=' . implode(',', $justUrls) . '&maxwidth=320&format=json';
 	$embedly_json = dabr_fetch($url);
 	$oembeds = json_decode($embedly_json);
 	
 	// Put the thumbnails into the $feed
 	foreach ($justUrls as $index => $url) 
 	{
-		if ($thumb = $oembeds[$index]->thumbnail_url) 
+		if ($thumb = $oembeds[$index]->html) 
+		{
+			$html = "<div class=\"embed\">" . $thumb . "</div>"; 	
+			foreach ($matched_urls[$url] as $statusId) 
+			{
+				$feed[$statusId]['html'] =  $feed[$statusId]['html'] . $html;
+			}
+		} else if ($thumb = $oembeds[$index]->thumbnail_url) 
 		{
 			$title = htmlspecialchars($oembeds[$index]->title);
-			$html = "</span>
-			<span class=\"embed\">
-				<a href=\"" . urldecode($url) . "\" rel=\"external\" target=\"_blank\">
-					<img src='" . IMAGE_PROXY_URL . "x50/" . $thumb . "' class=\"embeded\" alt=\"" . $title . "\" />
-				</a>"; 	
+			$html = 
+				"<div class=\"embed\">
+					<a href=\"" . urldecode($url) . "\" rel=\"external\" target=\"_blank\">".
+						"<img src='" . IMAGE_PROXY_URL . "320/" . $thumb . "' class=\"embeded\" alt=\"" . $title . "\" />".
+					"</a>
+				</div>"; 	
 				//	Span will be closed in theme
 			foreach ($matched_urls[$url] as $statusId) 
 			{
