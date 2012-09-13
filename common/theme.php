@@ -242,19 +242,29 @@ function theme_css() {
 		.avatar
 		{
 			display:block; 
-			height:50px; 
-			width:50px; 
-			left:5px; 
+			height:48px; 
+			width:48px; 
+			left:0px; 
 			margin:0; 
 			overflow:hidden; 
 			position:absolute;
+		}
+		.embed
+		{
+			left:0px; 
+			margin:0; 
+		}
+		.embeded
+		{
+			left:0px; 
+			margin:5px; 
 		}
 		.status{
 			display:block;
 			word-wrap:break-word;
 		}
 		.shift{
-			margin-left:58px;
+			margin-left:50px;
 			min-height:48px;
 		}
 		.from{
