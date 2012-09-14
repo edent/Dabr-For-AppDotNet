@@ -109,6 +109,16 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'dabr_repost_page',
 	),
+	'reposters' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'dabr_reposters_page',
+	),
+	'repost-native' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'dabr_repost',
+	),
 	'hash' => array(
 		'security' => true,
 		'hidden' => true,
@@ -671,6 +681,28 @@ function dabr_stars_page($query)
 	}
 }
 
+function dabr_reposters_page($query) 
+{	
+	// Which post are looking for?
+	$id = $query[1];
+
+	$app = new EZAppDotNet();
+	if ($app->getSession()) 
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		$users = $app->getReposters($id);
+	
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
+
+		// Format the output
+		$content = theme('users', $users);
+		theme('page', $page_type, $content);
+	}
+}
 
 function dabr_update() {
 	dabr_ensure_post_action();
@@ -1290,7 +1322,13 @@ function dabr_repost_page($query)
 	$length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
 	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
 
-	$content .= "<p>Repost:</p>
+	$content .= "<p>Native Repost:</p>
+				<form action='repost-native/{$id}' method='post'>
+					<input type='submit' value='Repost it!' />
+				</form>
+				<hr />";
+
+	$content .= "<p>Edit Before Reposting:</p>
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
 						<input name='in_reply_to_id' value='$id' type='hidden' />
@@ -1305,6 +1343,17 @@ function dabr_repost_page($query)
 
 }
 
+function dabr_repost($query)
+{
+	$id = (string) $query[1];
+	
+	$app = new EZAppDotNet();
+	if ($app->getSession()) 
+	{
+		$app->repost($id);
+		dabr_refresh('');
+	}
+}
 
 function dabr_posts_per_day($user, $rounding = 1) {
 	// Helper function to calculate an average count of posts per day
@@ -1510,6 +1559,22 @@ function theme_timeline($feed)
 				$date = $status['created_at'];
 			}
 
+			//	Deal with reposts.
+			if ($status['repost_of'])
+			{
+				$repost_id = $status['id'];
+				$reposter_username = $status['username'];
+				$reposter_name = $status['user']['name'];
+				$reposter_avatar = $status['user']['avatar_image']['url'];
+
+				$status = $status['repost_of'];
+				$status['dabr_repost_of'] = true;
+				$status['dabr_repost_id'] = $repost_id;
+				$status['dabr_repost_name'] = $reposter_name;
+				$status['dabr_repost_username'] = $reposter_username;
+				$status['dabr_repost_avatar'] = $repost_avatar;
+			}
+
 			$text = $status['html'];
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
@@ -1526,6 +1591,11 @@ function theme_timeline($feed)
 			if ($status['annotations'])
 			{
 				$conversation .= " | <a href='raw/{$status['id']}'>View Annotations</a>";
+			}
+
+			if ($status['dabr_repost_of'])
+			{
+				$conversation .= " | <a href='user/{$status['dabr_repost_username']}'>Reposted by {$status['dabr_repost_name']}</a>";
 			}
 
 			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
@@ -1732,14 +1802,23 @@ function theme_action_icons($status)
 		$L = "L";
 	}
 
-
 	$actions = array();
 
 	//	Reply
 	$actions[] = theme('action_icon', "status/{$status['id']}", "images/reply{$L}.png", '@');
 
 	//	Re-post	
-	$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweet{$L}.png", 'RT');
+	if ($status['dabr_repost_of'])
+	{
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweeted{$L}.png", 'RT');
+	}
+	else {
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweet{$L}.png", 'RT');
+	}
+	if ($status['num_reposts']>0)
+	{
+		$actions[] = "<a href=reposters/{$status['id']}>{$status['num_reposts']}</a>";	
+	}
 
 	//	Star
 	if ($status['you_starred']) 
@@ -1758,6 +1837,12 @@ function theme_action_icons($status)
 	if (user_is_current_user($from))
 	{
 		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", "images/trash{$L}.png", 'DEL');
+	}
+
+	//	Delete the Repost
+	if ($status['dabr_repost_of'])
+	{
+		$actions[] = theme('action_icon', "confirm/delete/{$status['dabr_repost_id']}", "images/trash{$L}.png", 'DEL');	
 	}
 
 	//	Map
