@@ -1149,12 +1149,12 @@ function dabr_raw_page($query) {
 			// Dump the post to screen
 			//print_r($app->getPost($query[1]));
 			//$thread = $app->getPost($query[1]);
-			$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
-			$thread[] = $app->getPost($query[1],array('include_annotations' => 1));
+			//$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
+			$thread = $app->getPost($query[1],array('include_annotations' => 1));
 			echo "<pre>";
 				print_r($thread);
 			
-				echo json_encode($thread);
+			//	echo json_encode($thread);
 			echo "/<pre>";
 		}
 	}
@@ -1526,7 +1526,13 @@ function theme_timeline($feed)
 	// Add the hyperlinks *BEFORE* adding images
 	foreach ($feed as &$status)
 	{
-		$status['html'] = dabr_parse_tags($status['text'], $status['entities']);
+		if ($status['repost_of'])
+		{
+			$status['html'] = dabr_parse_tags($status['repost_of']['text'], $status['repost_of']['entities']);
+		}
+		else {
+			$status['html'] = dabr_parse_tags($status['text'], $status['entities']);
+		}
 	}
 	unset($status);
 	
@@ -1559,23 +1565,27 @@ function theme_timeline($feed)
 				$date = $status['created_at'];
 			}
 
+			//	Post's text has already been manipulated
+			$text = $status['html'];
+
 			//	Deal with reposts.
 			if ($status['repost_of'])
 			{
+				$repost_of = $status['repost_of'];
 				$repost_id = $status['id'];
-				$reposter_username = $status['username'];
+				$reposter_username = $status['user']['username'];
 				$reposter_name = $status['user']['name'];
 				$reposter_avatar = $status['user']['avatar_image']['url'];
+				
+				$status = $repost_of;
 
-				$status = $status['repost_of'];
 				$status['dabr_repost_of'] = true;
 				$status['dabr_repost_id'] = $repost_id;
 				$status['dabr_repost_name'] = $reposter_name;
 				$status['dabr_repost_username'] = $reposter_username;
-				$status['dabr_repost_avatar'] = $repost_avatar;
+				$status['dabr_repost_avatar'] = $reposter_avatar;
 			}
 
-			$text = $status['html'];
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
 
@@ -1593,24 +1603,28 @@ function theme_timeline($feed)
 				$conversation .= " | <a href='raw/{$status['id']}'>View Annotations</a>";
 			}
 
+			$repost_info ="";
 			if ($status['dabr_repost_of'])
 			{
-				$conversation .= " | <a href='user/{$status['dabr_repost_username']}'>Reposted by {$status['dabr_repost_name']}</a>";
+				$repost_info .= "<a href='user/{$status['dabr_repost_username']}'>
+					<img src=\"{$status['dabr_repost_avatar']}?w=25\" />Reposted by {$status['dabr_repost_name']}
+				</a>
+				<br>";
 			}
 
 			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
 					<br />
 					{$text}
 					<br />
-					<small>Sent via $source $conversation</small>";
+					<small>$repost_info Sent via $source $conversation</small>";
 			unset($row);
 			$class = 'status';
 			
-			if ($page != 'user' && $avatar)
-			{
+			//if ($page != 'user' && $avatar)
+			//{
 				$row[] = array('data' => $avatar, 'class' => 'avatar');
 				$class .= ' shift';
-			}
+			//}
 			
 			$row[] = array('data' => $html, 'class' => $class);
 
