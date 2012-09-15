@@ -298,7 +298,8 @@ function embedly_embed_thumbnails(&$feed)
 		if ($thumb = $oembeds[$index]->html) 
 		{
 			$html = "</span>
-					<span class=\"embed\">" . $thumb; 	
+					<span class=\"embed\">" . $thumb; 
+					//	Span will be closed in theme	
 			foreach ($matched_urls[$url] as $statusId) 
 			{
 				$feed[$statusId]['html'] =  $feed[$statusId]['html'] . $html;
