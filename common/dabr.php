@@ -1620,11 +1620,11 @@ function theme_timeline($feed)
 			unset($row);
 			$class = 'status';
 			
-			//if ($page != 'user' && $avatar)
-			//{
+			if ($page != 'user' || $status['dabr_repost_of'])
+			{
 				$row[] = array('data' => $avatar, 'class' => 'avatar');
 				$class .= ' shift';
-			//}
+			}
 			
 			$row[] = array('data' => $html, 'class' => $class);
 
