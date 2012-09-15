@@ -1854,7 +1854,7 @@ function theme_action_icons($status)
 	}
 
 	//	Delete the Repost
-	if ($status['dabr_repost_of'])
+	if (user_is_current_user($status['dabr_repost_username']))
 	{
 		$actions[] = theme('action_icon', "confirm/delete/{$status['dabr_repost_id']}", "images/trash{$L}.png", 'DEL');	
 	}
