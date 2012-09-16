@@ -257,7 +257,7 @@ function theme_css() {
 			word-wrap:break-word;
 		}
 		.shift{
-			margin-left:5px;
+			margin-left:0px;
 		}
 		.from{
 			font-size:0.75em;
