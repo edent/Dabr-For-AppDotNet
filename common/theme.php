@@ -198,9 +198,7 @@ function theme_css() {
 	return "
 	<style type='text/css'>
 		a{color:#{$c->links}}
-		table{border-collapse:collapse}
 		form{margin:.3em;}
-		td{vertical-align:top;padding:0.3em}
 		img{border:0}
 		small,small a{color:#{$c->small}}
 		body
@@ -224,7 +222,7 @@ function theme_css() {
 		}
 		.tweet,.features
 		{
-			padding:5px
+			padding:5px;
 		}
 		
 		.date
@@ -241,31 +239,25 @@ function theme_css() {
 		}
 		.avatar
 		{
-			display:block; 
-			height:48px; 
-			width:48px; 
-			left:0px; 
-			margin:0; 
-			overflow:hidden; 
-			position:absolute;
+			height:auto; 
+			width:auto;
+			float:left;
+			margin:0px;
+			margin-right: 10px; 
 		}
 		.embed
 		{
 			left:0px; 
-			margin:0; 
 		}
 		.embeded
 		{
 			left:0px; 
-			margin:5px; 
 		}
 		.status{
-			display:block;
 			word-wrap:break-word;
 		}
 		.shift{
-			margin-left:50px;
-			min-height:48px;
+			margin-left:5px;
 		}
 		.from{
 			font-size:0.75em;
@@ -274,6 +266,8 @@ function theme_css() {
 		}
 		.from a	{
 			color:#{$c->small};
+		}
+		.actionicons {
 		}
 
 		#menu ul, #menu li { margin: 0; padding: 0; list-style: none; }

@@ -617,6 +617,10 @@ function dabr_users_page($query) {
 	// Belt & Braces :-)
 	$id = $query[2];
 	
+	$perPage = setting_fetch('perPage', 20);	
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+
 	$app = new EZAppDotNet();
 	if ($app->getSession()) 
 	{
@@ -1612,10 +1616,10 @@ function theme_timeline($feed)
 				<br>";
 			}
 
-			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['name']}</a></b> $actions $link 
-					<br />
-					{$text}
-					<br />
+			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['username']}</a></b><span class=\"actionicons\">$actions $link</span>
+					<br/>
+					$text
+					<br/>
 					<small>$repost_info Sent via $source $conversation</small>";
 			unset($row);
 			$class = 'status';
