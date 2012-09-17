@@ -248,6 +248,7 @@ function theme_css() {
 		.embed
 		{
 			left:0px; 
+			display:block;
 		}
 		.embeded
 		{
