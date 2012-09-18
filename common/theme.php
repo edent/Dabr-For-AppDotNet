@@ -223,6 +223,7 @@ function theme_css() {
 		.tweet,.features
 		{
 			padding:5px;
+			min-height:50px;
 		}
 		
 		.date
