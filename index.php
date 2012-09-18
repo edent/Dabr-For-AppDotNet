@@ -20,6 +20,7 @@ require_once 'EZAppDotNet.php';
 //	Set Up the default menu
 menu_register(array (
 	'about' => array (
+		'security' => true,
 		'callback' => 'about_page',
 	),
 	'logout' => array (
@@ -36,8 +37,8 @@ function logout_page() {
 }
 
 //	Show the about page
-function about_page() {
-	$content .= //file_get_contents('about.html');
+function get_about_page() {
+	$content = //file_get_contents('about.html');
 		'<div id="about" >
 			<h3>What is Dabr for AppDotNet?</h3>
 		<ul>
@@ -51,8 +52,12 @@ function about_page() {
 
         </div>';  
 
-       return $content;
-        //theme('page', 'About', $content); 
+        return $content;
+ }
+
+ function about_page()
+ {
+  	theme('page', "About Dabr", get_about_page());
  }
 
 function sign_in() 
@@ -62,7 +67,7 @@ function sign_in()
 	$url = htmlspecialchars($url);
 	$content = "<a href=\"$url\"><h2>Sign in using App.net</h2></a>";
 
-	$content .= about_page();
+	$content .= get_about_page();
 
 	return $content;
 }
