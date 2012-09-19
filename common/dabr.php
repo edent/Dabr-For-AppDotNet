@@ -575,7 +575,7 @@ function dabr_confirmed_page($query)
 			case 'mute':
 				$content  = "<p>
 								<span class='avatar'>
-									<img src='images/dabr.png' width='48' height='48' alt='Dabr Muted Icon' />
+									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Muted Icon' />
 								</span>
 								<span class='status shift'>
 									Shhhhhh $target! You are now <strong>muted</strong>.
@@ -585,7 +585,7 @@ function dabr_confirmed_page($query)
 			case 'unmute':
 				$content  = "<p>
 								<span class='avatar'>
-									<img src='images/dabr.png' width='48' height='48' alt='Dabr Unmuted Icon' />
+									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Unmuted Icon' />
 								</span>
 								<span class='status shift'>
 									Hello again $target - you have been <strong>unmuted</strong>.
@@ -595,7 +595,7 @@ function dabr_confirmed_page($query)
 			case 'spam':
 				$content = "<p>
 								<span class='avatar'>
-									<img src='images/dabr.png' width='48' height='48' alt='Dabr Spam Icon'/>
+									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Spam Icon'/>
 								</span>
 								<span class='status shift'>
 									Yum! Yum! Yum! Delicious spam! Goodbye @$target.

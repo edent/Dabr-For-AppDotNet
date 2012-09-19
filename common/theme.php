@@ -159,6 +159,10 @@ function theme_page($title, $content) {
 						<meta name="viewport" content="width=device-width; initial-scale=1.0;" />
 						<title>Dabr - ' . $title . '</title>
 						<base href="',BASE_URL,'" />
+						<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+						<link rel="apple-touch-icon" href="images/dabr-57.png" />
+						<link rel="apple-touch-icon" sizes="72x72" href="images/dabr-72.png" />
+						<link rel="apple-touch-icon" sizes="114x114" href="images/dabr-114.png" />
 						'.$meta.theme('css').'
 					</head>
 					<body id="thepage">';
