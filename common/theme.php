@@ -129,7 +129,7 @@ function theme_error($message) {
 
 function theme_page($title, $content) {
 	$body = theme('menu_top');
-	$body .= $content;
+	$body .= "<section>" . $content . "</section>";
 	$body .= theme('menu_bottom');
 	$body .= theme('google_analytics');
 	if (DEBUG_MODE == 'ON') 
@@ -165,15 +165,15 @@ function theme_page($title, $content) {
 						<link rel="apple-touch-icon" sizes="114x114" href="images/dabr-114.png" />
 						'.$meta.theme('css').'
 					</head>
-					<body id="thepage">';
-	echo 				"<div id=\"advert\">" . show_advert() . "</div>";
+					<body>';
+	//echo 				"<div id=\"advert\">" . show_advert() . "</div>";
 	echo 				$body;
 	if (setting_fetch('colours') == null)
 	{
 		//	If the cookies haven't been set, remind the user that they can set how Dabr looks
 		echo			'<p>Think Dabr looks ugly? <a href="settings">Change the colours!</a></p>';
 	}
-	echo '		</body>
+	echo 			'</body>
 				</html>';
 	exit();
 }
@@ -201,6 +201,7 @@ function theme_css() {
 	$c = theme('colours');
 	return "
 	<style type='text/css'>
+		nav{margin-top:-15px;}
 		a{color:#{$c->links}}
 		form{margin:.3em;}
 		img{border:0}
@@ -210,20 +211,14 @@ function theme_css() {
 			background:#{$c->bodybg};
 			color:#{$c->bodyt};margin:0;font:90% sans-serif
 		}
+
+		section {
+			clear: both; }
+
 		.odd{background:#{$c->odd}}
 		.even{background:#{$c->even}}
 		.reply{background:#{$c->replyodd}}
 		.reply.even{background: #{$c->replyeven}}
-		.menu
-		{
-			color:#{$c->menut};
-			background:#{$c->menubg};
-			padding: 2px}
-		.menu a
-		{
-			color:#{$c->menua};
-			text-decoration: none
-		}
 		.tweet,.features
 		{
 			padding:5px;
@@ -273,18 +268,67 @@ function theme_css() {
 		.from a	{
 			color:#{$c->small};
 		}
+
 		.actionicons {
 		}
 
-		#menu ul, #menu li { margin: 0; padding: 0; list-style: none; }
-		#menu ul { overflow: auto; }
-		#menu li { float: left; }
-		#menu a { display: block; padding: 0.5em; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
-		body.show-menu #menu-extras { display: block; }
-		#menu-extras { display: none; border-top: 1px solid #eee; }
-		#menu-extras li { float: none; }
-		#menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }
-		img.bigger { height: 22px; width: 22px; }
+		nav ul {
+			padding: 0; 
+			overflow: auto;
+		}
+
+		nav li {
+			list-style: none;
+			position: relative;
+			display: block;
+			float: left;
+			margin: 0px 0 0 0;
+			background:#{$c->menubg};
+		}
+
+		nav a {
+			display: block; 
+			padding: 0.5em; 
+			text-decoration: none; 
+			border-right: 1px solid #fff; 
+			font-size: 110%; 
+			color:#{$c->menua};
+		}
+
+		nav .current {
+			font-weight: bold; 
+		}
+
+		.prio-beta,
+		.prio-gamma,
+		.show-nav-less {
+			display: none; 
+		}
+
+		#prio:target .prio-beta,
+		#prio:target .prio-gamma,
+		#prio:target .show-nav-less {
+			display: block; 
+		}
+
+		#prio:target .show-nav-more {
+			display: none; 
+		}
+
+		@media all and (min-width: 31em) {
+		.prio-beta {
+			display: block; } 
+		}
+
+		@media all and (min-width: 70em) {
+			.prio-gamma {
+				display: block; }
+
+			.show-nav-more,
+			#prio:target .show-nav-less {
+				display: none; } 
+		}
+
 	</style>";
 }
 

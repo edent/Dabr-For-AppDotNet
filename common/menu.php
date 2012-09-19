@@ -58,23 +58,58 @@ function theme_menu_bottom() {
 
 function theme_menu_both($menu) {
 	$links = array();
-	foreach (menu_visible_items() as $url => $page) {
+
+	$menu_item = 0;
+
+	foreach (menu_visible_items() as $url => $page) 
+	{
 		$title = $url ? $url : 'home';
+
 		if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
-		if ($menu == 'bottom' && isset($page['accesskey'])) {
-			$links[] = "<a href='$url'>$title</a>";
-		} else {
-			$links[] = "<a href='$url'>$title</a>";
+		
+
+		if ($menu_item > 6)
+		{
+			$class = "prio-gamma";
+		} else if ($menu_item > 4)
+		{
+			$class = "prio-beta";
+		} else{
+			$class = "prio-alpha";
 		}
+
+		$links[] = "<li class=\"$class\"><a href=\"$url\">$title</a></li>";
+
+		$menu_item++;
 	}
+
 	if (user_is_authenticated()) {
 		$user = user_current_username();
-		array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
+		array_unshift($links, "<li class=\"current prio-beta\"><a href=\"user/$user\">$user</a></li>");
 	}
-	if ($menu == 'bottom') {
-		$links[] = "<a href='{$_GET['q']}'>refresh</a>";
+
+	//	Add the expand, contract button
+	$links[] = '<li class="show-nav-more"><a href="'.pageURL().'#prio">+more</a></li>';
+	$links[] = '<li class="show-nav-less"><a href="'.pageURL().'#">-less</a></li>';
+
+	return "<nav id=\"prio\"><ul>".implode("\n", $links).'</ul></nav>';
+}
+
+function pageURL() 
+{
+	$pageURL = 'http';
+	if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+	
+	$pageURL .= "://";
+	
+	if ($_SERVER["SERVER_PORT"] != "80") 
+	{
+		$pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+	} else {
+		$pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
 	}
-	return "<div class='menu menu-$menu'>".implode(' | ', $links).'</div>';
+	
+	return $pageURL;
 }
 
 ?>
