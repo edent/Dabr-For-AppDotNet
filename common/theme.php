@@ -56,6 +56,25 @@ function theme_options($options, $selected = NULL) {
 	return $output;
 }
 
+
+function theme_radio($options, $name, $selected = NULL) 
+{
+	if (count($options) == 0) return '';
+	$output = '';
+	foreach($options as $value => $description) 
+	{
+		$output .= '<label for="'.$value.'">
+						<input 
+							type="radio" 
+							name="'.$name.'"
+							id="'.$value.'" 
+							value="'.$value.'" '.($selected == $value ? 'checked="checked"' : '').' />'; 
+		$output .= ' ' . $description . '</label>
+		<br />';
+	}
+	return $output;
+}
+
 function theme_info($info) {
 	$rows = array();
 	foreach ($info as $name => $value) {

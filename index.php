@@ -8,7 +8,6 @@ header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
 
 require 'config.php';
-require 'common/browser.php';
 require 'common/menu.php';
 require 'common/user.php';
 require 'common/theme.php';

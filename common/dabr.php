@@ -1616,11 +1616,12 @@ function theme_timeline($feed)
 				<br>";
 			}
 
-			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['username']}</a></b><span class=\"actionicons\">$actions $link</span>
+			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['username']}</a></b><span class=\"actionicons\"> $actions $link</span>
 					<br/>
 					$text
 					<br/>
 					<small>$repost_info Sent via $source $conversation</small>";
+
 			unset($row);
 			$class = 'status';
 			
@@ -1815,7 +1816,7 @@ function theme_action_icons($status)
 {
 	$from = $status['user']['username'];
 
-	if (setting_fetch('browser') == "bigtouch")
+	if (setting_fetch('modes') == "bigtouch")
 	{
 		$L = "L";
 	}
@@ -1843,7 +1844,7 @@ function theme_action_icons($status)
 	{
 		$actions[] = theme('action_icon', "unstar/{$status['id']}", "images/star{$L}.png", 'STARRED');
 	} else {
-		$actions[] = theme('action_icon', "star/{$status['id']}", "images/star_grey{$L}.png", 'UNSTAR');
+		$actions[] = theme('action_icon', "star/{$status['id']}", "images/star_grey{$L}.png", 'STAR');
 	}
 
 	if ($status['num_stars']>0)
@@ -1883,8 +1884,17 @@ function theme_action_icons($status)
 	return implode(' ', $actions);
 }
 
-function theme_action_icon($url, $image_url, $text) {
-	// alt attribute left off to reduce bandwidth by about 720 bytes per page
+function theme_action_icon($url, $image_url, $text) 
+{
+	if (setting_fetch('modes') == "text")
+	{
+		if ($text == 'MAP')
+		{
+			return "<a href='$url' target='" . get_target() . "'>$text</a>";
+		}
+		return "<a href='$url'>$text</a>";
+	}
+
 	if ($text == 'MAP')
 	{
 		return "<a href='$url' target='" . get_target() . "'><img src='$image_url' alt='$text' /></a>";

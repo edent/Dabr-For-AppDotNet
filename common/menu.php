@@ -61,38 +61,60 @@ function theme_menu_both($menu) {
 
 	$menu_item = 0;
 
-	foreach (menu_visible_items() as $url => $page) 
+	if (setting_fetch('menustyle', 'smart') == 'smart')
 	{
-		$title = $url ? $url : 'home';
-
-		if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
-		
-
-		if ($menu_item > 6)
+		//	Smart Menu
+		foreach (menu_visible_items() as $url => $page) 
 		{
-			$class = "prio-gamma";
-		} else if ($menu_item > 4)
-		{
-			$class = "prio-beta";
-		} else{
-			$class = "prio-alpha";
+			$title = $url ? $url : 'home';
+
+			if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
+			
+
+			if ($menu_item > 6)
+			{
+				$class = "prio-gamma";
+			} else if ($menu_item > 3)
+			{
+				$class = "prio-beta";
+			} else{
+				$class = "prio-alpha";
+			}
+
+			$links[] = "<li class=\"$class\"><a href=\"$url\">$title</a></li>";
+
+			$menu_item++;
 		}
 
-		$links[] = "<li class=\"$class\"><a href=\"$url\">$title</a></li>";
+		if (user_is_authenticated()) {
+			$user = user_current_username();
+			array_unshift($links, "<li class=\"current prio-beta\"><a href=\"user/$user\">$user</a></li>");
+		}
 
-		$menu_item++;
+		//	Add the expand, contract button
+		$links[] = '<li class="show-nav-more"><a href="'.pageURL().'#prio">+more</a></li>';
+		$links[] = '<li class="show-nav-less"><a href="'.pageURL().'#">-less</a></li>';
+
+		return "<nav id=\"prio\"><ul>".implode("\n", $links).'</ul></nav>';		
+	} else
+	{
+		// Horizontal links for IE6 and crap browsers
+		foreach (menu_visible_items() as $url => $page) 
+		{
+			$title = $url ? $url : 'home';
+
+			if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
+			
+			$links[] = "<a href=\"$url\">$title</a>";
+		}
+
+		if (user_is_authenticated()) {
+			$user = user_current_username();
+			array_unshift($links, "<a href=\"user/$user\">$user</a>");
+		}
+
+		return implode(" | ", $links);
 	}
-
-	if (user_is_authenticated()) {
-		$user = user_current_username();
-		array_unshift($links, "<li class=\"current prio-beta\"><a href=\"user/$user\">$user</a></li>");
-	}
-
-	//	Add the expand, contract button
-	$links[] = '<li class="show-nav-more"><a href="'.pageURL().'#prio">+more</a></li>';
-	$links[] = '<li class="show-nav-less"><a href="'.pageURL().'#">-less</a></li>';
-
-	return "<nav id=\"prio\"><ul>".implode("\n", $links).'</ul></nav>';
 }
 
 function pageURL() 

@@ -10,10 +10,12 @@ Assembled in theme_css()
 $GLOBALS['colour_schemes'] = array(
 	0 => 'Pretty In Pink|c06,fcd,623,c8a,fee,fde,ffa,dd9,c06,fee,fee',
 	1 => 'Ugly Orange|b50,ddd,111,555,fff,eee,ffa,dd9,e81,c40,fff',
-	2 => 'Touch Blue|138,ddd,111,555,fff,eee,ffa,dd9,138,fff,fff',
+	2 => 'Twytter Blue|2674B2,BFDBE6,111,999,F7FCF6,D8ECF7,A9D0DF,8CBED5,002031,88D0DE,88D0DE',
 	3 => 'Sickly Green|293C03,ccc,000,555,fff,eee,CCE691,ACC671,495C23,919C35,fff',
 	4 => 'Kris\' Purple|d5d,000,ddd,999,222,111,202,101,909,222,000,000',
 	5 => '#red|d12,ddd,111,555,fff,eee,ffa,dd9,c12,fff,fff',
+	6 => 'Fazebook Blue|3B5998,F7F7F7,111,555,D8DFEA,EEE,FFA,DD9,3B5998,FFF,FFF',
+	
 );
 
 menu_register(array(
@@ -28,7 +30,8 @@ menu_register(array(
 
 function cookie_monster() {
 	$cookies = array(
-		'browser',
+		'modes',
+		'menustyle',
 		'settings',
 		'utc_offset',
 		'search_favourite',
@@ -59,11 +62,11 @@ function setcookie_year($name, $value) {
 
 function settings_page($args) {
 	if ($args[1] == 'save') {
-		$settings['browser']     = $_POST['browser'];
+		$settings['modes']       = $_POST['modes'];
+		$settings['menustyle']   = $_POST['menustyle'];
 		$settings['perPage']     = $_POST['perPage'];
 		$settings['gwt']         = $_POST['gwt'];
 		$settings['colours']     = $_POST['colours'];
-		$settings['reverse']     = $_POST['reverse'];
 		$settings['timestamp']   = $_POST['timestamp'];
 		$settings['hide_inline'] = $_POST['hide_inline'];
 		$settings['utc_offset']  = (float)$_POST['utc_offset'];
@@ -74,14 +77,17 @@ function settings_page($args) {
 	}
 
 	$modes = array(
-		'mobile' 	=> 'Normal phone',
-		'touch'		=> 'Touch Screen',
-		'bigtouch'	=> 'Touch Screen Big Icons',
-		'desktop'	=> 'PC/Laptop',
-		'text'		=> 'Text only',
-		'worksafe'	=> 'Work Safe',
+		'bigtouch'	=> 'Big Icons <img src="images/replyL.png" alt="Big Icon"/>',
+		'touch'		=> 'Small Icons <img src="images/reply.png"alt="Small Icon"/>',
+		'text'		=> 'Text only @',
 	);
 	
+
+	$menustyle = array(
+		'smart'	=> 'Smart Menu',
+		'old'	=> 'Old Style Menu (For older web browsers)'
+	);
+
 	$perPage = array(
 		  '5'	=>   '5 Posts Per Page',
 		 '10'	=>  '10 Posts Per Page',
@@ -121,12 +127,20 @@ function settings_page($args) {
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
 	$content .= '		</select>
-					</p>
-					<p>Mode:<br />
-						<select name="browser">';
-	$content .= theme('options', $modes, $GLOBALS['current_theme']);
-	$content .= 		'</select>
 					</p>';
+
+	$content .= '<p>Mode:<br />';
+
+	$content .= theme_radio($modes, "modes", setting_fetch('modes', 'bigtouch'));
+
+	$content .= '</p>';
+
+	$content .= '	<p>Menu Bar:<br />
+						<select name="menustyle">';
+	$content .= theme('options', $menustyle, setting_fetch('menustyle', 'smart'));
+	$content .= '		</select>
+					</p>';
+
 	$content .= '	<p>Posts Per Page:<br />
 						<select name="perPage">';
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
@@ -134,19 +148,14 @@ function settings_page($args) {
 					</p>';
 	$content .= '	<p>Emoticons - show :-) as images<br />
 						<select name="emoticons">';
-	$content .= theme('options', $emoticons, setting_fetch('emoticons', $GLOBALS['current_theme'] == 'text' ? 'on' : 'off'));
+	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
 	$content .= '		</select>
 					</p>
 					<p>External links go:<br />
 						<select name="gwt">';
-	$content .= theme('options', $gwt, setting_fetch('gwt', $GLOBALS['current_theme'] == 'text' ? 'on' : 'off'));
+	$content .= theme('options', $gwt, setting_fetch('gwt', 'off'));
 	$content .= '		</select>
 						<small><br />Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>
-					</p>';
-	$content .= '	<p>
-						<label>
-							<input type="checkbox" name="reverse" value="yes" '. (setting_fetch('reverse') == 'yes' ? ' checked="checked" ' : '') .' /> Attempt to reverse the conversation thread view.
-						</label>
 					</p>';
 	$content .= '	<p>
 						<label>
@@ -155,7 +164,7 @@ function settings_page($args) {
 					</p>';
 	$content .= '	<p>
 						<label>
-							<input type="checkbox" name="hide_inline" value="yes" '. (setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') .' /> Hide inline media (eg TwitPic thumbnails)
+							<input type="checkbox" name="hide_inline" value="yes" '. (setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') .' /> Hide inline media (eg image thumbnails &amp; embedded videos)
 						</label>
 					</p>';
 	$content .= '	<p>
