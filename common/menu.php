@@ -53,7 +53,8 @@ function theme_menu_top() {
 }
 
 function theme_menu_bottom() {
-	return theme('menu_both', 'bottom');
+	//return theme('menu_both', 'bottom');
+	return '<a href="'.pageURL().'#prio">^menu^</a>';
 }
 
 function theme_menu_both($menu) {

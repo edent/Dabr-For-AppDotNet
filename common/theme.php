@@ -146,9 +146,44 @@ function theme_error($message) {
 	theme_page('Error', $message);
 }
 
+
+function theme_header($title)
+{
+	switch ($title) {
+		case 'muted':
+			$header  .= "<h3>" . theme_get_logo(57) . "This is everyone you have muted</h3>";
+			break;
+		case 'friends':
+			$header  .= "<h3>" . theme_get_logo(57) . "Wow! You follow some really interesting folk!</h3>";
+			break;
+		case 'followers':
+			$header  .= "<h3>" . theme_get_logo(57) . "These lovely people hang on your every word</h3>";
+			break;
+		case 'Search':
+			$header  .= "<h3>" . theme_get_logo(57) . "Let's go exploring!</h3>";
+			break;
+		case 'Starrers':
+			$header  .= "<h3>" . theme_get_logo(57) . "People who starred that post</h3>";
+			break;
+		case 'Reposters':
+			$header  .= "<h3>" . theme_get_logo(57) . "They came, they saw, they reposted</h3>";
+			break;
+		default :
+			$header ="";
+	}
+
+	if (strpos($title, "Posts Starred") !== false)
+	{
+		$header  .= "<h3>" . theme_get_logo(57) . "OMG! It's full of stars!</h3>";
+	}
+
+	return $header;
+		
+}
+
 function theme_page($title, $content) {
 	$body = theme('menu_top');
-	$body .= "<section>" . $content . "</section>";
+	$body .= theme_header($title)  . "<section>" . $content . "</section>";
 	$body .= theme('menu_bottom');
 	$body .= theme('google_analytics');
 	if (DEBUG_MODE == 'ON') 
@@ -167,7 +202,7 @@ function theme_page($title, $content) {
 	if ($title == 'Login') 
 	{
 		$title = 'Dabr - mobile app.net Login';
-		$meta = '<meta name="description" content="Free open source alternative to mobile Twitter, bringing you the complete Twitter experience to your phone." />';
+		$meta = '<meta name="description" content="Free open source alternative to mobile App.net, bringing you the complete AppDotNet experience to your phone." />';
 	}
 	ob_start('ob_gzhandler');
 	header('Content-Type: text/html; charset=utf-8');
@@ -332,7 +367,8 @@ function theme_css() {
 			#prio:target .show-nav-less {
 				display: none; } 
 		}
-
+		
+		.logo{float:left;margin-right:15px;}
 	</style>";
 }
 
@@ -341,4 +377,9 @@ function theme_google_analytics() {
 	if (!$GA_ACCOUNT) return '';
 	$googleAnalyticsImageUrl = googleAnalyticsGetImageUrl();
 	return "<img src='{$googleAnalyticsImageUrl}' />";
+}
+
+function theme_get_logo($size = 128)
+{
+	return '<img src="images/dabr-'.$size.'.png" height="'.$size.'" width="'.$size.'" alt="The Dabr Bunny" class="logo" />';
 }

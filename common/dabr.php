@@ -526,9 +526,11 @@ function dabr_confirmation_page($query)
 	$action = $query[1];
 	$target = $query[2];	//The name of the user we are doing this action on
 
+	$content = theme_get_logo() . '<br/>';
+
 	switch ($action) {
 		case 'mute':
-			$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
 			$content .= "<ul>
 							<li>You won't see any of their posts in your timeline</li>
 							<li>They won't appear in your replies</li>
@@ -537,7 +539,7 @@ function dabr_confirmation_page($query)
 						</ul>";
 			break;
 		case 'unmute':
-			$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
 			$content .= "<ul>
 							<li>You will see their posts in your timeline if you follow them.</li>
 							<li>Their posts will appear in your replies</li>
@@ -545,7 +547,7 @@ function dabr_confirmation_page($query)
 						</ul>";
 			break;
 		case 'delete':
-			$content = "<p>Are you really sure you want to delete your post?</p>";
+			$content .= "<p>Are you really sure you want to delete your post?</p>";
 			$content .= "<ul>
 							<li>Post ID: <strong>$target</strong></li>
 							<li>There is <strong>no way to undo this action</strong>.</li>
@@ -553,7 +555,7 @@ function dabr_confirmation_page($query)
 			break;
 
 		case 'spam':
-			$content  = "<p>Are you really sure you want to report <strong>$target</strong> as a spammer?</p>";
+			$content .= "<p>Are you really sure you want to report <strong>$target</strong> as a spammer?</p>";
 			$content .= "<p>They will also be blocked from following you.</p>";
 			break;
 	}
@@ -570,33 +572,26 @@ function dabr_confirmed_page($query)
         // the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
         $action = $query[1]; // The action. block, unblock, spam
         $target = $query[2]; // The username of the target
+
+		$content = theme_get_logo() . '<br/>';
 	
 		switch ($action) {
 			case 'mute':
-				$content  = "<p>
-								<span class='avatar'>
-									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Muted Icon' />
-								</span>
+				$content  .= "<p>
 								<span class='status shift'>
 									Shhhhhh $target! You are now <strong>muted</strong>.
 								</span>
 							</p>";
 				break;
 			case 'unmute':
-				$content  = "<p>
-								<span class='avatar'>
-									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Unmuted Icon' />
-								</span>
+				$content  .= "<p>
 								<span class='status shift'>
 									Hello again $target - you have been <strong>unmuted</strong>.
 								</span>
 							</p>";
 				break;
 			case 'spam':
-				$content = "<p>
-								<span class='avatar'>
-									<img src='images/dabr-72.png' width='72' height='72' alt='Dabr Spam Icon'/>
-								</span>
+				$content .= "<p>
 								<span class='status shift'>
 									Yum! Yum! Yum! Delicious spam! Goodbye @$target.
 								</span>
@@ -644,9 +639,6 @@ function dabr_users_page($query) {
 			case "followers":
 				$users = $app->getFollowers($username);
 				break;
-			case "starred":
-				$users = $app->getStars($id);
-				break;
 			case "muted":
 				$users = $app->getMuted(); // Can only get the current user's muted list
 				break;
@@ -681,7 +673,7 @@ function dabr_stars_page($query)
 
 		// Format the output
 		$content = theme('users', $users);
-		theme('page', $page_type, $content);
+		theme('page', "Starrers", $content);
 	}
 }
 
@@ -704,7 +696,7 @@ function dabr_reposters_page($query)
 
 		// Format the output
 		$content = theme('users', $users);
-		theme('page', $page_type, $content);
+		theme('page', "Reposters", $content);
 	}
 }
 
@@ -1704,7 +1696,7 @@ function dabr_is_reply($status)
 function theme_users($feed, $nextPageURL=null) 
 {
 	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
+	if (count($feed) == 0 || $feed == '[]') return theme_get_logo() . '<br/><p>Where is everybody? No users found :-(</p>';
 
 	foreach ($feed as $user) {
 
@@ -1773,7 +1765,7 @@ function theme_get_full_avatar($object) {
 }
 
 function theme_no_posts() {
-	return '<p>No posts to display.</p>';
+	return theme_get_logo() . '<br/><p>No posts to display :-( sorry</p>';
 }
 
 function theme_search_form($query) {

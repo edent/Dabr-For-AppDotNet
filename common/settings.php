@@ -122,7 +122,11 @@ function settings_page($args) {
 		$utc_offset = '+' . $utc_offset;
 	}
 
-	$content .= '<form action="settings/save" method="post">
+	$content .= '<h1>Settings</h1>';
+	$content .= theme_get_logo();
+	$content .= '<br/>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
+
+	$content .= '<form action="settings/save" method="post" style="clear:both">
 					<p>Colour scheme:<br />
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
