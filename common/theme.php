@@ -220,15 +220,16 @@ function theme_css() {
 	$c = theme('colours');
 	return "
 	<style type='text/css'>
-		nav{margin-top:-15px;}
+		nav{}
 		a{color:#{$c->links}}
-		form{margin:.3em;}
-		img{border:0}
 		small,small a{color:#{$c->small}}
 		body
 		{	
 			background:#{$c->bodybg};
-			color:#{$c->bodyt};margin:0;font:90% sans-serif
+			color:#{$c->bodyt};
+			margin:0px;
+			margin-top:-14px;
+			font:90% sans-serif
 		}
 
 		section {
@@ -240,13 +241,13 @@ function theme_css() {
 		.reply.even{background: #{$c->replyeven}}
 		.tweet,.features
 		{
-			padding:5px;
+			padding:.5em;
 			min-height:50px;
 		}
 		
 		.date
 		{
-			padding:5px;
+			padding:.5em;
 			font-size:0.8em;
 			font-weight:bold;
 			color:#{$c->small}
@@ -261,7 +262,6 @@ function theme_css() {
 			height:auto; 
 			width:auto;
 			float:left;
-			margin:0px;
 			margin-right: 10px; 
 		}
 		.embed
@@ -276,21 +276,6 @@ function theme_css() {
 		.status{
 			word-wrap:break-word;
 		}
-		.shift{
-			margin-left:0px;
-		}
-		.from{
-			font-size:0.75em;
-			color:#{$c->small};
-			font-family:serif;
-		}
-		.from a	{
-			color:#{$c->small};
-		}
-
-		.actionicons {
-		}
-
 		nav ul {
 			padding: 0; 
 			overflow: auto;
