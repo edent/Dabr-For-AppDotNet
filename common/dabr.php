@@ -742,8 +742,20 @@ function dabr_update() {
 	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
-function dabr_replies_page() 
+function dabr_replies_page($query) 
 {
+	// Which user's replies are we looking for?
+	$username = $query[1];
+
+	if ($username == null)
+	{
+		// Must be the logged in user.
+		$username = "me"; // NOTE! Not "@me"!
+	}else
+	{
+		$username = "@" . $username;
+	}
+
 	$perPage = setting_fetch('perPage', 20);	
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
@@ -763,7 +775,7 @@ function dabr_replies_page()
 		// get the current user as JSON
 		//$data = $app->getUser();
 
-		$stream = $app->getUserMentions('me', array(
+		$stream = $app->getUserMentions($username, array(
 												'count'=>$perPage,
 												'before_id'=>$before_id,
 												'since_id'=>$since_id,
@@ -777,7 +789,7 @@ function dabr_replies_page()
 		//print_r($stream);
 		$content .= theme('timeline', $stream);
 			
-		theme('page', 'Replies', $content);
+		theme('page', 'Replies to ' . $username, $content);
 	// otherwise prompt to sign in
 	} else {
 		$content = sign_in();
@@ -1437,7 +1449,7 @@ function dabr_user_actions($user, $link=TRUE)
 			$actions .= " | <a href='confirm/spam/{$username}/{$id}'>Report Spam</a>";
 		}
 		
-		$actions .= " | <a href='search?query=%40{$username}'>Search @{$username}</a>";
+		$actions .= " | <a href='replies/{$username}'>Search @{$username}</a>";
 	}else
 	{
 		$actions .= pluralise('follower', $user['counts']['followers'], true);
@@ -1871,7 +1883,7 @@ function theme_action_icons($status)
 	}
 
 	//	Search for @ to a user
-	$actions[] = theme('action_icon',"search?query=%40{$from}","images/q{$L}.png",'?');
+	$actions[] = theme('action_icon',"replies/{$from}","images/q{$L}.png",'?');
 
 	return implode(' ', $actions);
 }
