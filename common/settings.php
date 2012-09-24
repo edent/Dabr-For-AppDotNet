@@ -150,7 +150,7 @@ function settings_page($args) {
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
 	$content .= '		</select>
 					</p>';
-	$content .= '	<p>Emoticons - show :-) as images<br>
+	$content .= '	<p>Emoticons - show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" /><br>
 						<select name="emoticons">';
 	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
 	$content .= '		</select>
