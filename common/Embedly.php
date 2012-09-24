@@ -260,6 +260,19 @@ function embedly_embed_thumbnails(&$feed)
 		{
 			$entities = $status['entities'];
 			
+
+			if ($status['annotations'] > 0)
+			{
+				foreach($status['annotations'] as $annotation) 
+				{
+					if ($annotation['type'] == "net.app.core.oembed")
+					{
+						$embed = $annotation['value']['html'];
+						$status['html'] .= "<br/>".$embed;
+					}
+				}
+			} 
+
 			if($entities['links'])
 			{
 				foreach($entities['links'] as $urls) 
