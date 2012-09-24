@@ -263,7 +263,6 @@ function theme_css() {
 			background:#{$c->bodybg};
 			color:#{$c->bodyt};
 			margin:0px;
-			margin-top:-14px;
 			font:90% sans-serif
 		}
 
@@ -274,12 +273,18 @@ function theme_css() {
 		.even{background:#{$c->even}}
 		.reply{background:#{$c->replyodd}}
 		.reply.even{background: #{$c->replyeven}}
-		.tweet,.features
+		.tweet
 		{
 			padding:.5em;
 			min-height:50px;
 		}
 		
+		.features
+		{
+			padding:.5em;
+			min-height:25px;
+		}
+
 		.date
 		{
 			padding:.5em;
