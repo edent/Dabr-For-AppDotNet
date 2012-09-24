@@ -526,7 +526,7 @@ function dabr_confirmation_page($query)
 	$action = $query[1];
 	$target = $query[2];	//The name of the user we are doing this action on
 
-	$content = theme_get_logo() . '<br/>';
+	$content = theme_get_logo() . '<br>';
 
 	switch ($action) {
 		case 'mute':
@@ -573,7 +573,7 @@ function dabr_confirmed_page($query)
         $action = $query[1]; // The action. block, unblock, spam
         $target = $query[2]; // The username of the target
 
-		$content = theme_get_logo() . '<br/>';
+		$content = theme_get_logo() . '<br>';
 	
 		switch ($action) {
 			case 'mute':
@@ -1067,7 +1067,7 @@ function dabr_user_page($query)
 				}
 			}
 		
-			$content .= "<p>In reply to:<br />" . $reply_post['text'] . "</p>";
+			$content .= "<p>In reply to:<br>" . $reply_post['text'] . "</p>";
 		}
 		
 		// Create the form where users can enter text
@@ -1341,7 +1341,7 @@ function dabr_repost_page($query)
 						<input type='hidden' name='from' value='$from' />
 						<input name='in_reply_to_id' value='$id' type='hidden' />
 						<textarea name='status' style='width:90%; max-width: 400px;' rows='6' id='status'>$text</textarea>
-						<br/>
+						<br>
 						<input type='submit' value='Repost' />
 						<span id='remaining'>" . (256 - $length) ."</span>
 					</form>";
@@ -1385,8 +1385,12 @@ function dabr_user_bio($user)
 	$bio = "";
 
 	if($user['description']['text'] != "")
-			$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . "<br />";
-		
+		$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . "<br>";
+	
+	if($user['timezone'] != "")
+		$bio .= "Timezone: " . str_replace("_", " ", $user['timezone']) . "<br>";
+
+
 	$bio .= "Joined on " . $date_joined . " - ";
 	$bio .= pluralise('post', (int)$user['counts']['posts'], true) . " ";
 	$bio .= "(~" . pluralise('post', $posts_per_day, true) . " per day). ";
@@ -1472,9 +1476,9 @@ function theme_user_header($user)
 	$out .= "	</span>";
 	$out .= "	<span class='status shift'>
 					<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
-					<br />";
+					<br>";
 	$out .= "		<span class='about'>";
-	$out .= "			Bio: " . dabr_user_bio($user)."<br />";
+	$out .= "			Bio: " . dabr_user_bio($user)."<br>";
 	$out .= "		</span>
 				</span>";
 	$out .= "	<div class='features'>";
@@ -1621,9 +1625,9 @@ function theme_timeline($feed)
 			}
 
 			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['username']}</a></b><span class=\"actionicons\"> $actions $link</span>
-					<br/>
+					<br>
 					$text
-					<br/>
+					<br>
 					<small>$repost_info Sent via $source $conversation</small>";
 
 			unset($row);
@@ -1708,7 +1712,7 @@ function dabr_is_reply($status)
 function theme_users($feed, $nextPageURL=null) 
 {
 	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return theme_get_logo() . '<br/><p>Where is everybody? No users found :-(</p>';
+	if (count($feed) == 0 || $feed == '[]') return theme_get_logo() . '<br><p>Where is everybody? No users found :-(</p>';
 
 	foreach ($feed as $user) {
 
@@ -1724,7 +1728,7 @@ function theme_users($feed, $nextPageURL=null)
 		$date_joined = date('jS M Y', $raw_date_joined);
 	
 		$content = "<a href=\"user/$username/$id\">$name (@$username)</a>
-					<br />
+					<br>
 					<span class='about'>";
 
 		if($user['description']['text'] != "")
@@ -1732,7 +1736,7 @@ function theme_users($feed, $nextPageURL=null)
 
 		$content .= dabr_user_actions($user,false);		
 
-		$content .= 	"<br />";
+		$content .= 	"<br>";
 		$content .= "</span>";
 
 		$rows[] = 	array(
@@ -1777,7 +1781,7 @@ function theme_get_full_avatar($object) {
 }
 
 function theme_no_posts() {
-	return theme_get_logo() . '<br/><p>No posts to display :-( sorry</p>';
+	return theme_get_logo() . '<br><p>No posts to display :-( sorry</p>';
 }
 
 function theme_search_form($query) {
