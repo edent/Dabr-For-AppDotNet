@@ -336,6 +336,11 @@ function dabr_parse_tags($input, $entities = false)
 	//	Linebreaks.  Some clients insert \n for formatting.
 	$out = nl2br($out);
 
+	//	Add Emoticons :-)
+	if (setting_fetch('emoticons') != 'off') {
+		$out = emoticons($out);
+	}
+
 	//Return the completed string
 	return $out;
 }
