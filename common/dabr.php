@@ -180,19 +180,26 @@ function long_url($shortURL)
 function js_counter($name, $length='256')
 {
 	$script = '<script type="text/javascript">
-function updateCount() {
-var remaining = ' . $length . ' - document.getElementById("' . $name . '").value.length;
-document.getElementById("remaining").innerHTML = remaining;
-if(remaining < 0) {
- var colour = "#FF0000";
- var weight = "bold";
-} else {
- var colour = "";
- var weight = "";
-}
-document.getElementById("remaining").style.color = colour;
-document.getElementById("remaining").style.fontWeight = weight;
-setTimeout(updateCount, 400);
+function updateCount() 
+{
+	var remaining = ' . $length . ' - document.getElementById("' . $name . '").value.length;
+	document.getElementById("remaining").innerHTML = remaining;
+	
+	if(remaining < 0) 
+	{
+		var colour = "#FF0000";
+		var weight = "bold";
+	} else if(remaining < 10) 
+	{
+		var colour = "#FFFF00";
+		var weight = "bold";
+	} else {
+ 		var colour = "";
+ 		var weight = "";
+	}
+	document.getElementById("remaining").style.color = colour;
+	document.getElementById("remaining").style.fontWeight = weight;
+	setTimeout(updateCount, 400);
 }
 updateCount();
 </script>';
@@ -708,6 +715,10 @@ function dabr_reposters_page($query)
 function dabr_update() {
 	dabr_ensure_post_action();
 	$status = stripslashes(trim($_POST['status']));
+
+	// Convert linebreaks to be a single character
+	$status = str_replace(array("\r\n", "\r", "\n"), "\n", $status);
+
 	if ($status) {
 		$app = new EZAppDotNet();
 		if ($app->getSession()) 
