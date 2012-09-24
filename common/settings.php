@@ -124,42 +124,42 @@ function settings_page($args) {
 
 	$content .= '<h1>Settings</h1>';
 	$content .= theme_get_logo();
-	$content .= '<br/>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
+	$content .= '<br>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
 
 	$content .= '<form action="settings/save" method="post" style="clear:both">
-					<p>Colour scheme:<br />
+					<p>Colour scheme:<br>
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
 	$content .= '		</select>
 					</p>';
 
-	$content .= '<p>Mode:<br />';
+	$content .= '<p>Mode:<br>';
 
 	$content .= theme_radio($modes, "modes", setting_fetch('modes', 'bigtouch'));
 
 	$content .= '</p>';
 
-	$content .= '	<p>Menu Bar:<br />
+	$content .= '	<p>Menu Bar:<br>
 						<select name="menustyle">';
 	$content .= theme('options', $menustyle, setting_fetch('menustyle', 'smart'));
 	$content .= '		</select>
 					</p>';
 
-	$content .= '	<p>Posts Per Page:<br />
+	$content .= '	<p>Posts Per Page:<br>
 						<select name="perPage">';
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
 	$content .= '		</select>
 					</p>';
-	$content .= '	<p>Emoticons - show :-) as images<br />
+	$content .= '	<p>Emoticons - show :-) as images<br>
 						<select name="emoticons">';
 	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
 	$content .= '		</select>
 					</p>
-					<p>External links go:<br />
+					<p>External links go:<br>
 						<select name="gwt">';
 	$content .= theme('options', $gwt, setting_fetch('gwt', 'off'));
 	$content .= '		</select>
-						<small><br />Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>
+						<small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>
 					</p>';
 	$content .= '	<p>
 						<label>
@@ -172,7 +172,7 @@ function settings_page($args) {
 						</label>
 					</p>';
 	$content .= '	<p>
-						<label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br />
+						<label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br>
 							It is worth adjusting this value if the time appears to be wrong.
 						</label>
 					</p>';

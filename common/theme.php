@@ -70,7 +70,7 @@ function theme_radio($options, $name, $selected = NULL)
 							id="'.$value.'" 
 							value="'.$value.'" '.($selected == $value ? 'checked="checked"' : '').' />'; 
 		$output .= ' ' . $description . '</label>
-		<br />';
+		<br>';
 	}
 	return $output;
 }

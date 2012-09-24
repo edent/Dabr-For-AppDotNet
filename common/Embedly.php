@@ -268,7 +268,7 @@ function embedly_embed_thumbnails(&$feed)
 					if ($annotation['type'] == "net.app.core.oembed")
 					{
 						$embed = $annotation['value']['html'];
-						$status['html'] .= "<br/>".$embed;
+						$status['html'] .= "<br>".$embed;
 					}
 				}
 			} 
