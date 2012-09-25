@@ -1617,7 +1617,7 @@ function theme_timeline($feed)
 			$link = theme('status_time_link', $status, true);
 
 			$avatar = theme('avatar', $status['user']['avatar_image']['url'], $status['user']['name']);
-			$source = "<a href=\"{$status['source']['link']}\">{$status['source']['name']}</a>";
+			$source = "<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">{$status['source']['name']}</a>";
 
 			$conversation = "";
 			if ($status['reply_to'])
@@ -1859,10 +1859,10 @@ function theme_action_icons($status)
 	//	Re-post	
 	if ($status['dabr_repost_of'])
 	{
-		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweeted{$L}.png", 'RT');
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweeted{$L}.png", 'RP');
 	}
 	else {
-		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweet{$L}.png", 'RT');
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweet{$L}.png", 'RP');
 	}
 	if ($status['num_reposts']>0)
 	{
