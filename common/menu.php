@@ -52,9 +52,9 @@ function theme_menu_top() {
 	return theme('menu_both', 'top');
 }
 
-function theme_menu_bottom() {
-	//return theme('menu_both', 'bottom');
-	return '<a href="'.pageURL().'#prio">^menu^</a>';
+function theme_menu_bottom() 
+{
+	return '<a href="'.pageURL().'#prio" class="button">^menu^</a>';
 }
 
 function theme_menu_both($menu) {

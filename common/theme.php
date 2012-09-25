@@ -184,7 +184,6 @@ function theme_header($title)
 function theme_page($title, $content) {
 	$body = theme('menu_top');
 	$body .= theme_header($title)  . "<section>" . $content . "</section>";
-	$body .= theme('menu_bottom');
 	$body .= theme('google_analytics');
 	if (DEBUG_MODE == 'ON') 
 	{
@@ -374,6 +373,20 @@ function theme_css() {
 		}
 		
 		.logo{float:left;margin-right:15px;}
+
+		.button{
+			font: bold 100%;
+    		text-decoration: none;
+    		background-color: #EEEEEE;
+    		color: #333333;
+    		padding: 2px 6px 2px 6px;
+    	}
+
+    	.bottom{
+    		font:110%;
+			text-align:center;
+		}
+
 	</style>";
 }
 

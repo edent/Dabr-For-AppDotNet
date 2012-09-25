@@ -661,6 +661,7 @@ function dabr_users_page($query) {
 
 		// Format the output
 		$content = theme('users', $users);
+
 		theme('page', $page_type, $content);
 	}
 }
@@ -1543,9 +1544,7 @@ function preg_match_one($pattern, $subject, $flags = NULL) {
 function theme_timeline($feed)
 {
 	if (count($feed) == 0) return theme('no_posts');
-	if (count($feed) < 2) { 
-		$hide_pagination = true;
-	}
+	
 	$rows = array();
 	$page = menu_current_page();
 	$date_heading = false;
@@ -1668,20 +1667,15 @@ function theme_timeline($feed)
 		}
 	}
 	$content = theme('table', array(), $rows, array('class' => 'timeline'));
-/*
-	if ($page != '' && !$hide_pagination)
-	{
-		$content .= theme('pagination');
-	}
-	else if (!$hide_pagination)  // Don't show pagination if there's only one item
-	{
-*/		//	Get the IDs of the first and last statuses
+
+	//	Don't show pagination if there's only one item
+	//	Get the IDs of the first and last posts
 	if (!$hide_pagination)
 	{
 		$last = end($feed);
 		$first = reset($feed);
 
-		$content .= theme_pagination($last['id'],$first['id']);//'<p>'.implode(' | ', $links).'</p>';
+		$content .= theme_pagination($last['id'],$first['id']);
 	}
 
 	return $content;
@@ -1771,8 +1765,10 @@ function theme_users($feed, $nextPageURL=null)
 	}
 
 	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if ($nextPageURL)
+	/*if ($nextPageURL)
 		$content .= "<a href='{$nextPageURL}'>Next</a>";
+	*/
+	$content .= theme_pagination();
 	return $content;
 }
 
@@ -1825,14 +1821,24 @@ function theme_external_link($url, $content = null) {
 
 function theme_pagination($before_id=null,$since_id=null)
 {
+	$pagination = "<div class=\"bottom\"><p>";
 
-	if ($since_id || $before_id)  // Don't show pagination if there's only one item
+	if ($since_id)
 	{
-		$links[] = "<a href='{$_GET['q']}?before_id=$before_id'>Older</a>";
-		$links[] = "<a href='{$_GET['q']}?since_id=$since_id'>Newer</a>";
-		
-		return '<p>'.implode(' | ', $links).'</p>';
+		$pagination .= "<a href='{$_GET['q']}?before_id=$before_id' class='button'>&lt; Older</a> ";
 	}
+
+	$pagination .= "<a href=\"".pageURL()."#prio\" class=\"button\">^ Menu ^</a> ";
+
+	if ($before_id) 
+	{	
+		$pagination .= "<a href='{$_GET['q']}?since_id=$since_id' class='button'>Newer &gt;</a>";
+	}	
+	
+	$pagination .= "</p></div>";
+
+	return $pagination;
+	
 }
 
 
