@@ -389,7 +389,14 @@ function dabr_status_page($query)
 			$api_start = microtime(1);
 
 			//	Get the post
-			$post = $app->getPost($id, array('include_annotations' => 1));	
+			try
+			{	
+				$post = $app->getPost($id, array('include_annotations' => 1));	
+			}
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
 
 			//	Get the Thread 
 			$thread_id = $post['thread_id'];
@@ -431,13 +438,21 @@ function dabr_status_page($query)
 			//	If this isn't the head of the thread, show the thread. If this is the head of the thread, only show if there are replies
 			if ($thread_id != $id || $post['num_replies'] > 0) 
 			{
-				$thread = array_reverse($app->getPostReplies($thread_id, 
+				try
+				{
+					$thread = $app->getPostReplies($thread_id, 
 												array(
 													'count'=>setting_fetch('perPage', 20),
 													'include_annotations' => 1
 													)
-												)
-										);
+												);
+				}
+				catch (Exception $e) 
+				{
+					theme_error($e->getMessage());
+				}
+
+				$thread = array_reverse($thread);
 				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
 			}
 			
@@ -471,7 +486,14 @@ function dabr_delete_page($query) {
 		// check that the user is signed in
 		if ($app->getSession()) 
 		{
-			$deleted = $app->deletePost($id);
+			try 
+			{
+				$deleted = $app->deletePost($id);
+			} 
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
 		}
 
 
@@ -497,13 +519,20 @@ function dabr_follow_page($query) {
 	
 		if ($user) 
 		{
-			if($query[0] == 'follow')
-			{
-				$app->followUser($user);
-			} else {
-				$app->unfollowUser($user);
+			try{
+				if($query[0] == 'follow')
+				{
+					$app->followUser($user);
+					
+				} else {
+					$app->unfollowUser($user);
+				}
+				dabr_refresh('friends');
 			}
-			dabr_refresh('friends');
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
 		}
 	}
 }
@@ -518,15 +547,23 @@ function dabr_mute_page($query) {
 		$username = "@" . $username;
 		if ($app->getSession()) 
 		{
-			if($query[0] == 'mute')
+			try
 			{
-				$app->muteUser($username);
-				dabr_refresh("confirmed/mute/{$username}");
-			} else 
-			{
-				$app->unmuteUser($username);
-				dabr_refresh("confirmed/unmute/{$username}");
+				if($query[0] == 'mute')
+				{
+					$app->muteUser($username);
+					dabr_refresh("confirmed/mute/{$username}");
+				} else 
+				{
+					$app->unmuteUser($username);
+					dabr_refresh("confirmed/unmute/{$username}");
+				}
 			}
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
+
 		}
 	}
 }
@@ -644,18 +681,25 @@ function dabr_users_page($query) {
 			$username = "@" . $username;
 		}
 		
-		switch ($page_type) {
-			case "friends":
-				$users = $app->getFollowing($username);
-				break;
-			case "followers":
-				$users = $app->getFollowers($username);
-				break;
-			case "muted":
-				$users = $app->getMuted(); // Can only get the current user's muted list
-				break;
+		try
+		{
+			switch ($page_type) {
+				case "friends":
+					$users = $app->getFollowing($username);
+					break;
+				case "followers":
+					$users = $app->getFollowers($username);
+					break;
+				case "muted":
+					$users = $app->getMuted(); // Can only get the current user's muted list
+					break;
+				}
 		}
-	
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
 
@@ -679,8 +723,15 @@ function dabr_stars_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$users = $app->getStars($id);
-	
+		try
+		{
+			$users = $app->getStars($id);
+		}
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
 
@@ -702,7 +753,12 @@ function dabr_reposters_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$users = $app->getReposters($id);
+		try{
+			$users = $app->getReposters($id);
+		}catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 	
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -728,7 +784,7 @@ function dabr_update() {
 
 			// Geolocation parameters
 			list($lat, $long) = explode(',', $_POST['location']);
-			$annotations;
+			$annotations = array();
 			if (is_numeric($lat) && is_numeric($long)) 
 			{
 				$post_data['lat'] = $lat;
@@ -748,11 +804,18 @@ function dabr_update() {
 
 				$annotations[] = $locationAnnotation;
 
+				
+			}
+			
+			try 
+			{
 				$app->createPost($status,array('reply_to' => $in_reply_to_id, 'annotations' =>$annotations));
+			} 
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
 			}
-			else{
-				$app->createPost($status,array('reply_to' => $in_reply_to_id));	
-			}
+			
 			
 		}
 	}
@@ -789,17 +852,22 @@ function dabr_replies_page($query)
 		// Create the form where users can enter text
 		$content = dabr_post_form();//theme('status_form');
 	
-		// get the current user as JSON
-		//$data = $app->getUser();
-
-		$stream = $app->getUserMentions($username, array(
+		try 
+		{
+			$stream = $app->getUserMentions($username, array(
 												'count'=>$perPage,
 												'before_id'=>$before_id,
 												'since_id'=>$since_id,
 												'include_annotations' => 1
 												)
-										);
+											);
 
+		} 
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
 		
@@ -840,7 +908,13 @@ function dabr_starred_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		$stream = $app->getStarred($username, array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id, 'include_annotations'=>1));
+		try {
+			$stream = $app->getStarred($username, array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id, 'include_annotations'=>1));
+		}
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -877,7 +951,19 @@ function dabr_global_page()
 		$content = dabr_post_form();
 	
 		// get the latest public posts
-		$stream = $app->getPublicPosts(array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id,'include_annotations'=>1));
+		try 
+		{
+			$stream = $app->getPublicPosts(	array('count'=>$perPage,
+													'before_id'=>$before_id,
+													'since_id'=>$since_id,
+													'include_annotations'=>1
+												)
+										);			
+		}
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -971,13 +1057,20 @@ function dabr_hashtag_page($query)
 			$api_start = microtime(1);
 
 			//	Search for hashtags
-			$stream = $app->searchHashtags($hashtag, 
+			try
+			{
+				$stream = $app->searchHashtags($hashtag, 
 											array('count'=>$perPage,
 												'before_id'=>$before_id,
 												'since_id'=>$since_id, 
 												'include_annotations'=>1
 											)
 										);
+			}
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -1021,7 +1114,14 @@ function dabr_find_post_in_timeline($id, $stream)
 		// Not found, fetch it specifically from the API
 		if ($app->getSession()) 
 		{
-			$found_post = $app->getPost($id, array('include_annotations' => 1));
+			try
+			{
+				$found_post = $app->getPost($id, array('include_annotations' => 1));
+			}
+			catch (Exception $e) 
+			{
+				theme_error($e->getMessage());
+			}
 		}
 	}
 	
@@ -1046,17 +1146,23 @@ function dabr_user_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		// get the current user as JSON
-		//$user_id = $app->getIdByUsername($user_name);
-
 		//	Get the user's name
-		$user = $app->getUser("@".$user_name);
+		try
+		{
+			$user = $app->getUser("@".$user_name);
+		}
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 
 		//	Start building the status
 		$status = "@" . $user_name . " ";
 
 		// get the user stream early, so we can search for reply to all.
-		$stream = $app->getUserPosts("@" . $user_name,
+		try
+		{
+			$stream = $app->getUserPosts("@" . $user_name,
 										array(
 											'count'=>$perPage,
 											'before_id'=>$before_id,
@@ -1064,7 +1170,11 @@ function dabr_user_page($query)
 											'include_annotations'=>1
 										)
 									);
-		
+		}catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+
 		if ($subaction == "reply" || $subaction == "replyall")
 		{
 			$reply_post = dabr_find_post_in_timeline($in_reply_to_id,$stream);
@@ -1088,7 +1198,7 @@ function dabr_user_page($query)
 		}
 		
 		// Create the form where users can enter text
-		$content .= dabr_post_form($status, $in_reply_to_id);//theme('status_form', $status, $in_reply_to_id);
+		$content .= dabr_post_form($status, $in_reply_to_id);
 
 		$content .= theme('user_header', $user);
 
@@ -1117,13 +1227,21 @@ function dabr_star_page($query)
 	
 	if ($app->getSession())
 	{
-		if ($query[0] == 'unstar') 
+		try
 		{
-			$app->unstarPost($id);
-		} else {
-			$app->starPost($id);
-		}	
-		dabr_refresh();
+			if ($query[0] == 'unstar') 
+			{
+				$app->unstarPost($id);
+			} else {
+				$app->starPost($id);
+			}	
+
+			dabr_refresh();
+		}
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 	}
 }
 
@@ -1148,7 +1266,20 @@ function dabr_home_page()
 		//$data = $app->getUser();
 
 		//	get the stream
-		$stream = $app->getUserStream(array('count'=>setting_fetch('perPage', 20),'before_id'=>$before_id,'since_id'=>$since_id,'include_annotations' => 1));
+		try
+		{	
+			$stream = $app->getUserStream(
+								array(
+									'count'=>setting_fetch('perPage', 20),
+									'before_id'=>$before_id,
+									'since_id'=>$since_id,
+									'include_annotations' => 1
+									)
+								);
+		}catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
 		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1172,88 +1303,10 @@ function dabr_raw_page($query) {
 		if ($app->getSession()) 
 		{
 			// Dump the post to screen
-			//print_r($app->getPost($query[1]));
-			//$thread = $app->getPost($query[1]);
-			//$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
 			$thread = $app->getPost($query[1],array('include_annotations' => 1));
 			echo "<pre>";
 				print_r($thread);
-			
-			//	echo json_encode($thread);
-			echo "/<pre>";
-		}
-	}
-}
-
-
-function dabr_hyper_page($query) 
-{
-	if (isset($query[1])) 
-	{
-		$app = new EZAppDotNet();
-		if ($app->getSession()) 
-		{
-			$thread = $app->getPostReplies($query[1],array('count'=>200,'include_annotations' => 1));
-			$thread[] = $app->getPost($query[1], array('include_annotations' => 1));
-
-			$json_string = json_encode($thread);
-
-			$data=json_decode($json_string,true);
-
-			$array  = array();
-
-			// first throw everything into an associative array for easy access
-			$references = array();
-			foreach ($data as $post) 
-			{
-			    $id = $post['id'];
-			    $post['children'] = array();
-
-			    $parent = $post['reply_to'];
-			    $text = $post['text'];
-			    $user = $post['user']['username'];
-			    $name = $post['user']['name'];
-			    $avatar = $post['user']['avatar_image']['url'];
-
-			    $references[$id] = array(
-			        "id" => $id,
-			        "name" => htmlspecialchars($name),
-			        "reply_to" => $parent, 
-			        "data" => array(
-			            "text" => htmlspecialchars($text), 
-			            "user" => htmlspecialchars($user), 
-			            "avatar" => $avatar
-			            )
-			        );
-
-			}
-
-			// now create the tree
-			$tree = array();
-			foreach ($references as &$post) 
-			{
-			    $id = $post['id'];
-			    $parentId = $post['reply_to'];
-			    // if it's a top level object, add it to the tree
-			    if (!$parentId) 
-			    {
-			        $tree[] =& $references[$id];
-			    }
-			    // else add it to the parent
-			    else 
-			    {
-			        $references[$parentId]['children'][] =& $post;
-			    }
-			    // avoid bad things by clearing the reference
-			    unset($post);
-			}
-
-			//trim the []
-			$output = json_encode($tree);
-			$output = substr($output, 1, -1);
-			// encode it
-			header("Content-type: application/json");
-			print $output;
+			echo "</pre>";
 		}
 	}
 }
@@ -1335,8 +1388,16 @@ function dabr_repost_page($query)
 			//	Track how long the API call took
 			global $api_time;
 			$api_start = microtime(1);
-
+		
+		try 
+		{
 			$post = $app->getPost($id,array('include_annotations' => 1));
+		} 
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -1375,7 +1436,15 @@ function dabr_repost($query)
 	$app = new EZAppDotNet();
 	if ($app->getSession()) 
 	{
-		$app->repost($id);
+		try 
+		{
+			$app->repost($id);
+		} 
+		catch (Exception $e) 
+		{
+			theme_error($e->getMessage());
+		}
+		
 		dabr_refresh('');
 	}
 }
