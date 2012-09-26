@@ -341,7 +341,7 @@ function dabr_parse_tags($input, $entities = false)
 	$out = str_replace(chr(27), ">", $out);			
 
 	//	Linebreaks.  Some clients insert \n for formatting.
-	$out = nl2br($out);
+	$out = nl2br($out, false);
 
 	//	Add Emoticons :-)
 	if (setting_fetch('emoticons') != 'off') {
