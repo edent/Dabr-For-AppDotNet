@@ -142,8 +142,11 @@ function theme_table_cell($contents, $header = FALSE) {
 }
 
 
-function theme_error($message) {
-	theme_page('Error', $message);
+function theme_error($message) 
+{
+	$message = str_replace("Bad Request: ", "", $message);
+	$errorMessage = "<h3>" . theme_get_logo(57) . "You silly sausage! " . $message . "</h3>";
+	theme_page('Error', $errorMessage);
 }
 
 
@@ -252,6 +255,8 @@ function theme_colours() {
 
 function theme_css() {
 	$c = theme('colours');
+	$font_size = setting_fetch('font_size', '1');
+
 	return "
 	<style type='text/css'>
 		nav{}
@@ -262,7 +267,7 @@ function theme_css() {
 			background:#{$c->bodybg};
 			color:#{$c->bodyt};
 			margin:0px;
-			font:90% sans-serif
+			font:" . ($font_size * 1) ."em sans-serif;
 		}
 
 		section {
@@ -287,13 +292,13 @@ function theme_css() {
 		.date
 		{
 			padding:.5em;
-			font-size:0.8em;
+			font-size:" . ($font_size * 0.8) ."em;
 			font-weight:bold;
 			color:#{$c->small}
 		}
 		.about,.time
 		{
-			font-size:0.75em;
+			font-size:" . ($font_size * 0.8) ."em;
 			color:#{$c->small}
 		}
 		.avatar
@@ -334,7 +339,7 @@ function theme_css() {
 			padding: 0.5em; 
 			text-decoration: none; 
 			border-right: 1px solid #fff; 
-			font-size: 110%; 
+			font-size:" . ($font_size * 1.1) ."em; 
 			color:#{$c->menua};
 		}
 
@@ -375,7 +380,8 @@ function theme_css() {
 		.logo{float:left;margin-right:15px;}
 
 		.button{
-			font: bold 100%;
+			font: bold;
+			font-size:" . ($font_size * 1) .";
     		text-decoration: none;
     		background-color: #EEEEEE;
     		color: #333333;
@@ -383,7 +389,7 @@ function theme_css() {
     	}
 
     	.bottom{
-    		font:110%;
+    		font:" . ($font_size * 1.1) ."em;
 			text-align:center;
 		}
 

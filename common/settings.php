@@ -71,6 +71,7 @@ function settings_page($args) {
 		$settings['hide_inline'] = $_POST['hide_inline'];
 		$settings['utc_offset']  = (float)$_POST['utc_offset'];
 		$settings['emoticons']   = $_POST['emoticons'];
+		$settings['font_size']   = $_POST['font_size'];
 				
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		dabr_refresh('');
@@ -78,10 +79,16 @@ function settings_page($args) {
 
 	$modes = array(
 		'bigtouch'	=> 'Big Icons <img src="images/replyL.png" alt="Big Icon"/>',
-		'touch'		=> 'Small Icons <img src="images/reply.png"alt="Small Icon"/>',
+		'touch'		=> 'Small Icons <img src="images/reply.png" alt="Small Icon"/>',
 		'text'		=> 'Text only @',
 	);
 	
+	$font_size = array(
+		'0.5' => "<span style=\"font-size:50%\">Small</span>", 
+		'1' => "<span style=\"font-size:100%\">Normal</span>", 
+		'1.5' => "<span style=\"font-size:150%\">Large</span>", 
+		'2' => "<span style=\"font-size:200%\">Huge</span>", 
+	);
 
 	$menustyle = array(
 		'smart'	=> 'Smart Menu',
@@ -127,41 +134,43 @@ function settings_page($args) {
 	$content .= '<br>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
 
 	$content .= '<form action="settings/save" method="post" style="clear:both">
-					<p>Colour scheme:<br>
+					<h3>Colour scheme:<br>
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
 	$content .= '		</select>
-					</p>';
+					</h3>';
 
-	$content .= '<p>Mode:<br>';
+	$content .= '<h3>Mode:</h3>';
 
 	$content .= theme_radio($modes, "modes", setting_fetch('modes', 'bigtouch'));
 
-	$content .= '</p>';
+	$content .= '<h3>Font Size:</h3>';
 
-	$content .= '	<p>Menu Bar:<br>
+	$content .= theme_radio($font_size, "font_size", setting_fetch('font_size', '1'));
+
+
+	$content .= '	<h3>Menu Bar:</h3>
 						<select name="menustyle">';
 	$content .= theme('options', $menustyle, setting_fetch('menustyle', 'smart'));
-	$content .= '		</select>
-					</p>';
+	$content .= '		</select>';
 
-	$content .= '	<p>Posts Per Page:<br>
+	$content .= '	<h3>Posts Per Page:</h3>
 						<select name="perPage">';
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
-	$content .= '		</select>
-					</p>';
-	$content .= '	<p>Emoticons - show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" /><br>
+	$content .= '		</select>';
+
+	$content .= '	<h3>Emoticons - show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" /></h3>
 						<select name="emoticons">';
 	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
-	$content .= '		</select>
-					</p>
-					<p>External links go:<br>
+	$content .= '		</select>';
+
+	$content .=	'	<h3>External links go:</h3>
 						<select name="gwt">';
 	$content .= theme('options', $gwt, setting_fetch('gwt', 'off'));
 	$content .= '		</select>
-						<small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>
-					</p>';
-	$content .= '	<p>
+						<small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>';
+	$content .= '	<h3>Others:</h3>
+					<p>
 						<label>
 							<input type="checkbox" name="timestamp" value="yes" '. (setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .' /> Show the timestamp ' . dabr_date('H:i') . ' instead of 25 sec ago
 						</label>
