@@ -982,13 +982,12 @@ function dabr_global_page()
 function dabr_search_page() 
 {
 	$search_query = $_GET['query'];
+	$search_type = $_GET['type'];
 
 	// Geolocation parameters
 	list($lat, $long) = explode(',', $_GET['location']);
 	$loc = $_GET['location'];
 	$radius = $_GET['radius'];
-
-	$content = theme('search_form', $search_query);
 
 	if (isset($_POST['query'])) 
 	{
@@ -1001,19 +1000,51 @@ function dabr_search_page()
 	{
 		$search_query = $_COOKIE['search_favourite'];
 	}
-	
+
+	$content = theme('search_form', $search_query, $search_type);
+
 	if ($search_query) 
 	{
-		$tl = dabr_search($search_query);//, $lat, $long, $radius);
-
-		if ($search_query !== $_COOKIE['search_favourite']) 
+		if ($search_type == "users")
 		{
-			$content .= '<form action="search/bookmark" method="post">
-							<input type="hidden" name="query" value="'.$search_query.'" />
-							<input type="submit" value="Save as default search" />
-						</form>';
+			$app = new EZAppDotNet();
+			if ($app->getSession()) 
+			{
+				//	Track how long the API call took
+				global $api_time;
+				$api_start = microtime(1);
+
+				//	Search for users
+				try
+				{
+					$users = $app->searchUsers($search_query);
+				} 
+				catch (Exception $e) 
+				{
+					theme_error($e->getMessage());
+				}
+
+				//	Track how long the API call took
+				$api_time += microtime(1) - $api_start;
+
+				$content .= theme('users', $users);
+
+				theme('page', 'Users matching '.stripslashes(htmlentities($search_query,ENT_QUOTES,"UTF-8")), $content);
+			}
 		}
-		$content .= theme('timeline', $tl);
+		else	//	Normal search for posts
+		{
+			$tl = dabr_search($search_query);//, $lat, $long, $radius);
+
+			if ($search_query !== $_COOKIE['search_favourite']) 
+			{
+				$content .= '<form action="search/bookmark" method="post">
+								<input type="hidden" name="query" value="'.$search_query.'" />
+								<input type="submit" value="Save as default search" />
+							</form>';
+			}
+			$content .= theme('timeline', $tl);
+		} 
 	}
 
 	theme('page', 'Search', $content);
@@ -1689,9 +1720,9 @@ function theme_timeline($feed)
 			$source = "<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">{$status['source']['name']}</a>";
 
 			$conversation = "";
-			if ($status['reply_to'])
+			if ($status['reply_to'] || $status['num_replies'] > 0)
 			{
-				$conversation .= "| <a href='status/{$status['reply_to']}'>View Conversation</a>";
+				$conversation .= "| <a href='status/{$status['id']}'>View Conversation</a>";
 			}
 
 			if ($status['annotations'])
@@ -1865,12 +1896,36 @@ function theme_no_posts() {
 	return theme_get_logo() . '<br><p>No posts to display :-( sorry</p>';
 }
 
-function theme_search_form($query) {
-	$query = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
-	return '
-	<form action="search" method="get"><input name="query" value="'. $query .'" />
+function theme_search_form($query, $type="") {
+	$q = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
+
+	
+	$form = '
+	<form action="search" method="get"><input name="query" value="'. $q .'" />
+		<br>
+		<label for="posts">
+			<input name="type" id="posts" value="posts" ';
+				if ($type == "posts" || $type == "")
+				{
+					$form .= 'checked="checked"';
+				}
+
+	$form .=  'type="radio">Search Posts
+		</label>
+		<label for="users">
+			<input name="type" id="users" value="users" ';
+				if ($type == "users")
+				{
+					$form .= 'checked="checked"';
+				}
+
+	$form .= 		 'type="radio">Search Users
+		</label>
+		<br>
 		<input type="submit" value="Search" />
 	</form>';
+
+	return $form;
 }
 
 function theme_external_link($url, $content = null) {

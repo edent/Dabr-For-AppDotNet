@@ -175,6 +175,11 @@ function theme_header($title)
 			$header ="";
 	}
 
+	if (strpos($title, "Users matching") !== false)
+	{
+		$header  .= "<h3>" . theme_get_logo(57) . "Who have we found?</h3>";
+	}
+
 	if (strpos($title, "Posts Starred") !== false)
 	{
 		$header  .= "<h3>" . theme_get_logo(57) . "OMG! It's full of stars!</h3>";
@@ -208,13 +213,13 @@ function theme_page($title, $content) {
 	}
 	ob_start('ob_gzhandler');
 	header('Content-Type: text/html; charset=utf-8');
-	echo	'<!DOCTYPE html>
+	$html =	'<!DOCTYPE html>
 				<html>
 					<head>
 						<meta charset="utf-8" />
 						<meta name="viewport" content="width=device-width; initial-scale=1.0;" />
 						<title>Dabr - ' . $title . '</title>
-						<base href="',BASE_URL,'" />
+						<base href="'.BASE_URL.'" />
 						<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
 						<link rel="apple-touch-icon" href="images/dabr-57.png" />
 						<link rel="apple-touch-icon" sizes="72x72" href="images/dabr-72.png" />
@@ -223,14 +228,15 @@ function theme_page($title, $content) {
 					</head>
 					<body>';
 	//echo 				"<div id=\"advert\">" . show_advert() . "</div>";
-	echo 				$body;
+	$html .= 			$body;
 	if (setting_fetch('colours') == null)
 	{
 		//	If the cookies haven't been set, remind the user that they can set how Dabr looks
-		echo			'<p>Think Dabr looks ugly? <a href="settings">Change the colours!</a></p>';
+		$html .=		'<p>Think Dabr looks ugly? <a href="settings">Change the colours!</a></p>';
 	}
-	echo 			'</body>
+	$html .=		'</body>
 				</html>';
+	echo $html;
 	exit();
 }
 

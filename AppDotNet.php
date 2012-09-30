@@ -319,7 +319,7 @@ class AppDotNet {
 	 * @param integer $post_id The ID of the post to retrieve
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
-	 * are: include_annoations.
+	 * are: include_annotations.
 	 * @return array An associative array representing the post
 	 */
 	public function getPost($post_id=null,$params = array()) {
@@ -343,7 +343,7 @@ class AppDotNet {
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function getPostReplies($post_id=null,$params = array()) {
@@ -360,7 +360,7 @@ class AppDotNet {
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function getUserPosts($user_id='me', $params = array()) {
@@ -377,7 +377,7 @@ class AppDotNet {
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function getUserMentions($user_id='me',$params = array()) {
@@ -391,7 +391,7 @@ class AppDotNet {
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function getUserStream($params = array()) {
@@ -453,40 +453,12 @@ class AppDotNet {
 	}
 
 	/**
-	 * Returns an array of User objects of users who reposted the specified post.
-	 * @param integer $post_id the post ID to 
-	 * @return array An array of associative arrays, each representing a single 
-	 * user who reposted $post_id
-	 */
-	public function getReposters($post_id){
-		return $this->httpReq('get',$this->_baseUrl.'posts/'.$post_id.'/reposters'); 
-	}
-
-	/**
-	 * Repost an existing Post object.
-	 * @param integer $post_id The id of the post
-	 * @return not a clue
-	 */
-	public function repost($post_id){
-		return $this->httpReq('post',$this->_baseUrl.'posts/'.$post_id.'/repost');
-	}
-
-	/**
-	 * Delete a post that the user has reposted.
-	 * @param integer $post_id The id of the post
-	 * @return not a clue
-	 */
-	public function deleteRepost($post_id){
-		return $this->httpReq('delete',$this->_baseUrl.'posts/'.$post_id.'/repost');
-	}
-
-	/**
 	 * Return Posts matching a specific #hashtag.
 	 * @param string $hashtag The hashtag you're looking for.
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function searchHashtags($hashtag=null, $params = array()) {
@@ -500,7 +472,7 @@ class AppDotNet {
 	 * @param array $params An associative array of optional general parameters. 
 	 * This will likely change as the API evolves, as of this writing allowed keys 
 	 * are:	count, before_id, since_id, include_muted, include_deleted, 
-	 * include_directed_posts, and include_annoations.
+	 * include_directed_posts, and include_annotations.
 	 * @return An array of associative arrays, each representing a single post.
 	 */
 	public function getPublicPosts($params = array()) {
@@ -570,11 +542,17 @@ class AppDotNet {
 
 	/**
 	* List the posts starred by the current user
+	* @param array $params An associative array of optional general parameters. 
+	* This will likely change as the API evolves, as of this writing allowed keys 
+	* are:	count, before_id, since_id, include_muted, include_deleted, 
+	* include_directed_posts, and include_annotations.
+	* See https://github.com/appdotnet/api-spec/blob/master/resources/posts.md#general-parameters
 	* @return array An array of associative arrays, each representing a single 
 	* user who has starred a post
 	*/
-	public function getStarred($user_id='me') {
-		return $this->httpReq('get',$this->_baseUrl.'users/'.urlencode($user_id).'/stars');
+	public function getStarred($user_id='me', $params = array()) {
+		return $this->httpReq('get',$this->_baseUrl.'users/'.urlencode($user_id).'/stars'
+					.'?'.$this->buildQueryString($params));
 	}
 
 	/**
@@ -584,6 +562,45 @@ class AppDotNet {
 	*/
 	public function getStars($post_id=null) {
 		return $this->httpReq('get',$this->_baseUrl.'posts/'.$post_id.'/stars');
+	}
+
+	/**
+	 * Returns an array of User objects of users who reposted the specified post.
+	 * @param integer $post_id the post ID to 
+	 * @return array An array of associative arrays, each representing a single 
+	 * user who reposted $post_id
+	 */
+	public function getReposters($post_id){
+		return $this->httpReq('get',$this->_baseUrl.'posts/'.$post_id.'/reposters'); 
+	}
+
+	/**
+	 * Repost an existing Post object.
+	 * @param integer $post_id The id of the post
+	 * @return not a clue
+	 */
+	public function repost($post_id){
+		return $this->httpReq('post',$this->_baseUrl.'posts/'.$post_id.'/repost');
+	}
+
+	/**
+	 * Delete a post that the user has reposted.
+	 * @param integer $post_id The id of the post
+	 * @return not a clue
+	 */
+	public function deleteRepost($post_id){
+		return $this->httpReq('delete',$this->_baseUrl.'posts/'.$post_id.'/repost');
+	}
+
+	/**
+	* List the users who match a specific search term
+	* @param string $search The search query. Supports @username or #tag searches as
+	* well as normal search terms. Searches username, display name, bio information.
+	* Does not search posts.
+	* @return array An array of associative arrays, each representing one user.
+	*/
+	public function searchUsers($search="") {
+		return $this->httpReq('get',$this->_baseUrl.'users/search?q='.urlencode($search));
 	}
 
 	public function getLastRequest() {
