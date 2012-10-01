@@ -1,20 +1,22 @@
 <?php
 
 /*
-Syntax is 
-'Name|links,bodybg,bodyt,small,odd,even,replyodd,replyeven,menubg,menut,menua',
-
 Assembled in theme_css()
+
+Syntax is 
+			'Name|			links	,bodybg	,bodyt	,small	,odd	,even	,replyodd,replyeven,menubg,menut,menua',
 */
 
 $GLOBALS['colour_schemes'] = array(
-	0 => 'Pretty In Pink|c06,fcd,623,c8a,fee,fde,ffa,dd9,c06,fee,fee',
-	1 => 'Ugly Orange|b50,ddd,111,555,fff,eee,ffa,dd9,e81,c40,fff',
-	2 => 'Twytter Blue|2674B2,BFDBE6,111,999,F7FCF6,D8ECF7,A9D0DF,8CBED5,002031,88D0DE,88D0DE',
-	3 => 'Sickly Green|293C03,ccc,000,555,fff,eee,CCE691,ACC671,495C23,919C35,fff',
-	4 => 'Kris\' Purple|d5d,000,ddd,999,222,111,202,101,909,222,000,000',
-	5 => '#red|d12,ddd,111,555,fff,eee,ffa,dd9,c12,fff,fff',
-	6 => 'Fazebook Blue|3B5998,F7F7F7,111,555,D8DFEA,EEE,FFA,DD9,3B5998,FFF,FFF',
+	0 => 'Pretty In Pink|	c06		,fcd	,623	,c8a	,fee	,fde	,ffa	,dd9	,c06	,fee	,fee',
+	1 => 'Ugly Orange|		b50		,ddd	,111	,555	,fff	,eee	,ffa	,dd9	,e81	,c40	,fff',
+	2 => 'Twytter Blue|		2674B2	,BFDBE6	,111	,999	,F7FCF6	,D8ECF7	,A9D0DF	,8CBED5	,002031	,88D0DE	,88D0DE',
+	3 => 'Sickly Green|		293C03	,ccc	,000	,555	,fff	,eee	,CCE691	,ACC671	,495C23	,919C35	,fff'	,
+	4 => 'Kris\' Purple|	d5d		,000	,ddd	,999	,222	,111	,202	,101	,909	,222	,000'	,
+	5 => '#red|				d12		,ddd	,111	,555	,fff	,eee	,ffa	,dd9	,c12	,fff	,fff'	,
+	6 => 'Fazebook Blue|	3B5998	,F7F7F7	,111	,555	,D8DFEA	,EEE	,FFA	,DD9	,3B5998	,FFF	,FFF'	,
+	7 => 'Night Reading|	FF0000	,000000	,FF0000	,FF0000	,222	,111	,202	,101	,000000	,FF0000	,FF0000'	,
+	8 => 'Clear and Simple|	130f30	,ccc	,130f30	,130f30	,fff	,EEE	,FFA	,DD9	,ccc	,130f30	,130f30'	,
 	
 );
 

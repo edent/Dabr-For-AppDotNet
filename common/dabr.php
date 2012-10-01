@@ -304,7 +304,16 @@ function dabr_parse_tags($input, $entities = false)
 				$display = $item['text'];
 				$position = $item['pos'];
 				$length = $item['len'];
-				$url = $item['url'];
+
+				if (setting_fetch('gwt') == 'on') // If the user wants links to go via GWT 
+				{
+					$encoded = urlencode($item['url']);
+					$url = "http://google.com/gwt/n?u={$encoded}";
+				}
+				else {
+					$url = $item['url'];
+				}
+				
 				$linkURL = 	chr(7) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(27) .
 								"{$display}" . 
 							chr(7) . "/a" . chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
