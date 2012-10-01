@@ -72,6 +72,7 @@ function settings_page($args) {
 		$settings['utc_offset']  = (float)$_POST['utc_offset'];
 		$settings['emoticons']   = $_POST['emoticons'];
 		$settings['font_size']   = $_POST['font_size'];
+		$settings['nondirected'] = $_POST['nondirected'];
 				
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		dabr_refresh('');
@@ -163,6 +164,12 @@ function settings_page($args) {
 						<select name="emoticons">';
 	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
 	$content .= '		</select>';
+
+	$content .=	'	<h3>Show non-directed replies:</h3>
+						<label>
+							<input type="checkbox" name="nondirected" value="1" '. (setting_fetch('nondirected') == '1' ? ' checked="checked" ' : '') .' /> 
+							You follow Alice, you don\'t follow Bob. Alice sends a post to Bob - do you want to see it?
+						</label>';
 
 	$content .=	'	<h3>External links go:</h3>
 						<select name="gwt">';

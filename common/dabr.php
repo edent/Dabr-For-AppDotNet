@@ -1304,7 +1304,8 @@ function dabr_home_page()
 									'count'=>setting_fetch('perPage', 20),
 									'before_id'=>$before_id,
 									'since_id'=>$since_id,
-									'include_annotations' => 1
+									'include_annotations' => 1,
+									'include_directed_posts' => setting_fetch('nondirected', 0)
 									)
 								);
 		}catch (Exception $e) 
