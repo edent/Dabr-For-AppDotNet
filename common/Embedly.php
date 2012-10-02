@@ -267,8 +267,22 @@ function embedly_embed_thumbnails(&$feed)
 				{
 					if ($annotation['type'] == "net.app.core.oembed")
 					{
-						$embed = $annotation['value']['html'];
-						$status['html'] .= "<br>".$embed;
+						if ($annotation['value']['html'])
+						{
+							$embed = $annotation['value']['html'];
+						}
+						else if ($annotation['value']['url']) 
+						{
+							$embed = 	"<a href=\"" . urldecode($annotation['value']['embeddable_url']) . "\" 
+											rel=\"external\" 
+											target=\"_blank\">
+											<img src='" . IMAGE_PROXY_URL . "320/" . urldecode($annotation['value']['url']) . "' 
+											class=\"embeded\" 
+											alt=\"" . urlencode($annotation['value']['title']) . "\" />".
+										"</a>";
+						}
+
+						$status['html'] .= "</span><span class=\"embed\">".$embed;
 					}
 				}
 			} 
