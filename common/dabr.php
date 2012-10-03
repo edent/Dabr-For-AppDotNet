@@ -780,10 +780,90 @@ function dabr_reposters_page($query)
 
 function dabr_update() {
 	dabr_ensure_post_action();
+	$annotations = array();
 	$status = stripslashes(trim($_POST['status']));
 
 	// Convert linebreaks to be a single character
 	$status = str_replace(array("\r\n", "\r", "\n"), "\n", $status);
+
+	if ($_FILES['image']['tmp_name']) 
+	{
+		$user_name = user_current_username();
+		$user_url = "http://alpha.app.net/" . $user_name;
+
+		$imgur_url = "http://api.imgur.com/2/upload.json";
+
+		$image = "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
+		
+		$imgur_key = IMGUR_API_KEY;
+
+		$imgur_array = array(	'key' => $imgur_key, 
+								'image' => $image,
+								'caption' => $status . " - from " . $user_url . " via #Dabr");
+
+		$timeout = 30;
+		$curl    = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, $imgur_url);
+		curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $imgur_array);
+
+		$imgur_json = curl_exec($curl);
+
+		curl_close ($curl);
+
+		/*
+		{
+		    "type": "net.app.core.oembed",
+		    "value": {
+		        "version": "1.0",
+		        "type": "photo",
+		        "width": 240,
+		        "height": 160,
+		        "title": "ZB8T0193",
+		        "url": "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
+		        "author_name": "Bees",
+		        "author_url": "http://www.flickr.com/photos/bees/",
+		        "provider_name": "Flickr",
+		        "provider_url": "http://www.flickr.com/",
+		        "embeddable_url": "http://www.flickr.com/photos/bees/2341623661/"
+		    }
+		}
+		*/
+
+		$imgur_json = json_decode($imgur_json,true);
+
+		$imgur_width = $imgur_json["upload"]["image"]["width"];
+		$imgur_height = $imgur_json["upload"]["image"]["height"];
+		$imgur_title = $imgur_json["upload"]["image"]["title"];
+		$imgur_original = $imgur_json["upload"]["links"]["original"];
+		$imgur_page = $imgur_json["upload"]["links"]["imgur_page"];
+
+		
+
+		$oembed = array(
+				"type" => "net.app.core.oembed", 
+				"value" => array(
+					"version"	=> "1.0",
+					"type"		=> "photo",
+					"width"		=> $imgur_width,
+					"height"	=> $imgur_height,
+					"title"		=> $imgur_title,
+					"url"		=> $imgur_original,
+					"author_name"	=> $user_name,
+					"author_url"	=> $user_url,
+					"provider_name"	=> "imgur",
+					"provider_url"	=> "http://imgur.com/",
+					"embeddable_url"=> $imgur_page 
+				)
+			);
+
+		$annotations[] = $oembed;
+
+		//$status .= "\n" . $imgur_page;
+	}
 
 	if ($status) {
 		$app = new EZAppDotNet();
@@ -793,7 +873,6 @@ function dabr_update() {
 
 			// Geolocation parameters
 			list($lat, $long) = explode(',', $_POST['location']);
-			$annotations = array();
 			if (is_numeric($lat) && is_numeric($long)) 
 			{
 				$post_data['lat'] = $lat;
@@ -811,9 +890,7 @@ function dabr_update() {
 												"value" => $locationValues
 											);
 
-				$annotations[] = $locationAnnotation;
-
-				
+				$annotations[] = $locationAnnotation;	
 			}
 			
 			try 
@@ -822,10 +899,10 @@ function dabr_update() {
 			} 
 			catch (Exception $e) 
 			{
+				var_dump($annotations);
+				var_dump($imgur_json);
 				theme_error($e->getMessage());
-			}
-			
-			
+			}	
 		}
 	}
 	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
@@ -1396,13 +1473,18 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 			$title = "Post to App.net";
 		}
 		
-		return "<fieldset>
+		return $fileUploadJS . "<fieldset>
 					<legend>
 						<strong>&alpha;</strong> {$title}
 					</legend>
 				
-					<form method=\"post\" action=\"update\">
+					<form method=\"post\" action=\"update\" enctype=\"multipart/form-data\">
 						<textarea id=\"status\" name=\"status\" rows=\"4\" style=\"width:95%; max-width: 400px;\">$text</textarea>
+												
+						<div class=\"fileinputs\">
+							Image: <input type=\"file\" accept=\"image/*\" name=\"image\" class=\"file\" />
+						</div>
+
 						<div>
 							<input name=\"in_reply_to_id\" value=\"$in_reply_to_id\" type=\"hidden\" />
 							<input type=\"submit\" value=\"Post\" />
