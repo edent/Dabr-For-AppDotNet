@@ -245,17 +245,17 @@ function theme_colours() {
 	list($name, $bits) = explode('|', $info);
 	$colours = explode(',', $bits);
 	return (object) array(
-		'links'		=> $colours[0],
-		'bodybg'	=> $colours[1],
-		'bodyt'		=> $colours[2],
-		'small'		=> $colours[3],
-		'odd'		=> $colours[4],
-		'even'		=> $colours[5],
-		'replyodd'	=> $colours[6],
-		'replyeven'	=> $colours[7],
-		'menubg'	=> $colours[8],
-		'menut'		=> $colours[9],
-		'menua'		=> $colours[10],
+		'links'		=> trim($colours[0]),
+		'bodybg'	=> trim($colours[1]),
+		'bodyt'		=> trim($colours[2]),
+		'small'		=> trim($colours[3]),
+		'odd'		=> trim($colours[4]),
+		'even'		=> trim($colours[5]),
+		'replyodd'	=> trim($colours[6]),
+		'replyeven'	=> trim($colours[7]),
+		'menubg'	=> trim($colours[8]),
+		'menut'		=> trim($colours[9]),
+		'menua'		=> trim($colours[10]),
 	);
 }
 
