@@ -841,8 +841,6 @@ function dabr_update() {
 		$imgur_original = $imgur_json["upload"]["links"]["original"];
 		$imgur_page = $imgur_json["upload"]["links"]["imgur_page"];
 
-		
-
 		$oembed = array(
 				"type" => "net.app.core.oembed", 
 				"value" => array(
@@ -862,7 +860,16 @@ function dabr_update() {
 
 		$annotations[] = $oembed;
 
-		//$status .= "\n" . $imgur_page;
+		//	If there is space, add the string. If not, just the annotation
+		//	URL + Space
+		if (strlen($status) <= (256 - strlen($imgur_page) -1))
+		{
+			$status .= "\n" . $imgur_page;
+		} //	Drop the http://
+		else if (strlen($status) <= (256 - (strlen($imgur_page)-7) -1))
+		{
+			$status .= "\n" .  substr($imgur_page,7);
+		}
 	}
 
 	if ($status) {
@@ -899,8 +906,6 @@ function dabr_update() {
 			} 
 			catch (Exception $e) 
 			{
-				var_dump($annotations);
-				var_dump($imgur_json);
 				theme_error($e->getMessage());
 			}	
 		}
