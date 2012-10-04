@@ -421,7 +421,7 @@ function dabr_status_page($query)
 			$content .= '<p><a href="https://alpha.app.net/' . $username . '/post/' . $id . '" target="'. get_target() . '">View orginal post on AppDotNet</a> | ';
 			
 			//	Translate the post
-			$content .= '<a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this post</a></p>';
+			$content .= '<a href="http://translate.google.com/?hl=en&sl=auto&ie=UTF-8&vi=m&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this post</a></p>';
 			
 			//	Add the reply box
 			//	Text to pre-populate
@@ -2067,7 +2067,7 @@ function theme_action_icons($status)
 {
 	$from = $status['user']['username'];
 
-	if (setting_fetch('modes') == "bigtouch")
+	if (setting_fetch('modes', "bigtouch") == "bigtouch")
 	{
 		$L = "L";
 	}
