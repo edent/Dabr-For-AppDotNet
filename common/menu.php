@@ -93,7 +93,7 @@ function theme_menu_both($menu) {
 		}
 
 		//	Add the expand, contract button
-		$links[] = '<li class="show-nav-more"><a href="'.pageURL().'#prio">+more</a></li>';
+		$links[] = '<li class="show-nav-more"><a href="'.pageURL().'#prio">+</a></li>';
 		$links[] = '<li class="show-nav-less"><a href="'.pageURL().'#">-less</a></li>';
 
 		return "<nav id=\"prio\"><ul>".implode("\n", $links).'</ul></nav>';		

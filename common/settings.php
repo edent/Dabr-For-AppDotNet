@@ -75,6 +75,7 @@ function settings_page($args) {
 		$settings['emoticons']   = $_POST['emoticons'];
 		$settings['font_size']   = $_POST['font_size'];
 		$settings['nondirected'] = $_POST['nondirected'];
+		$settings['fonts']       = $_POST['fonts'];
 				
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		dabr_refresh('');
@@ -125,7 +126,14 @@ function settings_page($args) {
 		list($name, $colours) = explode('|', $info);
 		$colour_schemes[$id] = $name;
 	}
-	
+
+	$fonts = array(
+			'Schoolbell' => 'Schoolbell',
+			'Droid+Sans' => 'Droid Sans',
+			'Ubuntu+Mono' => 'Ubuntu Mono',
+			'Lora'=>'Lora'
+		);
+
 	$utc_offset = setting_fetch('utc_offset', 0);
 
 	if ($utc_offset > 0) {
@@ -137,7 +145,7 @@ function settings_page($args) {
 	$content .= '<br>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
 
 	$content .= '<form action="settings/save" method="post" style="clear:both">
-					<h3>Colour scheme:<br>
+					<h3>Colour scheme:</h3>
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
 	$content .= '		</select>
@@ -150,6 +158,10 @@ function settings_page($args) {
 	$content .= '<h3>Font Size:</h3>';
 
 	$content .= theme_radio($font_size, "font_size", setting_fetch('font_size', '1'));
+
+	$content .= '<h3>Font:</h3>';
+
+	$content .= theme_radio($fonts, "fonts", setting_fetch('fonts', 'Lora'));
 
 
 	$content .= '	<h3>Menu Bar:</h3>

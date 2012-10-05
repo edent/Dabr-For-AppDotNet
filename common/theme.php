@@ -61,9 +61,15 @@ function theme_radio($options, $name, $selected = NULL)
 {
 	if (count($options) == 0) return '';
 	$output = '';
+
 	foreach($options as $value => $description) 
 	{
-		$output .= '<label for="'.$value.'">
+		if ($name == "fonts") 
+		{
+			$style = "style='font-family:  ". urldecode($value) . ", sans;'";
+		}
+
+		$output .= '<label for="'.$value.'" '.$style.'>
 						<input 
 							type="radio" 
 							name="'.$name.'"
@@ -217,13 +223,19 @@ function theme_page($title, $content) {
 				<html>
 					<head>
 						<meta charset="utf-8" />
-						<meta name="viewport" content="width=device-width; initial-scale=1.0;" />
+						<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 						<title>Dabr - ' . $title . '</title>
 						<base href="'.BASE_URL.'" />
 						<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
 						<link rel="apple-touch-icon" href="images/dabr-57.png" />
 						<link rel="apple-touch-icon" sizes="72x72" href="images/dabr-72.png" />
-						<link rel="apple-touch-icon" sizes="114x114" href="images/dabr-114.png" />
+						<link rel="apple-touch-icon" sizes="114x114" href="images/dabr-114.png" />';
+	if ($title == "Settings")
+	{
+		$html .=		'<link href="http://fonts.googleapis.com/css?family=Schoolbell|Ubuntu+Mono|Droid+Sans|Lora" rel="stylesheet" type="text/css">';
+	}
+
+	$html .=			'<link href="http://fonts.googleapis.com/css?family='.(setting_fetch("fonts","Lora")).'" rel="stylesheet" type="text/css">
 						'.$meta.theme('css').'
 					</head>
 					<body>';
@@ -265,16 +277,20 @@ function theme_css() {
 
 	return "
 	<style type='text/css'>
-		nav{}
-		a{color:#{$c->links}}
-		small,small a{color:#{$c->small}}
 		body
 		{	
 			background:#{$c->bodybg};
 			color:#{$c->bodyt};
-			margin:0px;
-			font:" . ($font_size * 1) ."em sans-serif;
+			font:" . ($font_size * 1) ."em;
+			font-family: '". urldecode(setting_fetch("fonts","Lora")) . "', sans;
+			margin-left:0px;
 		}
+
+		a{color:#{$c->links}}
+		small,small a{
+			color:#{$c->small};
+		}
+		
 
 		section {
 			clear: both; }
@@ -398,7 +414,6 @@ function theme_css() {
     		font:" . ($font_size * 1.1) ."em;
 			text-align:center;
 		}
-
 	</style>";
 }
 
