@@ -1,9 +1,8 @@
 <?php
-
-require 'Autolink.php';
-require 'Extractor.php';
-require 'Embedly.php';
-require 'Emoticons.php';
+require_once 'Autolink.php';
+require_once 'Extractor.php';
+require_once 'Embedly.php';
+require_once 'Emoticons.php';
 require_once 'menu.php';
 		
 menu_register(array(
@@ -128,11 +127,6 @@ menu_register(array(
 		'security' => true,
 		'hidden' => true,
 		'callback' => 'dabr_raw_page',
-	),
-	'hyper' => array(
-		'security' => true,
-		'hidden' => true,
-		'callback' => 'dabr_hyper_page',
 	)
 ));
 
@@ -144,13 +138,11 @@ function get_target()
 	{
 		return "_self";
 	}
-	else 
+	else
 	{
 		return "_blank";
 	}
 }
-
-
 
 function long_url($shortURL)
 {
@@ -180,16 +172,16 @@ function long_url($shortURL)
 function js_counter($name, $length='256')
 {
 	$script = '<script type="text/javascript">
-function updateCount() 
+function updateCount()
 {
 	var remaining = ' . $length . ' - document.getElementById("' . $name . '").value.length;
 	document.getElementById("remaining").innerHTML = remaining;
 	
-	if(remaining < 0) 
+	if(remaining < 0)
 	{
 		var colour = "#FF0000";
 		var weight = "bold";
-	} else if(remaining < 10) 
+	} else if(remaining < 10)
 	{
 		var colour = "#FFFF00";
 		var weight = "bold";
@@ -206,7 +198,7 @@ updateCount();
 	return $script;
 }
 
-function dabr_fetch($url) 
+function dabr_fetch($url)
 {
 	//	Track how long this is taking	
 	global $services_time;
@@ -227,7 +219,6 @@ function dabr_fetch($url)
 		curl_setopt($ch,CURLOPT_HTTPHEADER,array($basic));
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
 	}
 
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -244,24 +235,24 @@ function utf8_substr_replace($original, $replacement, $position, $length)
 {
 	$startString = mb_substr($original, 0, $position, "UTF-8");
 	$endString = mb_substr($original, $position + $length, mb_strlen($original), "UTF-8");
-
 	$out = $startString . $replacement . $endString;
-
 	return $out;
 }
 
-function dabr_parse_tags($input, $entities = false) 
+function dabr_parse_tags($input, $entities = false)
 {	
 	$out = $input;
 
 	if (!$entities)	// Use the Autolink.
 	{
 		//	Hashtags and @ are internal links
-		$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToHashtags();
-		$out = Twitter_Autolink::create($out)->setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToUsernamesAndLists();
-		
+		$out = Twitter_Autolink::create($out)->
+					setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToHashtags();
+		$out = Twitter_Autolink::create($out)->
+					setExternal(false)->setNoFollow(false)->setTarget(false)->addLinksToUsernamesAndLists();
 		//	URLs are external links
-		$out = Twitter_Autolink::create($out)->setExternal(true)->setNoFollow(true)->setTarget(true)->addLinksToURLs();
+		$out = Twitter_Autolink::create($out)->
+					setExternal(true)->setNoFollow(true)->setTarget(true)->addLinksToURLs();
 	} else
 	{
 		$entities_array = array();
@@ -269,29 +260,29 @@ function dabr_parse_tags($input, $entities = false)
 		//	Place the mention, hashtag, and link entities in the array. The key will be their position
 		$offset = 0;
 
-		foreach ($entities as $entity) 
+		foreach ($entities as $entity)
 		{
-			foreach ($entity as $item) 
+			foreach ($entity as $item)
 			{
 				$position = $item['pos'];
 				$entities_array[$position] = $item;
-			}
-			
+			}			
 		}
 		
 		//	Sort the array by key. First entity will be first, etc.
 		ksort($entities_array);
 
-		foreach ($entities_array as $item) 
+		foreach ($entities_array as $item)
 		{
 			if($item['id']) //	A user
 			{
 				$username = $item['name'];
 				$position = $item['pos'];
 				$length = $item['len'];
-				$userURL = '@' . chr(7). 'a href="' . BASE_URL . 'user/' . $username . '"' .chr(27) . 
-								$username . 
-							chr(7). '/a'. chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
+				// Using ASCII controll characters so our < & > don't get eaten later
+				$userURL = '@' . chr(7). 'a href="' . BASE_URL . 'user/' . $username . '"' .chr(27) .
+								$username .
+							chr(7). '/a'. chr(27);
 				
 				$newPosition = ($position + $offset);
 
@@ -305,7 +296,7 @@ function dabr_parse_tags($input, $entities = false)
 				$position = $item['pos'];
 				$length = $item['len'];
 
-				if (setting_fetch('gwt') == 'on') // If the user wants links to go via GWT 
+				if (setting_fetch('gwt') == 'on') // If the user wants links to go via GWT
 				{
 					$encoded = urlencode($item['url']);
 					$url = "http://google.com/gwt/n?u={$encoded}";
@@ -313,10 +304,10 @@ function dabr_parse_tags($input, $entities = false)
 				else {
 					$url = $item['url'];
 				}
-				
+				// Using ASCII controll characters so our < & > don't get eaten later
 				$linkURL = 	chr(7) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(27) .
-								"{$display}" . 
-							chr(7) . "/a" . chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
+								"{$display}" .
+							chr(7) . "/a" . chr(27);
 				
 				$newPosition = ($position + $offset);
 				
@@ -328,10 +319,11 @@ function dabr_parse_tags($input, $entities = false)
 				$hashtag = $item['name'];	//	A hashtag
 				$position = $item['pos'];
 				$length = $item['len'];
-				$hashtagURL = 	'#' . chr(7) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(27) . 
-									$hashtag . 
-								chr(7) . '/a' . chr(27);	// Using ASCII controll characters so our < & > don't get eaten later
-				
+				// Using ASCII controll characters so our < & > don't get eaten later
+				$hashtagURL = 	'#' . chr(7) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(27) .
+									$hashtag .
+								chr(7) . '/a' . chr(27);
+
 				$newPosition = ($position + $offset);
 				
 				$out = utf8_substr_replace($out, $hashtagURL, $newPosition, $length);
@@ -352,6 +344,9 @@ function dabr_parse_tags($input, $entities = false)
 	//	Linebreaks.  Some clients insert \n for formatting.
 	$out = nl2br($out, false);
 
+	//	Tabs don't render in HTML
+	$out = str_replace("\t","&nbsp;&nbsp;&nbsp;",$out);
+
 	//	Add Emoticons :-)
 	if (setting_fetch('emoticons') != 'off') {
 		$out = emoticons($out);
@@ -361,37 +356,40 @@ function dabr_parse_tags($input, $entities = false)
 	return $out;
 }
 
-function format_interval($timestamp, $granularity = 2) {
+function format_interval($timestamp, $granularity = 2)
+{
 	$units = array(
-	'year' => 31536000,
-	'day'  => 86400,
-	'hour' => 3600,
-	'min'  => 60,
-	'sec'  => 1
+		'year' => 31536000,
+		'day'  => 86400,
+		'hour' => 3600,
+		'min'  => 60,
+		'sec'  => 1
 	);
+
 	$output = '';
-	foreach ($units as $key => $value) {
-		if ($timestamp >= $value) {
+	foreach ($units as $key => $value)
+	{
+		if ($timestamp >= $value)
+		{
 			$output .= ($output ? ' ' : ''). pluralise($key, floor($timestamp / $value), true);
 			$timestamp %= $value;
 			$granularity--;
 		}
-		if ($granularity == 0) {
+		if ($granularity == 0)
 			break;
-		}
 	}
+
 	return $output ? $output : '0 sec';
 }
 
-function dabr_status_page($query) 
+function dabr_status_page($query)
 {
 	$id = (string) $query[1];
 	
 	if (is_numeric($id)) // Are all IDs numeric?
 	{
-		
 		$app = new EZAppDotNet();	
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{	
 			//	Track how long the API call took
 			global $api_time;
@@ -402,12 +400,12 @@ function dabr_status_page($query)
 			{	
 				$post = $app->getPost($id, array('include_annotations' => 1));	
 			}
-			catch (Exception $e) 
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
 
-			//	Get the Thread 
+			//	Get the Thread
 			$thread_id = $post['thread_id'];
 			
 			//	Grab the text before it gets formatted
@@ -418,10 +416,16 @@ function dabr_status_page($query)
 
 			//	Show a link to the original post		
 			$username = $post['user']['username'];
-			$content .= '<p><a href="https://alpha.app.net/' . $username . '/post/' . $id . '" target="'. get_target() . '">View orginal post on AppDotNet</a> | ';
+			$content .= '<p>
+							<a href="https://alpha.app.net/' . $username . '/post/' . $id . '"
+								target="'. get_target() . '" class="button">
+								View orginal</a> ';
 			
 			//	Translate the post
-			$content .= '<a href="http://translate.google.com/?hl=en&sl=auto&ie=UTF-8&vi=m&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this post</a></p>';
+			$content .= 	'<a href="http://translate.google.com/?hl=en&sl=auto&ie=UTF-8&vi=m&q=' . 
+								urlencode($text) . 
+								'" target="'. get_target() . '" class="button" >Translate</a>
+						</p>';
 			
 			//	Add the reply box
 			//	Text to pre-populate
@@ -436,7 +440,7 @@ function dabr_status_page($query)
 			}
 
 			// Add in the hashtags they've used
-			foreach ($post['entities']['hashtags'] as $hashtag) 
+			foreach ($post['entities']['hashtags'] as $hashtag)
 			{
 				$status .= "#" . $hashtag['name'] . " ";
 			}
@@ -444,19 +448,20 @@ function dabr_status_page($query)
 			// Create the form where users can enter text
 			$content .= dabr_post_form($status, $id);
 
-			//	If this isn't the head of the thread, show the thread. If this is the head of the thread, only show if there are replies
-			if ($thread_id != $id || $post['num_replies'] > 0) 
+			//	If this isn't the head of the thread, show the thread.
+			//	If this is the head of the thread, only show if there are replies
+			if ($thread_id != $id || $post['num_replies'] > 0)
 			{
 				try
 				{
-					$thread = $app->getPostReplies($thread_id, 
+					$thread = $app->getPostReplies($thread_id,
 												array(
 													'count'=>setting_fetch('perPage', 20),
 													'include_annotations' => 1
 													)
 												);
 				}
-				catch (Exception $e) 
+				catch (Exception $e)
 				{
 					theme_error($e->getMessage());
 				}
@@ -493,13 +498,13 @@ function dabr_delete_page($query) {
 		$app = new EZAppDotNet();
 
 		// check that the user is signed in
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
-			try 
+			try
 			{
 				$deleted = $app->deletePost($id);
-			} 
-			catch (Exception $e) 
+			}
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
@@ -526,7 +531,7 @@ function dabr_follow_page($query) {
 	{
 		$user = $query[1];
 	
-		if ($user) 
+		if ($user)
 		{
 			try{
 				if($query[0] == 'follow')
@@ -538,7 +543,7 @@ function dabr_follow_page($query) {
 				}
 				dabr_refresh('friends');
 			}
-			catch (Exception $e) 
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
@@ -550,11 +555,11 @@ function dabr_mute_page($query) {
 	dabr_ensure_post_action();
 	$username = $query[1];
 
-	if ($username) 
+	if ($username)
 	{
 		$app = new EZAppDotNet();
 		$username = "@" . $username;
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
 			try
 			{
@@ -562,13 +567,13 @@ function dabr_mute_page($query) {
 				{
 					$app->muteUser($username);
 					dabr_refresh("confirmed/mute/{$username}");
-				} else 
+				} else
 				{
 					$app->unmuteUser($username);
 					dabr_refresh("confirmed/unmute/{$username}");
 				}
 			}
-			catch (Exception $e) 
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
@@ -627,9 +632,9 @@ function dabr_confirmation_page($query)
 
 function dabr_confirmed_page($query)
 {
-        // the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
-        $action = $query[1]; // The action. block, unblock, spam
-        $target = $query[2]; // The username of the target
+		// the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
+		$action = $query[1]; // The action. block, unblock, spam
+		$target = $query[2]; // The username of the target
 
 		$content = theme_get_logo() . '<br>';
 	
@@ -662,7 +667,7 @@ function dabr_confirmed_page($query)
 function dabr_users_page($query) {
 	
 	//friends, followers, something else?
-	$page_type = $query[0]; 
+	$page_type = $query[0];
 
 	// Which user are looking for?
 	$username = $query[1];
@@ -675,7 +680,7 @@ function dabr_users_page($query) {
 	$since_id = $_GET['since_id'];
 
 	$app = new EZAppDotNet();
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -704,7 +709,7 @@ function dabr_users_page($query) {
 					break;
 				}
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -720,13 +725,13 @@ function dabr_users_page($query) {
 }
 
 
-function dabr_stars_page($query) 
+function dabr_stars_page($query)
 {	
 	// Which post are looking for?
 	$id = $query[1];
 
 	$app = new EZAppDotNet();
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -736,7 +741,7 @@ function dabr_stars_page($query)
 		{
 			$users = $app->getStars($id);
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -750,13 +755,13 @@ function dabr_stars_page($query)
 	}
 }
 
-function dabr_reposters_page($query) 
+function dabr_reposters_page($query)
 {	
 	// Which post are looking for?
 	$id = $query[1];
 
 	$app = new EZAppDotNet();
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -764,7 +769,7 @@ function dabr_reposters_page($query)
 
 		try{
 			$users = $app->getReposters($id);
-		}catch (Exception $e) 
+		}catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -786,7 +791,7 @@ function dabr_update() {
 	// Convert linebreaks to be a single character
 	$status = str_replace(array("\r\n", "\r", "\n"), "\n", $status);
 
-	if ($_FILES['image']['tmp_name']) 
+	if ($_FILES['image']['tmp_name'])
 	{
 		$user_name = user_current_username();
 		$user_url = "http://alpha.app.net/" . $user_name;
@@ -797,12 +802,12 @@ function dabr_update() {
 		
 		$imgur_key = IMGUR_API_KEY;
 
-		$imgur_array = array(	'key' => $imgur_key, 
+		$imgur_array = array(	'key' => $imgur_key,
 								'image' => $image,
 								'caption' => $status . " - from " . $user_url . " via #Dabr");
 
 		$timeout = 30;
-		$curl    = curl_init();
+		$curl = curl_init();
 
 		curl_setopt($curl, CURLOPT_URL, $imgur_url);
 		curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
@@ -816,21 +821,21 @@ function dabr_update() {
 
 		/*
 		{
-		    "type": "net.app.core.oembed",
-		    "value": {
-		        "version": "1.0",
-		        "type": "photo",
-		        "width": 240,
-		        "height": 160,
-		        "title": "ZB8T0193",
-		        "url": "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
-		        "author_name": "Bees",
-		        "author_url": "http://www.flickr.com/photos/bees/",
-		        "provider_name": "Flickr",
-		        "provider_url": "http://www.flickr.com/",
-		        "embeddable_url": "http://www.flickr.com/photos/bees/2341623661/"
-		    }
-		}
+			"type": "net.app.core.oembed",
+			"value": {
+				"version": "1.0",
+				"type": "photo",
+				"width": 240,
+				"height": 160,
+				"title": "ZB8T0193",
+				"url": "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
+				"author_name": "Bees",
+				"author_url": "http://www.flickr.com/photos/bees/",
+				"provider_name": "Flickr",
+				"provider_url": "http://www.flickr.com/",
+				"embeddable_url": "http://www.flickr.com/photos/bees/2341623661/"
+				}
+			}
 		*/
 
 		$imgur_json = json_decode($imgur_json,true);
@@ -842,7 +847,7 @@ function dabr_update() {
 		$imgur_page = $imgur_json["upload"]["links"]["imgur_page"];
 
 		$oembed = array(
-				"type" => "net.app.core.oembed", 
+				"type" => "net.app.core.oembed",
 				"value" => array(
 					"version"	=> "1.0",
 					"type"		=> "photo",
@@ -854,7 +859,7 @@ function dabr_update() {
 					"author_url"	=> $user_url,
 					"provider_name"	=> "imgur",
 					"provider_url"	=> "http://imgur.com/",
-					"embeddable_url"=> $imgur_page 
+					"embeddable_url"=> $imgur_page
 				)
 			);
 
@@ -874,13 +879,13 @@ function dabr_update() {
 
 	if ($status) {
 		$app = new EZAppDotNet();
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
 			$in_reply_to_id = (string) $_POST['in_reply_to_id'];
 
 			// Geolocation parameters
 			list($lat, $long) = explode(',', $_POST['location']);
-			if (is_numeric($lat) && is_numeric($long)) 
+			if (is_numeric($lat) && is_numeric($long))
 			{
 				$post_data['lat'] = $lat;
 				$post_data['long'] = $long;
@@ -888,8 +893,8 @@ function dabr_update() {
 				$locationValues = array(
 										"latitude" => $lat,
 										"longitude" => $long,
-										"altitude" => 0, 
-										"horizontal_accuracy" => 0, 
+										"altitude" => 0,
+										"horizontal_accuracy" => 0,
 										"vertical_accuracy" => 0
 									);
 
@@ -900,11 +905,14 @@ function dabr_update() {
 				$annotations[] = $locationAnnotation;	
 			}
 			
-			try 
+			try
 			{
-				$app->createPost($status,array('reply_to' => $in_reply_to_id, 'annotations' =>$annotations));
-			} 
-			catch (Exception $e) 
+				$app->createPost($status,array(
+						'reply_to' => $in_reply_to_id, 
+						'annotations' =>$annotations
+				));
+			}
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}	
@@ -913,7 +921,7 @@ function dabr_update() {
 	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
-function dabr_replies_page($query) 
+function dabr_replies_page($query)
 {
 	// Which user's replies are we looking for?
 	$username = $query[1];
@@ -934,7 +942,7 @@ function dabr_replies_page($query)
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -943,7 +951,7 @@ function dabr_replies_page($query)
 		// Create the form where users can enter text
 		$content = dabr_post_form();//theme('status_form');
 	
-		try 
+		try
 		{
 			$stream = $app->getUserMentions($username, array(
 												'count'=>$perPage,
@@ -953,8 +961,8 @@ function dabr_replies_page($query)
 												)
 											);
 
-		} 
-		catch (Exception $e) 
+		}
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -973,7 +981,7 @@ function dabr_replies_page($query)
 
 }
 
-function dabr_starred_page($query) 
+function dabr_starred_page($query)
 {
 	$perPage = setting_fetch('perPage', 20);	
 	$before_id = $_GET['before_id'];
@@ -993,16 +1001,21 @@ function dabr_starred_page($query)
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
 		$api_start = microtime(1);
 
 		try {
-			$stream = $app->getStarred($username, array('count'=>$perPage,'before_id'=>$before_id,'since_id'=>$since_id, 'include_annotations'=>1));
+			$stream = $app->getStarred($username, array(
+				'count'=>$perPage,
+				'before_id'=>$before_id,
+				'since_id'=>$since_id,
+				'include_annotations'=>1
+			));
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1021,7 +1034,7 @@ function dabr_starred_page($query)
 
 }
 
-function dabr_global_page() 
+function dabr_global_page()
 {
 	//	How many posts to get
 	$perPage = setting_fetch('perPage', 20);
@@ -1032,7 +1045,7 @@ function dabr_global_page()
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -1042,7 +1055,7 @@ function dabr_global_page()
 		$content = dabr_post_form();
 	
 		// get the latest public posts
-		try 
+		try
 		{
 			$stream = $app->getPublicPosts(	array('count'=>$perPage,
 													'before_id'=>$before_id,
@@ -1051,7 +1064,7 @@ function dabr_global_page()
 												)
 										);			
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1070,7 +1083,7 @@ function dabr_global_page()
 
 }
 
-function dabr_search_page() 
+function dabr_search_page()
 {
 	$search_query = $_GET['query'];
 	$search_type = $_GET['type'];
@@ -1080,26 +1093,26 @@ function dabr_search_page()
 	$loc = $_GET['location'];
 	$radius = $_GET['radius'];
 
-	if (isset($_POST['query'])) 
+	if (isset($_POST['query']))
 	{
 		$duration = time() + (3600 * 24 * 365);
 		setcookie('search_favourite', $_POST['query'], $duration, '/');
 		dabr_refresh('search');
 	}
 	
-	if (!isset($search_query) && array_key_exists('search_favourite', $_COOKIE)) 
+	if (!isset($search_query) && array_key_exists('search_favourite', $_COOKIE))
 	{
 		$search_query = $_COOKIE['search_favourite'];
 	}
 
 	$content = theme('search_form', $search_query, $search_type);
 
-	if ($search_query) 
+	if ($search_query)
 	{
 		if ($search_type == "users")
 		{
 			$app = new EZAppDotNet();
-			if ($app->getSession()) 
+			if ($app->getSession())
 			{
 				//	Track how long the API call took
 				global $api_time;
@@ -1109,8 +1122,8 @@ function dabr_search_page()
 				try
 				{
 					$users = $app->searchUsers($search_query);
-				} 
-				catch (Exception $e) 
+				}
+				catch (Exception $e)
 				{
 					theme_error($e->getMessage());
 				}
@@ -1120,14 +1133,16 @@ function dabr_search_page()
 
 				$content .= theme('users', $users);
 
-				theme('page', 'Users matching '.stripslashes(htmlentities($search_query,ENT_QUOTES,"UTF-8")), $content);
+				theme('page',
+					'Users matching '.stripslashes(htmlentities($search_query,ENT_QUOTES,"UTF-8")),
+					$content);
 			}
 		}
 		else	//	Normal search for posts
 		{
 			$tl = dabr_search($search_query);//, $lat, $long, $radius);
 
-			if ($search_query !== $_COOKIE['search_favourite']) 
+			if ($search_query !== $_COOKIE['search_favourite'])
 			{
 				$content .= '<form action="search/bookmark" method="post">
 								<input type="hidden" name="query" value="'.$search_query.'" />
@@ -1135,13 +1150,13 @@ function dabr_search_page()
 							</form>';
 			}
 			$content .= theme('timeline', $tl);
-		} 
+		}
 	}
 
 	theme('page', 'Search', $content);
 }
 
-function dabr_search($search_query) 
+function dabr_search($search_query)
 {
 	$perPage = setting_fetch('perPage', 20);
 	$page = (int) $_GET['page'];
@@ -1161,11 +1176,11 @@ function dabr_hashtag_page($query)
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 	
 
-		if (isset($query[1])) 
+		if (isset($query[1]))
 		{
 			$hashtag = $query[1];
 			$perPage = setting_fetch('perPage', 20);
@@ -1181,15 +1196,15 @@ function dabr_hashtag_page($query)
 			//	Search for hashtags
 			try
 			{
-				$stream = $app->searchHashtags($hashtag, 
+				$stream = $app->searchHashtags($hashtag,
 											array('count'=>$perPage,
 												'before_id'=>$before_id,
-												'since_id'=>$since_id, 
+												'since_id'=>$since_id,
 												'include_annotations'=>1
 											)
 										);
 			}
-			catch (Exception $e) 
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
@@ -1200,8 +1215,8 @@ function dabr_hashtag_page($query)
 
 			$content .= theme('timeline', $stream);
 			theme('page', '#'.$hashtag, $content);
-		} 
-		else 
+		}
+		else
 		{
 			theme('page', 'Hashtag', 'Hash hash!');
 		}
@@ -1213,16 +1228,16 @@ function dabr_hashtag_page($query)
 	theme('page', $page_title, $content);
 }
 
-function dabr_find_post_in_timeline($id, $stream) 
+function dabr_find_post_in_timeline($id, $stream)
 {
 	// Parameter checks
 	//if (!is_numeric($id) || !$stream) return;
 
 	// Check if the post exists in the timeline given
 	//	Look through the stream & see if the post we're replying to is in there.
-	foreach ($stream as $post) 
+	foreach ($stream as $post)
 	{
-		if ($post['id'] == $id) 
+		if ($post['id'] == $id)
 		{	
 			$found_post = $post;
 		}
@@ -1234,13 +1249,13 @@ function dabr_find_post_in_timeline($id, $stream)
 		$app = new EZAppDotNet();
 
 		// Not found, fetch it specifically from the API
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
 			try
 			{
 				$found_post = $app->getPost($id, array('include_annotations' => 1));
 			}
-			catch (Exception $e) 
+			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}
@@ -1262,7 +1277,7 @@ function dabr_user_page($query)
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
 		//	Track how long the API call took
 		global $api_time;
@@ -1273,7 +1288,7 @@ function dabr_user_page($query)
 		{
 			$user = $app->getUser("@".$user_name);
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1288,11 +1303,11 @@ function dabr_user_page($query)
 										array(
 											'count'=>$perPage,
 											'before_id'=>$before_id,
-											'since_id'=>$since_id, 
+											'since_id'=>$since_id,
 											'include_annotations'=>1
 										)
 									);
-		}catch (Exception $e) 
+		}catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1302,7 +1317,7 @@ function dabr_user_page($query)
 			$reply_post = dabr_find_post_in_timeline($in_reply_to_id,$stream);
 
 			// Add in the hashtags they've used
-			foreach ($reply_post['entities']['hashtags'] as $hashtag) 
+			foreach ($reply_post['entities']['hashtags'] as $hashtag)
 			{
 				$status .= "#" . $hashtag['name'] . " ";
 			}
@@ -1341,7 +1356,7 @@ function dabr_user_page($query)
 	theme('page', "User {$screen_name}", $content);
 }
 
-function dabr_star_page($query) 
+function dabr_star_page($query)
 {
 	$id = (string) $query[1];
 
@@ -1351,7 +1366,7 @@ function dabr_star_page($query)
 	{
 		try
 		{
-			if ($query[0] == 'unstar') 
+			if ($query[0] == 'unstar')
 			{
 				$app->unstarPost($id);
 			} else {
@@ -1360,14 +1375,14 @@ function dabr_star_page($query)
 
 			dabr_refresh();
 		}
-		catch (Exception $e) 
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
 	}
 }
 
-function dabr_home_page() 
+function dabr_home_page()
 {
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
@@ -1399,7 +1414,7 @@ function dabr_home_page()
 									'include_directed_posts' => setting_fetch('nondirected', 0)
 									)
 								);
-		}catch (Exception $e) 
+		}catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1420,10 +1435,10 @@ function dabr_home_page()
 }
 
 function dabr_raw_page($query) {
-	if (isset($query[1])) 
+	if (isset($query[1]))
 	{
 		$app = new EZAppDotNet();
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
 			// Dump the post to screen
 			$thread = $app->getPost($query[1],array('include_annotations' => 1));
@@ -1434,7 +1449,7 @@ function dabr_raw_page($query) {
 	}
 }
 
-function dabr_post_form($text = '', $in_reply_to_id = NULL) 
+function dabr_post_form($text = '', $in_reply_to_id = NULL)
 {
 
 	$geoJS = '<script type="text/javascript">
@@ -1458,12 +1473,14 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 					document.getElementById("lblGeo").innerHTML = msg;
 				}
 				function geoSuccess(position) {
-					geoStatus("Share my <a href=\'http://maps.google.co.uk/?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=\'blank\'>location</a>");
+					geoStatus("Share my <a href=\'http://maps.google.co.uk/?q=" + 
+						position.coords.latitude + "," + position.coords.longitude + 
+						"\' target=\'blank\'>location</a>");
 					chkbox.value = position.coords.latitude + "," + position.coords.longitude;
 				}
 			</script>';
 
-	if (user_is_authenticated()) 
+	if (user_is_authenticated())
 	{
 		//	adding ?status=foo will automaticall add "foo" to the text area.
 		if ($_GET['status'])
@@ -1478,13 +1495,17 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 			$title = "Post to App.net";
 		}
 		
-		return $fileUploadJS . "<fieldset>
+		return "<fieldset>
 					<legend>
 						<strong>&alpha;</strong> {$title}
 					</legend>
 				
 					<form method=\"post\" action=\"update\" enctype=\"multipart/form-data\">
-						<textarea id=\"status\" name=\"status\" rows=\"4\" style=\"width:95%; max-width: 400px;\">$text</textarea>
+						<textarea	id=\"status\" 
+									name=\"status\" 
+									rows=\"4\" 
+									style=\"width:95%; 
+									max-width: 400px;\">$text</textarea>
 												
 						<div class=\"fileinputs\">
 							Image: <input type=\"file\" accept=\"image/*\" name=\"image\" class=\"file\" />
@@ -1493,7 +1514,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 						<div>
 							<input name=\"in_reply_to_id\" value=\"$in_reply_to_id\" type=\"hidden\" />
 							<input type=\"submit\" value=\"Post\" />
-							<span id=\"remaining\">254</span> 
+							<span id=\"remaining\">254</span>
 							<span id=\"geo\" style=\"display: none;\">
 								<input onclick=\"goGeo()\" type=\"checkbox\" id=\"geoloc\" name=\"location\" />
 								<label for=\"geoloc\" id=\"lblGeo\"></label>
@@ -1508,20 +1529,20 @@ function dabr_repost_page($query)
 {
 	$id = (string) $query[1];
 	
-	if (is_numeric($id)) 
+	if (is_numeric($id))
 	{
 		$app = new EZAppDotNet();
-		if ($app->getSession()) 
+		if ($app->getSession())
 		{
 			//	Track how long the API call took
 			global $api_time;
 			$api_start = microtime(1);
 		
-		try 
+		try
 		{
 			$post = $app->getPost($id,array('include_annotations' => 1));
-		} 
-		catch (Exception $e) 
+		}
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1546,7 +1567,11 @@ function dabr_repost_page($query)
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
 						<input name='in_reply_to_id' value='$id' type='hidden' />
-						<textarea name='status' style='width:90%; max-width: 400px;' rows='6' id='status'>$text</textarea>
+						<textarea	name='status' 
+									style='width:90%; 
+									max-width: 400px;' 
+									rows='6' 
+									id='status'>$text</textarea>
 						<br>
 						<input type='submit' value='Repost' />
 						<span id='remaining'>" . (256 - $length) ."</span>
@@ -1562,13 +1587,13 @@ function dabr_repost($query)
 	$id = (string) $query[1];
 	
 	$app = new EZAppDotNet();
-	if ($app->getSession()) 
+	if ($app->getSession())
 	{
-		try 
+		try
 		{
 			$app->repost($id);
-		} 
-		catch (Exception $e) 
+		}
+		catch (Exception $e)
 		{
 			theme_error($e->getMessage());
 		}
@@ -1599,7 +1624,8 @@ function dabr_user_bio($user)
 	$bio = "";
 
 	if($user['description']['text'] != "")
-		$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . "<br>";
+		$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . 
+				"<br>";
 	
 	if($user['timezone'] != "")
 		$bio .= "Timezone: " . str_replace("_", " ", $user['timezone']) . "<br>";
@@ -1641,12 +1667,16 @@ function dabr_user_actions($user, $link=TRUE)
 
 	if ($link)
 	{
-		$actions .= "<a href='followers/{$username}'>" . pluralise('follower', $user['counts']['followers'], true) . "</a>";
-		$actions .= " | <a href='friends/{$username}'>" . pluralise('friend', $user['counts']['following'], true) . "</a>";
+		$actions .= "<a href='followers/{$username}'>" . 
+						pluralise('follower', $user['counts']['followers'], true) . 
+					"</a>";
+		$actions .= " | <a href='friends/{$username}'>" . 
+							pluralise('friend', $user['counts']['following'], true) . 
+						"</a>";
 		$actions .= " | <a href='starred/{$username}'>Starred Posts</a>";
 		
 		//	User cannot perform certain actions on herself
-		if (strtolower($username) !== strtolower(user_current_username())) 
+		if (strtolower($username) !== strtolower(user_current_username()))
 		{
 		
 			if ($you_follow == false) {
@@ -1676,7 +1706,7 @@ function dabr_user_actions($user, $link=TRUE)
 	return $actions;
 }
 
-function theme_user_header($user) 
+function theme_user_header($user)
 {
 	$name = $user['name']; //theme('full_name', $user);
 	$username = $user['username'];
@@ -1702,7 +1732,7 @@ function theme_user_header($user)
 	return $out;
 }
 
-function theme_avatar($url, $name = "") 
+function theme_avatar($url, $name = "")
 {
 	$size = 48;
 	return "<img src=\"$url?w=$size\" height='$size' width='$size' alt='$name' />";
@@ -1724,7 +1754,7 @@ function theme_status_time_link($status, $is_link = true) {
 	return $out;
 }
 
-function dabr_date($format, $timestamp = null) 
+function dabr_date($format, $timestamp = null)
 {
 	$offset = setting_fetch('utc_offset', 0) * 3600;
 	if (!isset($timestamp)) {
@@ -1741,6 +1771,8 @@ function preg_match_one($pattern, $subject, $flags = NULL) {
 function theme_timeline($feed)
 {
 	if (count($feed) == 0) return theme('no_posts');
+
+	if (count($feed) < setting_fetch('perPage', 20)) $hide_pagination = TRUE;
 	
 	$rows = array();
 	$page = menu_current_page();
@@ -1814,7 +1846,9 @@ function theme_timeline($feed)
 			$link = theme('status_time_link', $status, true);
 
 			$avatar = theme('avatar', $status['user']['avatar_image']['url'], $status['user']['name']);
-			$source = "<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">{$status['source']['name']}</a>";
+			$source = "<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">
+						{$status['source']['name']}
+					</a>";
 
 			$conversation = "";
 			if ($status['reply_to'] || $status['num_replies'] > 0)
@@ -1836,7 +1870,12 @@ function theme_timeline($feed)
 				<br>";
 			}
 
-			$html = "<b><a href='user/{$status['user']['username']}'>{$status['user']['username']}</a></b><span class=\"actionicons\"> $actions $link</span>
+			$html = "<b>
+						<a href='user/{$status['user']['username']}'>
+							{$status['user']['username']}
+						</a>
+					</b>
+					<span class=\"actionicons\"> $actions $link</span>
 					<br>
 					$text
 					<br>
@@ -1878,7 +1917,7 @@ function theme_timeline($feed)
 	return $content;
 }
 
-function dabr_is_reply($status) 
+function dabr_is_reply($status)
 {
 	if (!user_is_authenticated()) {
 		return false;
@@ -1894,7 +1933,7 @@ function dabr_is_reply($status)
 			
 			foreach($entities['mentions'] as $mentions)
 			{
-				if ($mentions['name'] == $user) 
+				if ($mentions['name'] == $user)
 				{
 					return true;
 				}
@@ -1916,10 +1955,14 @@ function dabr_is_reply($status)
 	return false;
 }
 
-function theme_users($feed, $nextPageURL=null) 
+function theme_users($feed, $nextPageURL=null)
 {
 	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return theme_get_logo() . '<br><p>Where is everybody? No users found :-(</p>';
+	if (count($feed) == 0 || $feed == '[]') 
+	{
+		return theme_get_logo() . 
+			'<br><p>Where is everybody? No users found :-(</p>';
+	}
 
 	foreach ($feed as $user) {
 
@@ -1947,14 +1990,14 @@ function theme_users($feed, $nextPageURL=null)
 		$content .= "</span>";
 
 		$rows[] = 	array(
-						'data' => 
+						'data' =>
 							array(
 								array(
-										'data' => theme('avatar',	$user['avatar_image']['url'], $name), 
+										'data' => theme('avatar',	$user['avatar_image']['url'], $name),
 										'class' => 'avatar'
 									),
 								array(
-									'data' => $content, 
+									'data' => $content,
 									'class' => 'status shift')
 								),
 							'class' => 'tweet'
@@ -1979,7 +2022,7 @@ function theme_full_name($user) {
 	return $name;
 }
 
-function theme_get_avatar($object) 
+function theme_get_avatar($object)
 {
 	$avatar_url = $object['avatar_image']['url'];
 	return $avatar_url . "?w=48";
@@ -2051,7 +2094,7 @@ function theme_pagination($before_id=null,$since_id=null)
 
 	$pagination .= "<a href=\"".pageURL()."#prio\" class=\"button\">^ Menu ^</a> ";
 
-	if ($before_id) 
+	if ($before_id)
 	{	
 		$pagination .= "<a href='{$_GET['q']}?since_id=$since_id' class='button'>Newer &gt;</a>";
 	}	
@@ -2063,7 +2106,7 @@ function theme_pagination($before_id=null,$since_id=null)
 }
 
 
-function theme_action_icons($status) 
+function theme_action_icons($status)
 {
 	$from = $status['user']['username'];
 
@@ -2091,7 +2134,7 @@ function theme_action_icons($status)
 	}
 
 	//	Star
-	if ($status['you_starred']) 
+	if ($status['you_starred'])
 	{
 		$actions[] = theme('action_icon', "unstar/{$status['id']}", "images/star{$L}.png", 'STARRED');
 	} else {
@@ -2112,19 +2155,25 @@ function theme_action_icons($status)
 	//	Delete the Repost
 	if (user_is_current_user($status['dabr_repost_username']))
 	{
-		$actions[] = theme('action_icon', "confirm/delete/{$status['dabr_repost_id']}", "images/trash{$L}.png", 'DEL');	
+		$actions[] = theme('action_icon', 
+			"confirm/delete/{$status['dabr_repost_id']}",
+			"images/trash{$L}.png",
+			'DEL');	
 	}
 
 	//	Map
 	if ($status['annotations'] > 0)
 	{
-		foreach($status['annotations'] as $annotation) 
+		foreach($status['annotations'] as $annotation)
 		{
 			if ($annotation['type'] == "net.app.core.geolocation")
 			{
 				$lat = $annotation['value']['latitude'];
 				$long = $annotation['value']['longitude'];
-				$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", "images/map{$L}.png", 'MAP');
+				$actions[] = theme('action_icon', 
+					"https://maps.google.com/maps?q={$lat},{$long}",
+					"images/map{$L}.png", 
+					'MAP');
 			}
 		}
 	}
@@ -2135,7 +2184,7 @@ function theme_action_icons($status)
 	return implode(' ', $actions);
 }
 
-function theme_action_icon($url, $image_url, $text) 
+function theme_action_icon($url, $image_url, $text)
 {
 	if (setting_fetch('modes') == "text")
 	{
@@ -2164,4 +2213,3 @@ function is_64bit() {
 	$int = intval($int);
 	return ($int == 9223372036854775807);
 }
-?>
