@@ -1271,6 +1271,9 @@ function dabr_user_page($query)
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
 	$subaction = $query[2];
+	$perPage = setting_fetch('perPage', 20);
+
+
 	// Get the ID of the post to which we are replying
 	$in_reply_to_id = (string) $query[3];
 
