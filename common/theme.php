@@ -334,6 +334,7 @@ function theme_css() {
 		{
 			left:0px; 
 			display:block;
+			overflow-x:auto;
 		}
 		.embeded
 		{
