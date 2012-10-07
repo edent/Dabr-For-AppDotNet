@@ -422,7 +422,7 @@ function dabr_status_page($query)
 								View orginal</a> ';
 			
 			//	Translate the post
-			$content .= 	'<a href="http://translate.google.com/?hl=en&sl=auto&ie=UTF-8&vi=m&q=' . 
+			$content .= 	'<a href="http://translate.google.com/?hl=en&amp;sl=auto&amp;ie=UTF-8&amp;vi=m&amp;q=' . 
 								urlencode($text) . 
 								'" target="'. get_target() . '" class="button" >Translate</a>
 						</p>';
@@ -1849,14 +1849,14 @@ function theme_timeline($feed)
 			$link = theme('status_time_link', $status, true);
 
 			$avatar = theme('avatar', $status['user']['avatar_image']['url'], $status['user']['name']);
-			$source = "<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">
-						{$status['source']['name']}
-					</a>";
+			$source = 	"<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">".
+							"{$status['source']['name']}".
+						"</a>";
 
 			$conversation = "";
 			if ($status['reply_to'] || $status['num_replies'] > 0)
 			{
-				$conversation .= "| <a href='status/{$status['id']}'>View Conversation</a>";
+				$conversation .= " | <a href='status/{$status['id']}'>View Conversation</a>";
 			}
 
 			if ($status['annotations'])
@@ -1874,9 +1874,7 @@ function theme_timeline($feed)
 			}
 
 			$html = "<b>
-						<a href='user/{$status['user']['username']}'>
-							{$status['user']['username']}
-						</a>
+						<a href='user/{$status['user']['username']}'>{$status['user']['username']}</a>
 					</b>
 					<span class=\"actionicons\"> $actions $link</span>
 					<br>
@@ -2113,7 +2111,7 @@ function theme_action_icons($status)
 {
 	$from = $status['user']['username'];
 
-	if (setting_fetch('modes', "bigtouch") == "bigtouch")
+	if (setting_fetch('modes','bigtouch') == 'bigtouch')
 	{
 		$L = "L";
 	}
