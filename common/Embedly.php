@@ -282,7 +282,7 @@ function embedly_embed_thumbnails(&$feed)
 										"</a>";
 						}
 
-						$status['html'] .= "</span><span class=\"embed\">".$embed;
+						$status['html'] .= "<span class=\"embed\">".$embed."</span>";
 					}
 				}
 			} 
@@ -324,8 +324,7 @@ function embedly_embed_thumbnails(&$feed)
 	{
 		if ($thumb = $oembeds[$index]->html) 
 		{
-			$html = "</span>
-					<span class=\"embed\">" . $thumb; 
+			$html = "<span class=\"embed\">" . $thumb."</span>"; 
 					//	Span will be closed in theme	
 			foreach ($matched_urls[$url] as $statusId) 
 			{
@@ -335,11 +334,12 @@ function embedly_embed_thumbnails(&$feed)
 		{
 			$title = htmlspecialchars($oembeds[$index]->title);
 			$html = 
-				"</span>".
+				
 				"<span class=\"embed\">".
 					"<a href=\"" . urldecode($url) . "\" rel=\"external\" target=\"_blank\">".
 						"<img src='" . IMAGE_PROXY_URL . "320/" . $thumb . "' class=\"embeded\" alt=\"" . $title . "\" />".
-					"</a>"; 	
+					"</a>".
+				"</span>"; 	
 				//	Span will be closed in theme
 			foreach ($matched_urls[$url] as $statusId) 
 			{
