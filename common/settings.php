@@ -131,7 +131,8 @@ function settings_page($args) {
 			'Schoolbell' => 'Schoolbell',
 			'Droid+Sans' => 'Droid Sans',
 			'Ubuntu+Mono' => 'Ubuntu Mono',
-			'Lora'=>'Lora'
+			'Lora'=>'Lora',
+			'Open+Sans'=>'Open Sans Light'
 		);
 
 	$utc_offset = setting_fetch('utc_offset', 0);
