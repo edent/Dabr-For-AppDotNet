@@ -232,10 +232,10 @@ function theme_page($title, $content) {
 						<link rel="apple-touch-icon" sizes="114x114" href="images/dabr-114.png" />';
 	if ($title == "Settings")
 	{
-		$html .=		'<link href="http://fonts.googleapis.com/css?family=Schoolbell|Ubuntu+Mono|Droid+Sans|Lora" rel="stylesheet" type="text/css">';
+		$html .=		'<link href="http://fonts.googleapis.com/css?family=Schoolbell|Ubuntu+Mono|Droid+Sans|Lora|Open+Sans:300" rel="stylesheet" type="text/css">';
 	}
 
-	$html .=			'<link href="http://fonts.googleapis.com/css?family='.(setting_fetch("fonts","Lora")).'" rel="stylesheet" type="text/css">
+	$html .=			'<link href="http://fonts.googleapis.com/css?family='.(setting_fetch("fonts","Open Sans")).'" rel="stylesheet" type="text/css">
 						'.$meta.theme('css').'
 					</head>
 					<body>';
@@ -281,16 +281,20 @@ function theme_css() {
 		{	
 			background:#{$c->bodybg};
 			color:#{$c->bodyt};
-			font:" . ($font_size * 1) ."em;
-			font-family: '". urldecode(setting_fetch("fonts","Lora")) . "', sans;
+			font-size:" . ($font_size * 100) ."%;
+			font-family: '". urldecode(setting_fetch("fonts","Open+Sans")) . "', sans;
 			margin-left:0px;
+		}
+
+		input, select, textarea {
+			font-size:" . ($font_size * 100) ."%;
+			font-family: '". urldecode(setting_fetch("fonts","Open+Sans")) . "', sans;
 		}
 
 		a{color:#{$c->links}}
 		small,small a{
 			color:#{$c->small};
 		}
-		
 
 		section {
 			clear: both; }
@@ -314,13 +318,12 @@ function theme_css() {
 		.date
 		{
 			padding:.5em;
-			font-size:" . ($font_size * 0.8) ."em;
 			font-weight:bold;
 			color:#{$c->small}
 		}
 		.about,.time
 		{
-			font-size:" . ($font_size * 0.8) ."em;
+			font-size:80%;
 			color:#{$c->small}
 		}
 		.avatar
@@ -362,7 +365,7 @@ function theme_css() {
 			padding: 0.5em; 
 			text-decoration: none; 
 			border-right: 1px solid #fff; 
-			font-size:" . ($font_size * 1.1) ."em; 
+			font-size:" . ($font_size * 105) ."%; 
 			color:#{$c->menua};
 		}
 
@@ -401,19 +404,16 @@ function theme_css() {
 		}
 		
 		.logo{float:left;margin-right:15px;}
-
+		
+		.bottom{
+			text-align:center;
+		}
 		.button{
 			font: bold;
-			font-size:" . ($font_size * 1) .";
-    		text-decoration: none;
-    		background-color: #EEEEEE;
-    		color: #333333;
-    		padding: 2px 6px 2px 6px;
-    	}
-
-    	.bottom{
-    		font:" . ($font_size * 1.1) ."em;
-			text-align:center;
+			text-decoration: none;
+			background-color: #EEEEEE;
+			color: #333333;
+			padding: 2px 6px 2px 6px;
 		}
 	</style>";
 }
