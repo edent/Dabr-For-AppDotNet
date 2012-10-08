@@ -1715,7 +1715,7 @@ function theme_user_header($user)
 	$username = $user['username'];
 	$id = $user['id'];
 
-	$full_avatar = $user['avatar_image']['url']; //theme_get_full_avatar($user);
+	$full_avatar = theme_get_full_avatar($user);
 	
 	$out = "<div class='profile'>";
 	$out .= "	<span class='avatar'>";
@@ -1733,12 +1733,6 @@ function theme_user_header($user)
 	$out .= "	</div>
 			</div>";
 	return $out;
-}
-
-function theme_avatar($url, $name = "")
-{
-	$size = 48;
-	return "<img src=\"$url?w=$size\" height='$size' width='$size' alt='$name' />";
 }
 
 function theme_status_time_link($status, $is_link = true) {
@@ -1834,7 +1828,7 @@ function theme_timeline($feed)
 				$repost_id = $status['id'];
 				$reposter_username = $status['user']['username'];
 				$reposter_name = $status['user']['name'];
-				$reposter_avatar = $status['user']['avatar_image']['url'];
+				$reposter_avatar = theme_get_full_avatar($status['user']);
 				
 				$status = $repost_of;
 
@@ -1848,7 +1842,7 @@ function theme_timeline($feed)
 			$actions = theme('action_icons', $status);
 			$link = theme('status_time_link', $status, true);
 
-			$avatar = theme('avatar', $status['user']['avatar_image']['url'], $status['user']['name']);
+			$avatar = theme('avatar', theme_get_full_avatar($status['user']), $status['user']['name']);
 			$source = 	"<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">".
 							"{$status['source']['name']}".
 						"</a>";
@@ -1994,7 +1988,7 @@ function theme_users($feed, $nextPageURL=null)
 						'data' =>
 							array(
 								array(
-										'data' => theme('avatar',	$user['avatar_image']['url'], $name),
+										'data' => theme('avatar',	theme_get_full_avatar($user), $name),
 										'class' => 'avatar'
 									),
 								array(
@@ -2025,12 +2019,32 @@ function theme_full_name($user) {
 
 function theme_get_avatar($object)
 {
-	$avatar_url = $object['avatar_image']['url'];
-	return $avatar_url . "?w=48";
+	if ((setting_fetch('avatar_show', 'on') == 'off'))
+	{
+		return "";
+	}
+
+	$avatar_url = theme_get_full_avatar($object);
+	$size = setting_fetch('avatar_size',48);
+	return $avatar_url . "?w=" . $size;
 }
 
-function theme_get_full_avatar($object) {
-	return $object['avatar_image']['url'];
+function theme_get_full_avatar($object = null) {
+	if ($object)
+		return $object['avatar_image']['url'];
+	//	Default Avatar
+	return "https://d2rfichhc2fb9n.cloudfront.net/image/4/_qtbudHpXtjys3CJVSRcSFcOYtCeY5wbD_tXdTiuhTAUV3vfYbKcF8TkvJRJiEbdDaRsUuChlN1rHzNDHm2Bj6OJ4y1LKkNQW64xqfLCUkjBy60_4D7lWlDpXKBZVN45MpoIFOVWHqIFNsvS0SRyUlA4lyA";
+}
+
+function theme_avatar($url, $name = "")
+{
+	if ((setting_fetch('avatar_show', 'on') == 'off'))
+	{
+		return "";
+	}
+
+	$size = setting_fetch('avatar_size',48);
+	return "<img src=\"$url?w=$size\" height='$size' width='$size' alt='$name' />";
 }
 
 function theme_no_posts() {

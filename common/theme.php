@@ -288,7 +288,7 @@ function theme_css() {
 		}
 		
 		nav ul {margin-top: 0px}
-		
+
 		input, select, textarea {
 			font-size:" . ($font_size * 100) ."%;
 			font-family: '". urldecode(setting_fetch("fonts","Open+Sans")) . "', sans;
@@ -430,5 +430,9 @@ function theme_google_analytics() {
 
 function theme_get_logo($size = 128)
 {
+	if ((setting_fetch('avatar_show', 'on') == 'off'))
+	{
+		return "";
+	}
 	return '<img src="images/dabr-'.$size.'.png" height="'.$size.'" width="'.$size.'" alt="The Dabr Bunny" class="logo" />';
 }

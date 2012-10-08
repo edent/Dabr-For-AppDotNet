@@ -45,7 +45,8 @@ function cookie_monster() {
 		setcookie($cookie, NULL, $duration, '/');
 		setcookie($cookie, NULL, $duration);
 	}
-	return theme('page', 'Cookie Monster', '<p>The cookie monster has logged you out and cleared all settings. Try logging in again now.</p>');
+	return theme('page', 'Cookie Monster', 
+		'<p>The cookie monster has logged you out and cleared all settings. Try logging in again now.</p>');
 }
 
 function setting_fetch($setting, $default = NULL) {
@@ -76,6 +77,8 @@ function settings_page($args) {
 		$settings['font_size']   = $_POST['font_size'];
 		$settings['nondirected'] = $_POST['nondirected'];
 		$settings['fonts']       = $_POST['fonts'];
+		$settings['avatar_show'] = $_POST['avatar_show'];
+		$settings['avatar_size'] = $_POST['avatar_size'];
 				
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		dabr_refresh('');
@@ -88,7 +91,8 @@ function settings_page($args) {
 	);
 	
 	$font_size = array(
-		'0.5' => "<span style=\"font-size:50%\">Small</span>", 
+		'0.5' => "<span style=\"font-size:50%\">Smallest</span>", 
+		'0.75' => "<span style=\"font-size:100%\">Small</span>", 
 		'1' => "<span style=\"font-size:100%\">Normal</span>", 
 		'1.5' => "<span style=\"font-size:150%\">Large</span>", 
 		'2' => "<span style=\"font-size:200%\">Huge</span>", 
@@ -121,6 +125,11 @@ function settings_page($args) {
 		'off' => 'OFF',
 	);
 
+	$avatar_show = array(
+		'on' => 'ON',
+		'off' => 'OFF',
+	);
+
 	$colour_schemes = array();
 	foreach ($GLOBALS['colour_schemes'] as $id => $info) {
 		list($name, $colours) = explode('|', $info);
@@ -143,7 +152,8 @@ function settings_page($args) {
 
 	$content .= '<h1>Settings</h1>';
 	$content .= theme_get_logo();
-	$content .= '<br>This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!';
+	$content .= '<br>This is where you can set your personal preferences! 
+					Have fun changing the colour schemes - my favourite is PINK!';
 
 	$content .= '<form action="settings/save" method="post" style="clear:both">
 					<h3>Colour scheme:</h3>
@@ -175,35 +185,92 @@ function settings_page($args) {
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
 	$content .= '		</select>';
 
-	$content .= '	<h3>Emoticons - show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" /></h3>
-						<select name="emoticons">';
-	$content .= theme('options', $emoticons, setting_fetch('emoticons', 'on'));
-	$content .= '		</select>';
+	$content .= '	<h3>Avatar Size</h3>';
+	$content .= '	<input 
+						name="avatar_size" 
+						type="range" 
+						min="12" 
+						max="240" 
+						value="'.setting_fetch('avatar_size',48).'" 
+						step="12" 
+						onchange="showValue(this.value)" 
+						style="width: 90%;"
+					/>';
+	$content .= '	<span id="range">'.setting_fetch('avatar_size',48).'</span>
+					<br>
+					<img 
+						id="avatar" 
+						src="'.theme_get_full_avatar().'?w='.setting_fetch('avatar_size',48).'" 
+						alt="Default Avatar"
+					/>
+					<script type="text/javascript">
+					function showValue(newValue)
+					{
+						document.getElementById("range").innerHTML=newValue;
+						
+						document.getElementById("avatar").src = "'.theme_get_full_avatar().'?w="+newValue;
+					}
+					
+					function replaceQueryString(url,param,value) 
+					{
+						var re = new RegExp("([?|&])" + param + "=.*?(&|$)","i");
+						if (url.match(re))
+							return url.replace(re,\'$1\' + param + "=" + value + \'$2\');
+						else
+							return url + \'&\' + param + "=" + value;
+					}
+					</script>';
+
+	$content .= '	<h3>Work Safe</h3>';
+	
+	$content .= '	<p>
+						<label>
+							<input type="checkbox" name="hide_inline" value="yes" ' . 
+								(setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') . 
+							' /> Hide inline media (eg image thumbnails &amp; embedded videos)
+						</label>
+					</p>';
+
+	$content .= '	<p>
+						<label>
+							<input type="checkbox" name="avatar_show" value="off" ' . 
+								(setting_fetch('avatar_show','on') == 'off' ? ' checked="checked" ' : '') .
+								' /> Hide avatars
+						</label>
+					</p>';
+
+	$content .= '	<p>
+						<label>
+							<input type="checkbox" name="emoticons" value="on" ' . 
+								(setting_fetch('emoticons','on') == 'on' ? ' checked="checked" ' : '') .
+								' /> show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" />
+						</label>
+					</p>';
 
 	$content .=	'	<h3>Show non-directed replies:</h3>
 						<label>
-							<input type="checkbox" name="nondirected" value="1" '. (setting_fetch('nondirected') == '1' ? ' checked="checked" ' : '') .' /> 
-							You follow Alice, you don\'t follow Bob. Alice sends a post to Bob - do you want to see it?
+							<input type="checkbox" name="nondirected" value="1" ' . 
+								(setting_fetch('nondirected') == '1' ? ' checked="checked" ' : '') .
+								' /> You follow Alice, you don\'t follow Bob. 
+								Alice sends a post to Bob - do you want to see it?
 						</label>';
 
 	$content .=	'	<h3>External links go:</h3>
 						<select name="gwt">';
 	$content .= theme('options', $gwt, setting_fetch('gwt', 'off'));
 	$content .= '		</select>
-						<small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small>';
+						Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.';
 	$content .= '	<h3>Others:</h3>
 					<p>
 						<label>
-							<input type="checkbox" name="timestamp" value="yes" '. (setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .' /> Show the timestamp ' . dabr_date('H:i') . ' instead of 25 sec ago
+							<input type="checkbox" name="timestamp" value="yes" ' . 
+								(setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .
+								' /> Show the timestamp ' . dabr_date('H:i') . ' instead of 25 sec ago
 						</label>
 					</p>';
+	
 	$content .= '	<p>
-						<label>
-							<input type="checkbox" name="hide_inline" value="yes" '. (setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') .' /> Hide inline media (eg image thumbnails &amp; embedded videos)
-						</label>
-					</p>';
-	$content .= '	<p>
-						<label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br>
+						<label>The time is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br>
 							It is worth adjusting this value if the time appears to be wrong.
 						</label>
 					</p>';
