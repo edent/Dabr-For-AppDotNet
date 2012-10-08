@@ -284,8 +284,11 @@ function theme_css() {
 			font-size:" . ($font_size * 100) ."%;
 			font-family: '". urldecode(setting_fetch("fonts","Open+Sans")) . "', sans;
 			margin-left:0px;
+			margin-top:0px;
 		}
-
+		
+		nav ul {margin-top: 0px}
+		
 		input, select, textarea {
 			font-size:" . ($font_size * 100) ."%;
 			font-family: '". urldecode(setting_fetch("fonts","Open+Sans")) . "', sans;
