@@ -37,22 +37,39 @@ function logout_page() {
 
 //	Show the about page
 function get_about_page() {
-	$about = //file_get_contents('about.html');
-		'<div id="about" >
-			<h3>What is Dabr for AppDotNet?</h3>';
+	$about = 
+		'<div id="about" >'.
+			'<h3>What is Dabr for AppDotNet?</h3>';
 	$about .= theme_get_logo();
-	$about .= '<ul>
-				<li>A mobile web interface for AppDotNet</li>
-				<li>Created by <a href="https://alpha.app.net/edent">Terence Eden</a></li>
-				<li>Based on <a href="http://code.google.com/p/dabr/">Dabr for Twitter</a> originally by 
-					<a href="http://twitter.com/davidcarrington">@davidcarrington</a>, 
-					<a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a>, and
-					<a href="http://twitter.com/whatleydude">@whatleydude</a> 
-				</li>
-				<li><a href="https://github.com/edent/Dabr-For-AppDotNet">Open Source on GitHub</a></li>
-			</ul>
-
-			<p>If you have any comments, suggestions or questions then feel free to <a href="http://edent.tel/">get in touch</a>.</p>
+	$about .= 	'<ul>
+					<li>A mobile web interface for AppDotNet</li>
+					<li>Created by <a href="https://alpha.app.net/edent">Terence Eden</a></li>
+				</ul>
+				<h2>Features:</h2>
+				<ul>
+					<li>Change colour scheme</li>
+					<li>Change font and font size</li>			
+					<li>Upload images</li>
+					<li>Share location</li>
+					<li>Watch posted videos</li>
+					<li>Preview images, FourSquare, Wikipedia and more.</li>
+					<li>Search for users</li>
+					<li>Search posts</li>
+					<li>See who has starred your posts</li>
+					<li>See who has reposted your postsd</li>
+					<li>Change you avatar size</li>
+					<li>...and so much more!</li>
+				</ul>
+				<h2>Credits:</h2>
+				<ul>
+					<li>Based on <a href="http://code.google.com/p/dabr/">Dabr for Twitter</a> originally by 
+						<a href="http://twitter.com/davidcarrington">@davidcarrington</a>, 
+						<a href="http://shkspr.mobi/blog/index.php/tag/dabr/">Terence Eden</a>, and
+						<a href="http://twitter.com/whatleydude">@whatleydude</a> 
+					</li>
+					<li><a href="https://github.com/edent/Dabr-For-AppDotNet">Open Source on GitHub</a></li>
+				</ul>
+				<p>If you have any comments, suggestions or questions then feel free to <a href="http://edent.tel/">get in touch</a>.</p>
         </div>';  
 
         return $about;
