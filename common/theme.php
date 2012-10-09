@@ -309,7 +309,7 @@ function theme_css() {
 		.tweet
 		{
 			padding:.5em;
-			min-height:50px;
+			min-height:".(setting_fetch('avatar_size',48) + 2)."px;
 		}
 		
 		.features
