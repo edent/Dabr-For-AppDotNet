@@ -341,6 +341,7 @@ function theme_css() {
 			left:0px; 
 			display:block;
 			overflow-x:auto;
+			clear:both;
 		}
 		.embeded
 		{
