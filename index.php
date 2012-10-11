@@ -47,7 +47,7 @@ function get_about_page() {
 				</ul>
 				<h2>Features:</h2>
 				<ul>
-					<li>Change colour scheme</li>
+					<li>Change colour scheme - including night reading mode</li>
 					<li>Change font and font size</li>			
 					<li>Upload images</li>
 					<li>Share location</li>
@@ -85,7 +85,10 @@ function sign_in()
 	$app = new EZAppDotNet();
 	$url = $app->getAuthUrl();
 	$url = htmlspecialchars($url);
-	$sign_in = "<a href=\"$url\"><h2>Sign in using App.net</h2></a>";
+	$sign_in = "<a href=\"$url\">
+					<img src=\"images/ConnectButton_240x50.png\" width=\"250\" height=\"50\" alt=\"Sign in button\" />
+					<h2>Sign in using App.net</h2>
+				</a>";
 
 	$about = get_about_page();
 
