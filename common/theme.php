@@ -152,6 +152,13 @@ function theme_error($message)
 {
 	$message = str_replace("Bad Request: ", "", $message);
 	$errorMessage = "<h3>" . theme_get_logo(57) . "You silly sausage! " . $message . "</h3>";
+
+	//	Authentication error. User has either revoked access or changed password.
+	if (strpos($message, "authentication") !== false)
+	{
+		$errorMessage .= "It looks like you changed your password. Please <a href=\"logout\">logout</a> and then reauthenticate.";
+	}
+
 	theme_page('Error', $errorMessage);
 }
 
