@@ -57,8 +57,15 @@ function user_current_username()
 		// check that the user is signed in
 		if ($app->getSession())
 		{
-			$user = $app->getUser();
-
+			try
+			{	
+				$user = $app->getUser();	
+			}
+			catch (Exception $e)
+			{
+				theme_error($e->getMessage());
+			}
+			
 			$username = $user['username'];
 			
 			$_SESSION['app_username'] = $username;
