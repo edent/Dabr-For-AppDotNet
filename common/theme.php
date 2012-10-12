@@ -151,7 +151,7 @@ function theme_table_cell($contents, $header = FALSE) {
 function theme_error($message) 
 {
 	$message = str_replace("Bad Request: ", "", $message);
-	$errorMessage = "<h3>" . theme_get_logo(57) . "You silly sausage! " . $message . "</h3>";
+	$errorMessage = "<h3>" . theme_get_logo(57) . _(ERROR_MESSAGE) . " " . $message . "</h3>";
 
 	//	Authentication error. User has either revoked access or changed password.
 	if (strpos($message, "authentication") !== false)
@@ -443,4 +443,41 @@ function theme_get_logo($size = 128)
 		return "";
 	}
 	return '<img src="images/dabr-'.$size.'.png" height="'.$size.'" width="'.$size.'" alt="The Dabr Bunny" class="logo" />';
+}
+
+//	Show the about page
+function theme_about_page() {
+	$about = 
+		'<div id="about" >'.
+			'<h3>'._(WHAT_IS).'</h3>';
+	$about .= theme_get_logo();
+	$about .= 	'<ul>
+					<li>'._(ABOUT_1).'</li>
+					<li>'._(CREATED_BY).'</li>
+				</ul>
+				<h2>'._(ABOUT_FEATURES).'</h2>
+				<ul>
+					<li>'._(ABOUT_2).'</li>
+					<li>'._(ABOUT_3).'</li>
+					<li>'._(ABOUT_4).'</li>
+					<li>'._(ABOUT_5).'</li>
+					<li>'._(ABOUT_6).'</li>
+					<li>'._(ABOUT_7).'</li>
+					<li>'._(ABOUT_8).'</li>
+					<li>'._(ABOUT_9).'</li>
+					<li>'._(ABOUT_10).'</li>
+					<li>'._(ABOUT_11).'</li>
+					<li>'._(ABOUT_12).'</li>
+					<li>'._(ABOUT_13).'</li>
+				</ul>
+				<h2>'._(ABOUT_CREDITS).'</h2>
+				<ul>
+					<li>'._(ABOUT_CREDITS_1).'</a> 
+					</li>
+					<li>'._(GITHUB_LINK).'</li>
+				</ul>
+				<p>'._(ABOUT_COMMENTS).'</p>
+		</div>'; 
+
+	return $about;
 }

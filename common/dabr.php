@@ -418,13 +418,12 @@ function dabr_status_page($query)
 			$username = $post['user']['username'];
 			$content .= '<p>
 							<a href="https://alpha.app.net/' . $username . '/post/' . $id . '"
-								target="'. get_target() . '" class="button">
-								View orginal</a> ';
+								target="'. get_target() . '" class="button">'._(LINK_VIEW_ORIGINAL).'</a> ';
 			
 			//	Translate the post
 			$content .= 	'<a href="http://translate.google.com/?hl=en&amp;sl=auto&amp;ie=UTF-8&amp;vi=m&amp;q=' . 
 								urlencode($text) . 
-								'" target="'. get_target() . '" class="button" >Translate</a>
+								'" target="'. get_target() . '" class="button" >'._(LINK_TRANSLATE).'</a>
 						</p>';
 			
 			//	Add the reply box
@@ -467,7 +466,7 @@ function dabr_status_page($query)
 				}
 
 				$thread = array_reverse($thread);
-				$content .= '<p>And the conversation view...</p>'.theme('timeline', $thread);
+				$content .= '<p>'._(CONVERSATION_VIEW).'</p>'.theme('timeline', $thread);
 			}
 			
 			//	Track how long the API call took
@@ -510,7 +509,6 @@ function dabr_delete_page($query) {
 			}
 		}
 
-
 		dabr_refresh('user/'.user_current_username());
 	}
 }
@@ -519,12 +517,12 @@ function dabr_ensure_post_action() {
 	// This function is used to make sure the user submitted their action as an HTTP POST request
 	// It slightly increases security for actions such as Delete, Block and Spam
 	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-		theme_error('Error: Invalid HTTP request method for this action.');
+		theme_error(_(ERROR_INVALID_METHOD));
 	}
 }
 
-function dabr_follow_page($query) {
-
+function dabr_follow_page($query) 
+{
 	$app = new EZAppDotNet();
 	
 	if ($app->getSession())
@@ -577,7 +575,6 @@ function dabr_mute_page($query) {
 			{
 				theme_error($e->getMessage());
 			}
-
 		}
 	}
 }
@@ -593,38 +590,38 @@ function dabr_confirmation_page($query)
 
 	switch ($action) {
 		case 'mute':
-			$content .= "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<p>" . sprintf(_('Are you sure you want to mute %s?'),$target) . "</p>";
 			$content .= "<ul>
-							<li>You won't see any of their posts in your timeline</li>
-							<li>They won't appear in your replies</li>
-							<li>They <em>will still be able to follow you and see your posts</em></li>
-							<li>You <em>can</em> unmute them later</li>
+							<li>"._(MUTE_1)."</li>
+							<li>"._(MUTE_2)."</li>
+							<li>"._(MUTE_3)."</li>
+							<li>"._(MUTE_4)."</li>
 						</ul>";
 			break;
 		case 'unmute':
-			$content .= "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+			$content .= "<p>"._(ARE_YOU_SURE)." <strong>$action $target</strong>?</p>";
 			$content .= "<ul>
-							<li>You will see their posts in your timeline if you follow them.</li>
-							<li>Their posts will appear in your replies</li>
-							<li>You <em>can</em> mute them later</li>
+							<li>"._(UNMUTE_1)."</li>
+							<li>"._(UNMUTE_2)."</li>
+							<li>"._(UNMUTE_3)."</li>
 						</ul>";
 			break;
 		case 'delete':
-			$content .= "<p>Are you really sure you want to delete your post?</p>";
+			$content .= "<p>"._(ARE_YOU_SURE_DELETE)."</p>";
 			$content .= "<ul>
 							<li>Post ID: <strong>$target</strong></li>
-							<li>There is <strong>no way to undo this action</strong>.</li>
+							<li><strong>"._(NO_UNDO)."</strong>.</li>
 						</ul>";
 			break;
 
 		case 'spam':
-			$content .= "<p>Are you really sure you want to report <strong>$target</strong> as a spammer?</p>";
-			$content .= "<p>They will also be blocked from following you.</p>";
+			$content .= "<p>".sprintf(_('SPAM_1 %s'),$target)."</p>";
+			$content .= "<p>"._(SPAM_2)."</p>";
 			break;
 	}
 
 	$content .= "<form action='$action/$target' method='post'>
-					<input type='submit' value='Yes please' />
+					<input type='submit' value='"._(CONFIRM_BUTTON)."' />
 				</form>";
 	
 	theme('Page', 'Confirm', $content);
@@ -641,22 +638,22 @@ function dabr_confirmed_page($query)
 		switch ($action) {
 			case 'mute':
 				$content  .= "<p>
-								<span class='status shift'>
-									Shhhhhh $target! You are now <strong>muted</strong>.
+								<span class='status shift'>"
+									.sprintf(_('MUTED_1 %s'),$target)."
 								</span>
 							</p>";
 				break;
 			case 'unmute':
 				$content  .= "<p>
-								<span class='status shift'>
-									Hello again $target - you have been <strong>unmuted</strong>.
+								<span class='status shift'>"
+									.sprintf(_('UNMUTED_1 %s'),$target)."									
 								</span>
 							</p>";
 				break;
 			case 'spam':
 				$content .= "<p>
-								<span class='status shift'>
-									Yum! Yum! Yum! Delicious spam! Goodbye @$target.
+								<span class='status shift'>"
+									.sprintf(_('SPAMMER_1 %s'),$target)."
 								</span>
 							</p>";
 				break;
@@ -1030,7 +1027,6 @@ function dabr_starred_page($query)
 	} else {
 		$content = sign_in();
 	}
-
 }
 
 function dabr_global_page()
@@ -1039,7 +1035,6 @@ function dabr_global_page()
 	$perPage = setting_fetch('perPage', 20);
 	$before_id = $_GET['before_id'];
 	$since_id = $_GET['since_id'];
-	
 	
 	$app = new EZAppDotNet();
 
@@ -1079,7 +1074,6 @@ function dabr_global_page()
 	} else {
 		$content = sign_in();
 	}
-
 }
 
 function dabr_search_page()
@@ -1145,7 +1139,7 @@ function dabr_search_page()
 			{
 				$content .= '<form action="search/bookmark" method="post">
 								<input type="hidden" name="query" value="'.$search_query.'" />
-								<input type="submit" value="Save as default search" />
+								<input type="submit" value="'._(SAVE_DEFAULT_SEARCH).'" />
 							</form>';
 			}
 			$content .= theme('timeline', $tl);
@@ -1171,14 +1165,11 @@ function dabr_search($search_query)
 
 function dabr_hashtag_page($query)
 {
-
 	$app = new EZAppDotNet();
 
 	// check that the user is signed in
 	if ($app->getSession())
 	{
-	
-
 		if (isset($query[1]))
 		{
 			$hashtag = $query[1];
@@ -1187,7 +1178,7 @@ function dabr_hashtag_page($query)
 			$since_id = $_GET['since_id'];
 
 			// Create the form where users can enter text prepopulated with the hashtag
-			$content = dabr_post_form("#".$hashtag);//theme('status_form', '#'.$hashtag.' ');
+			$content = dabr_post_form("#".$hashtag);
 			//	Track how long the API call took
 			global $api_time;
 			$api_start = microtime(1);
@@ -1229,10 +1220,7 @@ function dabr_hashtag_page($query)
 
 function dabr_find_post_in_timeline($id, $stream)
 {
-	// Parameter checks
-	//if (!is_numeric($id) || !$stream) return;
-
-	// Check if the post exists in the timeline given
+	//	Check if the post exists in the timeline given
 	//	Look through the stream & see if the post we're replying to is in there.
 	foreach ($stream as $post)
 	{
@@ -1260,7 +1248,6 @@ function dabr_find_post_in_timeline($id, $stream)
 			}
 		}
 	}
-	
 	return $found_post;
 }
 
@@ -1271,7 +1258,6 @@ function dabr_user_page($query)
 	$since_id = $_GET['since_id'];
 	$subaction = $query[2];
 	$perPage = setting_fetch('perPage', 20);
-
 
 	// Get the ID of the post to which we are replying
 	$in_reply_to_id = (string) $query[3];
@@ -1333,14 +1319,13 @@ function dabr_user_page($query)
 				}
 			}
 		
-			$content .= "<p>In reply to:<br>" . $reply_post['text'] . "</p>";
+			$content .= "<p>"._(IN_REPLY_TO)."<br>" . $reply_post['text'] . "</p>";
 		}
 		
 		// Create the form where users can enter text
 		$content .= dabr_post_form($status, $in_reply_to_id);
 
 		$content .= theme('user_header', $user);
-
 		
 		//	Track how long the API call took
 		$api_time += microtime(1) - $api_start;
@@ -1395,14 +1380,11 @@ function dabr_home_page()
 	if ($app->getSession()) {
 	
 		// Create the form where users can enter text
-		$content = dabr_post_form();//theme('status_form');
+		$content = dabr_post_form();
 		
 		//	Track how long the API call took
 		global $api_time;
 		$api_start = microtime(1);
-	
-		// get the current user as JSON
-		//$data = $app->getUser();
 
 		//	get the stream
 		try
@@ -1426,7 +1408,6 @@ function dabr_home_page()
 		
 		//print_r($stream);
 		$content .= theme('timeline', $stream);
-		
 
 	// otherwise prompt to sign in
 	} else {
@@ -1453,12 +1434,11 @@ function dabr_raw_page($query) {
 
 function dabr_post_form($text = '', $in_reply_to_id = NULL)
 {
-
 	$geoJS = '<script type="text/javascript">
 				started = false;
 				chkbox = document.getElementById("geoloc");
 				if (navigator.geolocation) {
-					geoStatus("Share my location");
+					geoStatus("'._(SHARE_MY_LOCATION).'");
 					if ("'.$_COOKIE['geo'].'"=="Y") {
 						chkbox.checked = true;
 						goGeo();
@@ -1475,9 +1455,9 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 					document.getElementById("lblGeo").innerHTML = msg;
 				}
 				function geoSuccess(position) {
-					geoStatus("Share my <a href=\'http://maps.google.co.uk/?q=" + 
+					geoStatus("<a href=\'http://maps.google.co.uk/?q=" + 
 						position.coords.latitude + "," + position.coords.longitude + 
-						"\' target=\'blank\'>location</a>");
+						"\' target=\'blank\'>'._(SHARE_MY_LOCATION).'</a>");
 					chkbox.value = position.coords.latitude + "," + position.coords.longitude;
 				}
 			</script>';
@@ -1492,9 +1472,9 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 
 		if ($in_reply_to_id !== NULL)
 		{
-			$title = "Reply on App.net";
+			$title = _(POST_CAPTION);
 		} else {
-			$title = "Post to App.net";
+			$title = _(POST_CAPTION_REPLY);
 		}
 		
 		return "<fieldset>
@@ -1516,7 +1496,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 						<div>
 							<input name=\"in_reply_to_id\" value=\"$in_reply_to_id\" type=\"hidden\" />
 							<input type=\"submit\" value=\"Post\" />
-							<span id=\"remaining\">254</span>
+							<span id=\"remaining\">256</span>
 							<span id=\"geo\" style=\"display: none;\">
 								<input onclick=\"goGeo()\" type=\"checkbox\" id=\"geoloc\" name=\"location\" />
 								<label for=\"geoloc\" id=\"lblGeo\"></label>
@@ -1540,15 +1520,14 @@ function dabr_repost_page($query)
 			global $api_time;
 			$api_start = microtime(1);
 		
-		try
-		{
-			$post = $app->getPost($id,array('include_annotations' => 1));
-		}
-		catch (Exception $e)
-		{
-			theme_error($e->getMessage());
-		}
-
+			try
+			{
+				$post = $app->getPost($id,array('include_annotations' => 1));
+			}
+			catch (Exception $e)
+			{
+				theme_error($e->getMessage());
+			}
 
 			//	Track how long the API call took
 			$api_time += microtime(1) - $api_start;
@@ -1559,29 +1538,27 @@ function dabr_repost_page($query)
 	$length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
 	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
 
-	$content .= "<p>Native Repost:</p>
+	$content .= "<p>"._(NATIVE_REPOST)."</p>
 				<form action='repost-native/{$id}' method='post'>
-					<input type='submit' value='Repost it!' />
+					<input type='submit' value='"._(NATIVE_REPOST_BUTTON)."' />
 				</form>
 				<hr />";
 
-	$content .= "<p>Edit Before Reposting:</p>
+	$content .= "<p>"._(EDIT_BEFORE_REPOST)."</p>
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
 						<input name='in_reply_to_id' value='$id' type='hidden' />
 						<textarea	name='status' 
-									style='width:90%; 
-									max-width: 400px;' 
+									style='width:90%; max-width: 400px;' 
 									rows='6' 
 									id='status'>$text</textarea>
 						<br>
-						<input type='submit' value='Repost' />
+						<input type='submit' value='"._(NATIVE_REPOST_BUTTON)."' />
 						<span id='remaining'>" . (256 - $length) ."</span>
 					</form>";
 	$content .= js_counter("status");
 
 	theme('page', 'Repost', $content);
-
 }
 
 function dabr_repost($query)
@@ -1626,33 +1603,31 @@ function dabr_user_bio($user)
 	$bio = "";
 
 	if($user['description']['text'] != "")
-		$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . 
-				"<br>";
+		$bio .= dabr_parse_tags($user['description']['text'], $user['description']['entities']) . "<br>";
 	
 	if($user['timezone'] != "")
-		$bio .= "Timezone: " . str_replace("_", " ", $user['timezone']) . "<br>";
+		$bio .= _(TIMEZONE) . " " . str_replace("_", " ", $user['timezone']) . "<br>";
 
-
-	$bio .= "Joined on " . $date_joined . " - ";
+	$bio .= _(JOINED) . " " . $date_joined . " - ";
 	$bio .= pluralise('post', (int)$user['counts']['posts'], true) . " ";
 	$bio .= "(~" . pluralise('post', $posts_per_day, true) . " per day). ";
 	
 	if ($follows_you && $you_follow)
 	{
-		$bio .= "YOU ARE BEST FRIENDS! ";			
+		$bio .= _(BEST_MATES);			
 	}
 	else if ($follows_you)
 	{
-		$bio .= "Follows you. ";
+		$bio .= _(FOLLOWS) . " ";
 	}
 	else if ($you_follow)
 	{
-		$bio .= "You are following. ";
+		$bio .= _(FOLLOWING) . " ";
 	}
 
 	if ($you_muted)
 	{
-		$bio .= " Shhh! Muted. ";
+		$bio .= " " . _(SH_MUTED) ." ";
 	}
 
 	return $bio;
@@ -1680,26 +1655,25 @@ function dabr_user_actions($user, $link=TRUE)
 		//	User cannot perform certain actions on herself
 		if (strtolower($username) !== strtolower(user_current_username()))
 		{
-		
 			if ($you_follow == false) {
-				$actions .= " | <a href='follow/{$id}'>Follow</a>";
+				$actions .= " | <a href='follow/{$id}'>"._(FOLLOW)."</a>";
 			}
 			else {
-				$actions .= " | <a href='unfollow/{$id}'>Unfollow</a>";
+				$actions .= " | <a href='unfollow/{$id}'>"._(UNFOLLOW)."</a>";
 			}
 
 			if ($you_muted)
 			{
-				$actions .= " | <a href='confirm/unmute/{$username}'>Unmute</a>";
+				$actions .= " | <a href='confirm/unmute/{$username}'>"._(UNMUTE)."</a>";
 			}else
 			{
-				$actions .= " | <a href='confirm/mute/{$username}'>Mute</a>";
+				$actions .= " | <a href='confirm/mute/{$username}'>"._(MUTE)."</a>";
 			}
 			
-			$actions .= " | <a href='confirm/spam/{$username}/{$id}'>Report Spam</a>";
+			$actions .= " | <a href='confirm/spam/{$username}/{$id}'>"._(REPORT_SPAM)."</a>";
 		}
 		
-		$actions .= " | <a href='replies/{$username}'>Search @{$username}</a>";
+		$actions .= " | <a href='replies/{$username}'>" . sprintf(_('SEARCH_AT %s'),$username) . "</a>";
 	}else
 	{
 		$actions .= pluralise('follower', $user['counts']['followers'], true);
@@ -1710,7 +1684,7 @@ function dabr_user_actions($user, $link=TRUE)
 
 function theme_user_header($user)
 {
-	$name = $user['name']; //theme('full_name', $user);
+	$name = $user['name'];
 	$username = $user['username'];
 	$id = $user['id'];
 
@@ -1724,7 +1698,7 @@ function theme_user_header($user)
 					<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
 					<br>";
 	$out .= "		<span class='about'>";
-	$out .= "			Bio: " . dabr_user_bio($user)."<br>";
+	$out .= 			_(BIO) . " " . dabr_user_bio($user)."<br>";
 	$out .= "		</span>
 				</span>";
 	$out .= "	<div class='features'>";
@@ -1849,21 +1823,22 @@ function theme_timeline($feed)
 			$conversation = "";
 			if ($status['reply_to'] || $status['num_replies'] > 0)
 			{
-				$conversation .= " | <a href='status/{$status['id']}'>View Conversation</a>";
+				$conversation .= " | <a href='status/{$status['id']}'>"._(VIEW_CONV)."</a>";
 			}
 
 			if ($status['annotations'])
 			{
-				$conversation .= " | <a href='raw/{$status['id']}'>View Annotations</a>";
+				$conversation .= " | <a href='raw/{$status['id']}'>"._(VIEW_ANNOT)."</a>";
 			}
 
 			$repost_info ="";
 			if ($status['dabr_repost_of'])
 			{
 				$repost_info .= "<a href='user/{$status['dabr_repost_username']}'>
-					<img src=\"{$status['dabr_repost_avatar']}?w=25\" />Reposted by {$status['dabr_repost_name']}
-				</a>
-				<br>";
+									<img src=\"{$status['dabr_repost_avatar']}?w=25\" />"
+									. sprintf(_('REPOSTED_BY %s'),$status['dabr_repost_name']) ."
+								</a>
+								<br>";
 			}
 
 			$html = "<b>
@@ -1873,7 +1848,7 @@ function theme_timeline($feed)
 					<br>
 					$text
 					<br>
-					<small>$repost_info Sent via $source $conversation</small>";
+					<small>$repost_info "._(VIA)." $source $conversation</small>";
 
 			unset($row);
 			$class = 'status';
@@ -1955,11 +1930,11 @@ function theme_users($feed, $nextPageURL=null)
 	if (count($feed) == 0 || $feed == '[]') 
 	{
 		return theme_get_logo() . 
-			'<br><p>Where is everybody? No users found :-(</p>';
+			'<br><p>'._(NO_USERS_FOUND).'</p>';
 	}
 
-	foreach ($feed as $user) {
-
+	foreach ($feed as $user) 
+	{
 		$name = $user['name'];
 		$username = $user['username'];
 		$follows_you = $user['follows_you'];
@@ -1999,21 +1974,9 @@ function theme_users($feed, $nextPageURL=null)
 	}
 
 	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	/*if ($nextPageURL)
-		$content .= "<a href='{$nextPageURL}'>Next</a>";
-	*/
+
 	$content .= theme_pagination();
 	return $content;
-}
-
-function theme_full_name($user) {
-	$name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
-	//THIS IF STATEMENT IS RETURNING FALSE EVERYTIME ?!?
-	//if ($user->name && $user->name != $user->screen_name) {
-	if($user->name != "") {
-		$name .= " ({$user->name})";
-	}
-	return $name;
 }
 
 function theme_get_avatar($object)
@@ -2047,7 +2010,7 @@ function theme_avatar($url, $name = "")
 }
 
 function theme_no_posts() {
-	return theme_get_logo() . '<br><p>No posts to display :-( sorry</p>';
+	return theme_get_logo() . '<br><p>'._(NO_POSTS).'</p>';
 }
 
 function theme_search_form($query, $type="") {
@@ -2055,7 +2018,8 @@ function theme_search_form($query, $type="") {
 
 	
 	$form = '
-	<form action="search" method="get"><input name="query" value="'. $q .'" />
+	<form action="search" method="get">
+		<input name="query" value="'. $q .'" />
 		<br>
 		<label for="posts">
 			<input name="type" id="posts" value="posts" ';
@@ -2064,7 +2028,7 @@ function theme_search_form($query, $type="") {
 					$form .= 'checked="checked"';
 				}
 
-	$form .=  'type="radio">Search Posts
+	$form .=  'type="radio">'._(SEARCH_POSTS).'
 		</label>
 		<label for="users">
 			<input name="type" id="users" value="users" ';
@@ -2073,28 +2037,27 @@ function theme_search_form($query, $type="") {
 					$form .= 'checked="checked"';
 				}
 
-	$form .= 		 'type="radio">Search Users
+	$form .= 		 'type="radio">'._(SEARCH_POSTS).'
 		</label>
 		<br>
-		<input type="submit" value="Search" />
+		<input type="submit" value="'._(SEARCH_BUTTON).'" />
 	</form>';
 
 	return $form;
 }
 
-function theme_external_link($url, $content = null) {
+function theme_external_link($url, $content = null) 
+{
 	//Long URL functionality.  Also uncomment function long_url($shortURL)
 	if (!$content)
 	{
 		//Used to wordwrap long URLs
-		//return "<a href='$url' target='_blank'>". wordwrap(long_url($url), 64, "\n", true) ."</a>";
 		return "<a href='$url' target='" . get_target() . "'>". long_url($url) ."</a>";
 	}
 	else
 	{
 		return "<a href='$url' target='" . get_target() . "'>$content</a>";
 	}
-
 }
 
 function theme_pagination($before_id=null,$since_id=null)
@@ -2103,22 +2066,20 @@ function theme_pagination($before_id=null,$since_id=null)
 
 	if ($since_id)
 	{
-		$pagination .= "<a href='{$_GET['q']}?before_id=$before_id' class='button'>&lt; Older</a> ";
+		$pagination .= "<a href='{$_GET['q']}?before_id=$before_id' class='button'>&lt; "._(LINK_OLDER)."</a> ";
 	}
 
-	$pagination .= "<a href=\"".pageURL()."#prio\" class=\"button\">^ Menu ^</a> ";
+	$pagination .= "<a href=\"".pageURL()."#prio\" class=\"button\">^ "._(LINK_MENU)." ^</a> ";
 
 	if ($before_id)
 	{	
-		$pagination .= "<a href='{$_GET['q']}?since_id=$since_id' class='button'>Newer &gt;</a>";
+		$pagination .= "<a href='{$_GET['q']}?since_id=$since_id' class='button'>"._(LINK_NEWER)." &gt;</a>";
 	}	
 	
 	$pagination .= "</p></div>";
 
 	return $pagination;
-	
 }
-
 
 function theme_action_icons($status)
 {
@@ -2217,12 +2178,14 @@ function theme_action_icon($url, $image_url, $text)
 	return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
 }
 
-function pluralise($word, $count, $show = FALSE) {
+function pluralise($word, $count, $show = FALSE) 
+{
 	if($show) $word = number_format($count) . " {$word}";
 	return $word . (($count != 1) ? 's' : '');
 }
 
-function is_64bit() {
+function is_64bit() 
+{
 	$int = "9223372036854775807";
 	$int = intval($int);
 	return ($int == 9223372036854775807);
