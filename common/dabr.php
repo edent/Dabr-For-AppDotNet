@@ -519,7 +519,7 @@ function dabr_ensure_post_action() {
 	// This function is used to make sure the user submitted their action as an HTTP POST request
 	// It slightly increases security for actions such as Delete, Block and Spam
 	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-		die('Error: Invalid HTTP request method for this action.');
+		theme_error('Error: Invalid HTTP request method for this action.');
 	}
 }
 
@@ -804,8 +804,7 @@ function dabr_update() {
 
 		$imgur_array = array(	'key' => $imgur_key,
 								'image' => $image,
-								'caption' => $status . " - from " . $user_url . " via #Dabr");
-
+								'caption' => " " . $status . " - from " . $user_url . " via #Dabr");
 		$timeout = 30;
 		$curl = curl_init();
 
