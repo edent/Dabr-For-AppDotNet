@@ -2,31 +2,33 @@
 
 $menu_registry = array();
 
-function menu_register($items) {
-	foreach ($items as $url => $item) {
+function menu_register($items) 
+{
+	foreach ($items as $url => $item) 
+	{
 		$GLOBALS['menu_registry'][$url] = $item;
 	}
 }
 
-function menu_execute_active_handler() {
+function menu_execute_active_handler()
+{
 	$query = (array) explode('/', $_GET['q']);
 	$GLOBALS['page'] = $query[0];
 	$page = $GLOBALS['menu_registry'][$GLOBALS['page']];
-	if (!$page) {
+	if (!$page) 
+	{
 		header('HTTP/1.0 404 Not Found');
-		die('404 - Page not found.');
+		theme_error('404 - Page not found.');
 	}
 
-
-
-//	if ($page['security'])
-//	user_ensure_authenticated();
+	//	if ($page['security'])
+	//	user_ensure_authenticated();
 
 	if (function_exists('config_log_request'))
-	config_log_request();
+		config_log_request();
 
 	if (function_exists($page['callback']))
-	return call_user_func($page['callback'], $query);
+		return call_user_func($page['callback'], $query);
 
 	return false;
 }
@@ -35,11 +37,14 @@ function menu_current_page() {
 	return $GLOBALS['page'];
 }
 
-function menu_visible_items() {
+function menu_visible_items() 
+{
 	static $items;
-	if (!isset($items)) {
+	if (!isset($items))
+	{
 		$items = array();
-		foreach ($GLOBALS['menu_registry'] as $url => $page) {
+		foreach ($GLOBALS['menu_registry'] as $url => $page)
+		{
 			if ($page['security'] && !user_is_authenticated()) continue;
 			if ($page['hidden']) continue;
 			$items[$url] = $page;
@@ -54,10 +59,11 @@ function theme_menu_top() {
 
 function theme_menu_bottom() 
 {
-	return '<a href="'.pageURL().'#prio" class="button">^menu^</a>';
+	return '<a href="'.pageURL().'#prio" class="button">^ '._(LINK_MENU).' ^</a>';
 }
 
-function theme_menu_both($menu) {
+function theme_menu_both($menu) 
+{
 	$links = array();
 
 	$menu_item = 0;
@@ -67,10 +73,9 @@ function theme_menu_both($menu) {
 		//	Smart Menu
 		foreach (menu_visible_items() as $url => $page) 
 		{
-			$title = $url ? $url : 'home';
+			$title = $page['display'];
 
 			if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
-			
 
 			if ($menu_item > 6)
 			{
@@ -102,7 +107,7 @@ function theme_menu_both($menu) {
 		// Horizontal links for IE6 and crap browsers
 		foreach (menu_visible_items() as $url => $page) 
 		{
-			$title = $url ? $url : 'home';
+			$title = $page['display'];
 
 			if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
 			

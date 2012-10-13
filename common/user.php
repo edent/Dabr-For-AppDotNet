@@ -1,17 +1,6 @@
 <?php
 require_once 'AppDotNet.php';
 
-menu_register(array(
-	'oauth' => array(
-		'callback' => 'user_oauth',
-		'hidden' => 'true',
-	),
-	'login' => array(
-		'callback' => 'user_login',
-		'hidden' => 'true',
-	),
-));
-
 function user_ensure_authenticated() {
 	$app = new EZAppDotNet();
 

@@ -402,3 +402,36 @@ msgstr "Save Settings"
 msgid "SETTINGS_RESET"
 msgstr "Visit <a href=\"reset\">Reset</a> if things go horribly wrong - it will log you out and clear all settings."
 
+msgid "MENU_ABOUT"
+msgstr "About"
+
+msgid "MENU_LOGOUT"
+msgstr "Logout"
+
+msgid "MENU_REPLIES"
+msgstr "Replies"
+
+msgid "MENU_GLOBAL"
+msgstr "Global"
+
+msgid "MENU_SEARCH"
+msgstr "Search"
+
+msgid "MENU_STARRED"
+msgstr "My Stars"
+
+msgid "MENU_FOLLOWERS"
+msgstr "Followers"
+
+msgid "MENU_FRIENDS"
+msgstr "Following"
+
+msgid "MENU_MUTED"
+msgstr "Shhhh!"
+
+msgid "MENU_SETTINGS"
+msgstr "Settings"
+
+msgid "MENU_HOME"
+msgstr "Home"
+

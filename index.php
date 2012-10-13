@@ -1,6 +1,17 @@
 <?php
 $dabr_start = microtime(1);
 
+// I18N support information here
+$language = "en_GB";
+putenv("LANG=" . $language); 
+setlocale(LC_ALL, $language);
+
+// Set the text domain as "messages"
+$domain = "messages";
+bindtextdomain($domain, "Locale"); 
+bind_textdomain_codeset($domain, 'UTF-8');
+textdomain($domain);
+
 header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
 header('Last-Modified: ' . date('r'));
 header('Cache-Control: no-store, no-cache, must-revalidate');
@@ -16,26 +27,17 @@ require 'common/settings.php';
 
 require_once 'EZAppDotNet.php';
 
-// I18N support information here
-$language = "en_GB";
-putenv("LANG=" . $language); 
-setlocale(LC_ALL, $language);
-
-// Set the text domain as "messages"
-$domain = "messages";
-bindtextdomain($domain, "Locale"); 
-bind_textdomain_codeset($domain, 'UTF-8');
-textdomain($domain);
-
 //	Set Up the default menu
 menu_register(array (
 	'about' => array (
 		'security' => true,
 		'callback' => 'about_page',
+		'display'  => _(MENU_ABOUT)
 	),
 	'logout' => array (
 		'security' => true,
 		'callback' => 'logout_page',
+		'display'  => _(MENU_LOGOUT)
 	),
 ));
 

@@ -191,6 +191,450 @@ function theme_header($title)
 	return $header;		
 }
 
+function theme_user_header($user)
+{
+	$name = $user['name'];
+	$username = $user['username'];
+	$id = $user['id'];
+
+	$full_avatar = theme_get_full_avatar($user);
+	
+	$out = "<div class='profile'>";
+	$out .= "	<span class='avatar'>";
+	$out .=			theme('avatar', $full_avatar, $name);
+	$out .= "	</span>";
+	$out .= "	<span class='status shift'>
+					<b><a href=\"user/$username/$id\">$name (@$username)</a></b>
+					<br>";
+	$out .= "		<span class='about'>";
+	$out .= 			_(BIO) . " " . dabr_user_bio($user)."<br>";
+	$out .= "		</span>
+				</span>";
+	$out .= "	<div class='features'>";
+	$out .= 		dabr_user_actions($user);
+	$out .= "	</div>
+			</div>";
+	return $out;
+}
+
+function theme_status_time_link($status, $is_link = true) {
+	$time = strtotime($status['created_at']);
+	if ($time > 0) {
+		if (dabr_date('dmy') == dabr_date('dmy', $time) && !setting_fetch('timestamp')) {
+			$out = format_interval(time() - $time, 1). ' ago';
+		} else {
+			$out = dabr_date('H:i', $time);
+		}
+	} else {
+		$out = $status['created_at'];
+	}
+	if ($is_link)
+		$out = "<a href='status/{$status['id']}' class='time'>$out</a>";
+	return $out;
+}
+
+function theme_timeline($feed)
+{
+	if (count($feed) == 0) return theme('no_posts');
+
+	if (count($feed) < setting_fetch('perPage', 20)) $hide_pagination = TRUE;
+	
+	$rows = array();
+	$page = menu_current_page();
+	$date_heading = false;
+	$first=0;
+
+	// Add the hyperlinks *BEFORE* adding images
+	foreach ($feed as &$status)
+	{
+		if ($status['repost_of'])
+		{
+			$status['html'] = dabr_parse_tags($status['repost_of']['text'], $status['repost_of']['entities']);
+		}
+		else {
+			$status['html'] = dabr_parse_tags($status['text'], $status['entities']);
+		}
+	}
+	unset($status);
+	
+	// Only embed images in suitable browsers
+	if (!in_array(setting_fetch('browser'), array('text', 'worksafe')))
+	{
+		if (EMBEDLY_KEY !== '')
+		{
+			embedly_embed_thumbnails($feed);
+		}
+	}
+
+	foreach ($feed as $status)
+	{
+		if (!$status['is_deleted'])	//	Don't display deleted posts
+		{
+			$time = strtotime($status['created_at']);
+
+			if ($time > 0)
+			{
+				$date = dabr_date('l jS F Y', strtotime($status['created_at']));
+				if ($date_heading !== $date)
+				{
+					$date_heading = $date;
+					$rows[] = array('data'  => array($date), 'class' => 'date');
+				}
+			}
+			else
+			{
+				$date = $status['created_at'];
+			}
+
+			//	Post's text has already been manipulated
+			$text = $status['html'];
+
+			//	Deal with reposts.
+			if ($status['repost_of'])
+			{
+				$repost_of = $status['repost_of'];
+				$repost_id = $status['id'];
+				$reposter_username = $status['user']['username'];
+				$reposter_name = $status['user']['name'];
+				$reposter_avatar = theme_get_full_avatar($status['user']);
+				
+				$status = $repost_of;
+
+				$status['dabr_repost_of'] = true;
+				$status['dabr_repost_id'] = $repost_id;
+				$status['dabr_repost_name'] = $reposter_name;
+				$status['dabr_repost_username'] = $reposter_username;
+				$status['dabr_repost_avatar'] = $reposter_avatar;
+			}
+
+			$actions = theme('action_icons', $status);
+			$link = theme('status_time_link', $status, true);
+
+			$avatar = theme('avatar', theme_get_full_avatar($status['user']), $status['user']['name']);
+			$source = 	"<a href=\"{$status['source']['link']}\" target=\"". get_target() . "\">".
+							"{$status['source']['name']}".
+						"</a>";
+
+			$conversation = "";
+			if ($status['reply_to'] || $status['num_replies'] > 0)
+			{
+				$conversation .= " | <a href='status/{$status['id']}'>"._(VIEW_CONV)."</a>";
+			}
+
+			if ($status['annotations'])
+			{
+				$conversation .= " | <a href='raw/{$status['id']}'>"._(VIEW_ANNOT)."</a>";
+			}
+
+			$repost_info ="";
+			if ($status['dabr_repost_of'])
+			{
+				$repost_info .= "<a href='user/{$status['dabr_repost_username']}'>
+									<img src=\"{$status['dabr_repost_avatar']}?w=25\" />"
+									. sprintf(_('REPOSTED_BY %s'),$status['dabr_repost_name']) ."
+								</a>
+								<br>";
+			}
+
+			$html = "<b>
+						<a href='user/{$status['user']['username']}'>{$status['user']['username']}</a>
+					</b>
+					<span class=\"actionicons\"> $actions $link</span>
+					<br>
+					$text
+					<br>
+					<small>$repost_info "._(VIA)." $source $conversation</small>";
+
+			unset($row);
+			$class = 'status';
+			
+			if ($page != 'user' || $status['dabr_repost_of'])
+			{
+				$row[] = array('data' => $avatar, 'class' => 'avatar');
+				$class .= ' shift';
+			}
+			
+			$row[] = array('data' => $html, 'class' => $class);
+
+			$class = 'tweet';
+			if ($page != 'replies' && dabr_is_reply($status))
+			{
+				$class .= ' reply';
+			}
+			$row = array('data' => $row, 'class' => $class);
+
+			$rows[] = $row;
+		}
+	}
+	$content = theme('rows', $rows, array('class' => 'timeline'));
+
+	//	Don't show pagination if there's only one item
+	//	Get the IDs of the first and last posts
+	if (!$hide_pagination)
+	{
+		$last = end($feed);
+		$first = reset($feed);
+
+		$content .= theme_pagination($last['id'],$first['id']);
+	}
+
+	return $content;
+}
+
+function theme_users($feed, $nextPageURL=null)
+{
+	$rows = array();
+	if (count($feed) == 0 || $feed == '[]') 
+	{
+		return theme_get_logo() . 
+			'<br><p>'._(NO_USERS_FOUND).'</p>';
+	}
+
+	foreach ($feed as $user) 
+	{
+		$name = $user['name'];
+		$username = $user['username'];
+		$follows_you = $user['follows_you'];
+		$you_follow = $user['you_follow'];
+		$you_muted = $user['you_muted'];
+
+		$posts_per_day = dabr_posts_per_day($user);
+
+		$raw_date_joined = strtotime($user['created_at']);
+		$date_joined = date('jS M Y', $raw_date_joined);
+	
+		$content = "<a href=\"user/$username/$id\">$name (@$username)</a>
+					<br>
+					<span class='about'>";
+
+		if($user['description']['text'] != "")
+			$content .= "Bio: " . dabr_user_bio($user);
+
+		$content .= dabr_user_actions($user,false);		
+
+		$content .= 	"<br>";
+		$content .= "</span>";
+
+		$rows[] = 	array(
+						'data' =>
+							array(
+								array(
+										'data' => theme('avatar',	theme_get_full_avatar($user), $name),
+										'class' => 'avatar'
+									),
+								array(
+									'data' => $content,
+									'class' => 'status shift')
+								),
+							'class' => 'tweet'
+					);
+	}
+
+	$content = theme('rows', $rows, array('class' => 'followers'));
+
+	$content .= theme_pagination();
+	return $content;
+}
+
+function theme_get_avatar($object)
+{
+	if ((setting_fetch('avatar_show', 'on') == 'off'))
+	{
+		return "";
+	}
+
+	$avatar_url = theme_get_full_avatar($object);
+	$size = setting_fetch('avatar_size',48);
+	return $avatar_url . "?w=" . $size;
+}
+
+function theme_get_full_avatar($object = null) {
+	if ($object)
+		return $object['avatar_image']['url'];
+	//	Default Avatar
+	return "https://d2rfichhc2fb9n.cloudfront.net/image/4/_qtbudHpXtjys3CJVSRcSFcOYtCeY5wbD_tXdTiuhTAUV3vfYbKcF8TkvJRJiEbdDaRsUuChlN1rHzNDHm2Bj6OJ4y1LKkNQW64xqfLCUkjBy60_4D7lWlDpXKBZVN45MpoIFOVWHqIFNsvS0SRyUlA4lyA";
+}
+
+function theme_avatar($url, $name = "")
+{
+	if ((setting_fetch('avatar_show', 'on') == 'off'))
+	{
+		return "";
+	}
+
+	$size = setting_fetch('avatar_size',48);
+	return "<img src=\"$url?w=$size\" height='$size' width='$size' alt='$name' />";
+}
+
+function theme_no_posts() {
+	return theme_get_logo() . '<br><p>'._(NO_POSTS).'</p>';
+}
+
+function theme_search_form($query, $type="") {
+	$q = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
+
+	
+	$form = '
+	<form action="search" method="get">
+		<input name="query" value="'. $q .'" />
+		<br>
+		<label for="posts">
+			<input name="type" id="posts" value="posts" ';
+				if ($type == "posts" || $type == "")
+				{
+					$form .= 'checked="checked"';
+				}
+
+	$form .=  'type="radio">'._(SEARCH_POSTS).'
+		</label>
+		<label for="users">
+			<input name="type" id="users" value="users" ';
+				if ($type == "users")
+				{
+					$form .= 'checked="checked"';
+				}
+
+	$form .= 		 'type="radio">'._(SEARCH_POSTS).'
+		</label>
+		<br>
+		<input type="submit" value="'._(SEARCH_BUTTON).'" />
+	</form>';
+
+	return $form;
+}
+
+function theme_external_link($url, $content = null) 
+{
+	//Long URL functionality.  Also uncomment function long_url($shortURL)
+	if (!$content)
+	{
+		//Used to wordwrap long URLs
+		return "<a href='$url' target='" . get_target() . "'>". long_url($url) ."</a>";
+	}
+	else
+	{
+		return "<a href='$url' target='" . get_target() . "'>$content</a>";
+	}
+}
+
+function theme_pagination($before_id=null,$since_id=null)
+{
+	$pagination = "<div class=\"bottom\"><p>";
+
+	if ($since_id)
+	{
+		$pagination .= "<a href='{$_GET['q']}?before_id=$before_id' class='button'>&lt; "._(LINK_OLDER)."</a> ";
+	}
+
+	$pagination .= "<a href=\"".pageURL()."#prio\" class=\"button\">^ "._(LINK_MENU)." ^</a> ";
+
+	if ($before_id)
+	{	
+		$pagination .= "<a href='{$_GET['q']}?since_id=$since_id' class='button'>"._(LINK_NEWER)." &gt;</a>";
+	}	
+	
+	$pagination .= "</p></div>";
+
+	return $pagination;
+}
+
+function theme_action_icons($status)
+{
+	$from = $status['user']['username'];
+
+	if (setting_fetch('modes','bigtouch') == 'bigtouch')
+	{
+		$L = "L";
+	}
+
+	$actions = array();
+
+	//	Reply
+	$actions[] = theme('action_icon', "status/{$status['id']}", "images/reply{$L}.png", '@');
+
+	//	Re-post	
+	if ($status['dabr_repost_of'])
+	{
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweeted{$L}.png", 'RP');
+	}
+	else {
+		$actions[] = theme('action_icon', "repost/{$status['id']}", "images/retweet{$L}.png", 'RP');
+	}
+	if ($status['num_reposts']>0)
+	{
+		$actions[] = "<a href=reposters/{$status['id']}>{$status['num_reposts']}</a>";	
+	}
+
+	//	Star
+	if ($status['you_starred'])
+	{
+		$actions[] = theme('action_icon', "unstar/{$status['id']}", "images/star{$L}.png", 'STARRED');
+	} else {
+		$actions[] = theme('action_icon', "star/{$status['id']}", "images/star_grey{$L}.png", 'STAR');
+	}
+
+	if ($status['num_stars']>0)
+	{
+		$actions[] = "<a href=stars/{$status['id']}>{$status['num_stars']}</a>";	
+	}
+
+	// Delete
+	if (user_is_current_user($from))
+	{
+		$actions[] = theme('action_icon', "confirm/delete/{$status['id']}", "images/trash{$L}.png", 'DEL');
+	}
+
+	//	Delete the Repost
+	if (user_is_current_user($status['dabr_repost_username']))
+	{
+		$actions[] = theme('action_icon', 
+			"confirm/delete/{$status['dabr_repost_id']}",
+			"images/trash{$L}.png",
+			'DEL');	
+	}
+
+	//	Map
+	if ($status['annotations'] > 0)
+	{
+		foreach($status['annotations'] as $annotation)
+		{
+			if ($annotation['type'] == "net.app.core.geolocation")
+			{
+				$lat = $annotation['value']['latitude'];
+				$long = $annotation['value']['longitude'];
+				$actions[] = theme('action_icon', 
+					"https://maps.google.com/maps?q={$lat},{$long}",
+					"images/map{$L}.png", 
+					'MAP');
+			}
+		}
+	}
+
+	//	Search for @ to a user
+	$actions[] = theme('action_icon',"replies/{$from}","images/q{$L}.png",'?');
+
+	return implode(' ', $actions);
+}
+
+function theme_action_icon($url, $image_url, $text)
+{
+	if (setting_fetch('modes') == "text")
+	{
+		if ($text == 'MAP')
+		{
+			return "<a href='$url' target='" . get_target() . "'>$text</a>";
+		}
+		return "<a href='$url'>$text</a>";
+	}
+
+	if ($text == 'MAP')
+	{
+		return "<a href='$url' target='" . get_target() . "'><img src='$image_url' alt='$text' /></a>";
+	}
+
+	return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
+}
+
 function theme_page($title, $content) 
 {
 	$body = theme('menu_top');
