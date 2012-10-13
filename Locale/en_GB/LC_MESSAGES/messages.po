@@ -249,3 +249,156 @@ msgstr "Newer"
 msgid "LINK_MENU"
 msgstr "Menu"
 
+msgid "ERROR_THEME %s"
+msgstr "Error: theme function <b>%s</b> not found."
+
+msgid "LIST_MUTED"
+msgstr "This is everyone you have muted"
+
+msgid "LIST_FOLLOWING"
+msgstr "Wow! You follow some really interesting folk!"
+
+msgid "LIST_FOLLOWERS"
+msgstr "These lovely people hang on your every word"
+
+msgid "LIST_SEARCH"
+msgstr "Let's go exploring!"
+
+msgid "LIST_STARRED"
+msgstr "People who starred that post"
+
+msgid "LIST_REPOSTERS"
+msgstr "They came, they saw, they reposted"
+
+msgid "LIST_FOUND"
+msgstr "Who have we found?</h3>"
+
+msgid "LIST_STARS"
+msgstr "OMG! It's full of stars!"
+
+msgid "TIME_PROCESSED %s"
+msgstr "Processed in %s seconds"
+
+msgid "OTHER_SERVICES"
+msgstr "other services"
+
+msgid "UGLY"
+msgstr "Think Dabr looks ugly? <a href=\"settings\">Change the colours, font, and more!</a>"
+
+msgid "COOKIE_MONSTER_DONE"
+msgstr "The cookie monster has logged you out and cleared all settings. Try logging in again now."
+
+msgid "BIG_ICONS"
+msgstr "Big Icons"
+
+msgid "SMALL_ICONS"
+msgstr "Small Icons"
+
+msgid "TEXT_ONLY"
+msgstr "Text Only"
+
+msgid "FONT_SMALLEST"
+msgstr "Smallest"
+
+msgid "FONT_SMALL"
+msgstr "Small"
+
+msgid "FONT_NORMAL"
+msgstr "Normal"
+
+msgid "FONT_LARGE"
+msgstr "Large"
+
+msgid "FONT_HUGE"
+msgstr "Huge"
+
+msgid "MENU_SMART"
+msgstr "Smart Menu"
+
+msgid "MENU_OLD"
+msgstr "Old Style Menu (For older web browsers)"
+
+msgid "POST_PER_PAGE %s"
+msgstr "%s Posts Per Page"
+
+msgid "GWT_DIRECT"
+msgstr "Direct URL Access"
+
+msgid "GWT_GWT"
+msgstr "Google Web Transcoder"
+
+msgid "SETTINGS_H1"
+msgstr "Settings"
+
+msgid "SETTINGS_1"
+msgstr "This is where you can set your personal preferences! Have fun changing the colour schemes - my favourite is PINK!"
+
+msgid "SETTINGS_COLOUR"
+msgstr "Colour scheme:"
+
+msgid "SETTINGS_MODE"
+msgstr "Icon Size"
+
+msgid "SETTINGS_FONT_SIZE"
+msgstr "Font Size:"
+
+msgid "SETTINGS_FONT"
+msgstr "Choose a fun new font"
+
+msgid "SETTINGS_MENU"
+msgstr "Menu Bar:"
+
+msgid "SETTINGS_PPP"
+msgstr "Posts Per Page"
+
+msgid "SETTINGS_AVATAR_SIZE"
+msgstr "Avatar Size"
+
+msgid "SETTINGS_WORK_SAFE"
+msgstr "Work Safe"
+
+msgid "SETTINGS_HIDE_INLINE"
+msgstr "Hide inline media (eg image thumbnails &amp; embedded videos)"
+
+msgid "SETTINGS_HIDE_AVATARS"
+msgstr "Hide avatars"
+
+msgid "SETTINGS_EMOTICONS"
+msgstr "Replace :-) with"
+
+msgid "SETTINGS_NON_DIRECT"
+msgstr "Show non-directed replies:"
+
+msgid "SETTINGS_NON_DIRECT_DETAIL"
+msgstr "You follow Alice, you don't follow Bob. Alice sends a post to Bob - do you want to see it?"
+
+msgid "SETTINGS_EXTERNAL"
+msgstr "External links go:"
+
+msgid "SETTINGS_GWT_DETAIL"
+msgstr "Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth."
+
+msgid "SETTINGS_OTHERS"
+msgstr "Others:"
+
+msgid "SETTINGS_TIMESTAMP %s"
+msgstr "Show the timestamp \"%s\" instead of \"25 sec ago\""
+
+msgid "SETTINGS_TIMESTAMP_IS %s"
+msgstr "The current time is: %s"
+
+msgid "SETTINGS_TIMESTAMP_OFFSET"
+msgstr "You can use an offset of "
+
+msgid "SETTINGS_TIMESTAMP_DISPLAY %s"
+msgstr "we display the time as %s"
+
+msgid "SETTINGS_TIMESTAMP_ADJUST"
+msgstr "It is worth adjusting this value if the time appears to be wrong."
+
+msgid "SETTINGS_SAVE_BUTTON"
+msgstr "Save Settings"
+
+msgid "SETTINGS_RESET"
+msgstr "Visit <a href=\"reset\">Reset</a> if things go horribly wrong - it will log you out and clear all settings."
+

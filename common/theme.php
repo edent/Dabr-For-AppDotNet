@@ -10,38 +10,36 @@ function theme()
 	$function = array_shift($args);
 	$function = 'theme_'.$function;
 
-	if ($current_theme) {
+	if ($current_theme) 
+	{
 		$custom_function = $current_theme.'_'.$function;
 		if (function_exists($custom_function))
 		$function = $custom_function;
-	} else {
+	} else 
+	{
 		if (!function_exists($function))
-		return "<p>Error: theme function <b>$function</b> not found.</p>";
+		return "<p>".sprintf(_('ERROR_THEME %s?'),$function)."</p>";
 	}
 	return call_user_func_array($function, $args);
 }
 
-function theme_csv($headers, $rows) {
-	$out = implode(',', $headers)."\n";
-	foreach ($rows as $row) {
-		$out .= implode(',', $row)."\n";
-	}
-	return $out;
-}
-
 function theme_list($items, $attributes) {
-	if (!is_array($items) || count($items) == 0) {
+	if (!is_array($items) || count($items) == 0) 
+	{
 		return '';
 	}
+	
 	$output = '<ul'.theme_attributes($attributes).'>';
-	foreach ($items as $item) {
+	foreach ($items as $item) 
+	{
 		$output .= "<li>$item</li>\n";
 	}
 	$output .= "</ul>\n";
 	return $output;
 }
 
-function theme_options($options, $selected = NULL) {
+function theme_options($options, $selected = NULL) 
+{
 	if (count($options) == 0) return '';
 	$output = '';
 	foreach($options as $value => $name) {
@@ -55,7 +53,6 @@ function theme_options($options, $selected = NULL) {
 	}
 	return $output;
 }
-
 
 function theme_radio($options, $name, $selected = NULL) 
 {
@@ -81,51 +78,6 @@ function theme_radio($options, $name, $selected = NULL)
 	return $output;
 }
 
-function theme_info($info) {
-	$rows = array();
-	foreach ($info as $name => $value) {
-		$rows[] = array($name, $value);
-	}
-	return theme('table', array(), $rows);
-}
-
-function theme_table($headers, $rows, $attributes = NULL) {
-	$out = '<div'.theme_attributes($attributes).'>';
-	if (count($headers) > 0) {
-		$out .= '<thead><tr>';
-		foreach ($headers as $cell) {
-			$out .= theme_table_cell($cell, TRUE);
-		}
-		$out .= '</tr></thead>';
-	}
-	if (count($rows) > 0) {
-		$out .= theme('table_rows', $rows);
-	}
-	$out .= '</div>';
-	return $out;
-}
-
-function theme_table_rows($rows) {
-	$i = 0;
-	foreach ($rows as $row) {
-		if ($row['data']) {
-			$cells = $row['data'];
-			unset($row['data']);
-			$attributes = $row;
-		} else {
-			$cells = $row;
-			$attributes = FALSE;
-		}
-		$attributes['class'] .= ($attributes['class'] ? ' ' : '') . ($i++ %2 ? 'even' : 'odd');
-		$out .= '<div'.theme_attributes($attributes).'>';
-		foreach ($cells as $cell) {
-			$out .= theme_table_cell($cell);
-		}
-		$out .= "</div>\n";
-	}
-	return $out;
-}
-
 function theme_attributes($attributes) {
 	if (!$attributes) return;
 	foreach ($attributes as $name => $value) {
@@ -133,20 +85,6 @@ function theme_attributes($attributes) {
 	}
 	return $out;
 }
-
-function theme_table_cell($contents, $header = FALSE) {
-	$celltype = $header ? 'th' : 'td';
-	if (is_array($contents)) {
-		$value = $contents['data'];
-		unset($contents['data']);
-		$attributes = $contents;
-	} else {
-		$value = $contents;
-		$attributes = false;
-	}
-	return "<span".theme_attributes($attributes).">$value</span>";
-}
-
 
 function theme_error($message) 
 {
@@ -156,33 +94,32 @@ function theme_error($message)
 	//	Authentication error. User has either revoked access or changed password.
 	if (strpos($message, "authentication") !== false)
 	{
-		$errorMessage .= "It looks like you changed your password. Please <a href=\"logout\">logout</a> and then reauthenticate.";
+		$errorMessage .= _(RE_AUTH);
 	}
 
 	theme_page('Error', $errorMessage);
 }
 
-
 function theme_header($title)
 {
 	switch ($title) {
 		case 'muted':
-			$header  .= "<h3>" . theme_get_logo(57) . "This is everyone you have muted</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_MUTED) . "</h3>";
 			break;
 		case 'friends':
-			$header  .= "<h3>" . theme_get_logo(57) . "Wow! You follow some really interesting folk!</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_FOLLOWING) . "</h3>";
 			break;
 		case 'followers':
-			$header  .= "<h3>" . theme_get_logo(57) . "These lovely people hang on your every word</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_FOLLOWERS) . "</h3>";
 			break;
 		case 'Search':
-			$header  .= "<h3>" . theme_get_logo(57) . "Let's go exploring!</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_SEARCH) . "</h3>";
 			break;
 		case 'Starrers':
-			$header  .= "<h3>" . theme_get_logo(57) . "People who starred that post</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_STARRED) . "</h3>";
 			break;
 		case 'Reposters':
-			$header  .= "<h3>" . theme_get_logo(57) . "They came, they saw, they reposted</h3>";
+			$header  .= "<h3>" . theme_get_logo(57) . _(LIST_REPOSTERS) . "</h3>";
 			break;
 		default :
 			$header ="";
@@ -190,19 +127,19 @@ function theme_header($title)
 
 	if (strpos($title, "Users matching") !== false)
 	{
-		$header  .= "<h3>" . theme_get_logo(57) . "Who have we found?</h3>";
+		$header  .= "<h3>" . theme_get_logo(57) . _(LIST_FOUND) . "</h3>";
 	}
 
 	if (strpos($title, "Posts Starred") !== false)
 	{
-		$header  .= "<h3>" . theme_get_logo(57) . "OMG! It's full of stars!</h3>";
+		$header  .= "<h3>" . theme_get_logo(57) . _(LIST_STARS) . "</h3>";
 	}
 
-	return $header;
-		
+	return $header;		
 }
 
-function theme_page($title, $content) {
+function theme_page($title, $content) 
+{
 	$body = theme('menu_top');
 	$body .= theme_header($title)  . "<section>" . $content . "</section>";
 	$body .= theme('google_analytics');
@@ -210,12 +147,11 @@ function theme_page($title, $content) {
 	{
 		global $dabr_start, $api_time, $services_time, $rate_limit;
 		$time = microtime(1) - $dabr_start;
-		$body .= '<p>
-					Processed in '.
-					round($time, 4).' seconds ('.
-					round(($time - $api_time - $services_time) / $time * 100).'% Dabr, '.
+		$body .= '<p>'.
+					sprintf(_('TIME_PROCESSED %s'), round($time, 4)).'
+					('.round(($time - $api_time - $services_time) / $time * 100).'% Dabr, '.
 					round($api_time / $time * 100).'% app.net API, '.
-					round($services_time / $time * 100).'% other services). '.
+					round($services_time / $time * 100).'% '._(OTHER_SERVICES).'). '.
 					$rate_limit.
 				'.</p>';
 	}
@@ -251,7 +187,7 @@ function theme_page($title, $content) {
 	if (setting_fetch('colours') == null)
 	{
 		//	If the cookies haven't been set, remind the user that they can set how Dabr looks
-		$html .=		'<p>Think Dabr looks ugly? <a href="settings">Change the colours!</a></p>';
+		$html .=		'<p>'._(UGLY).'</p>';
 	}
 	$html .=		'</body>
 				</html>';
@@ -451,33 +387,43 @@ function theme_about_page() {
 		'<div id="about" >'.
 			'<h3>'._(WHAT_IS).'</h3>';
 	$about .= theme_get_logo();
-	$about .= 	'<ul>
-					<li>'._(ABOUT_1).'</li>
-					<li>'._(CREATED_BY).'</li>
-				</ul>
-				<h2>'._(ABOUT_FEATURES).'</h2>
-				<ul>
-					<li>'._(ABOUT_2).'</li>
-					<li>'._(ABOUT_3).'</li>
-					<li>'._(ABOUT_4).'</li>
-					<li>'._(ABOUT_5).'</li>
-					<li>'._(ABOUT_6).'</li>
-					<li>'._(ABOUT_7).'</li>
-					<li>'._(ABOUT_8).'</li>
-					<li>'._(ABOUT_9).'</li>
-					<li>'._(ABOUT_10).'</li>
-					<li>'._(ABOUT_11).'</li>
-					<li>'._(ABOUT_12).'</li>
-					<li>'._(ABOUT_13).'</li>
-				</ul>
-				<h2>'._(ABOUT_CREDITS).'</h2>
-				<ul>
-					<li>'._(ABOUT_CREDITS_1).'</a> 
-					</li>
-					<li>'._(GITHUB_LINK).'</li>
-				</ul>
-				<p>'._(ABOUT_COMMENTS).'</p>
-		</div>'; 
+	
+	$about .= 	theme_list(
+					array(
+							_(ABOUT_1),
+							_(CREATED_BY),
+						)
+					,null
+				);
+	$about .= 	'<h2>'._(ABOUT_FEATURES).'</h2>';
+	$about .= 	theme_list(
+					array(
+							_(ABOUT_2),
+							_(ABOUT_3),
+							_(ABOUT_4),
+							_(ABOUT_5),
+							_(ABOUT_6),
+							_(ABOUT_7),
+							_(ABOUT_8),
+							_(ABOUT_9),
+							_(ABOUT_10),
+							_(ABOUT_11),
+							_(ABOUT_12),
+							_(ABOUT_13),
+						)
+					,null
+				);
+
+	$about .= 	'<h2>'._(ABOUT_CREDITS).'</h2>';
+	$about .= 	theme_list(
+					array(
+							_(ABOUT_CREDITS_1),
+							_(GITHUB_LINK),
+						)
+					,null
+				);	
+	$about .= '<p>'._(ABOUT_COMMENTS).'</p>
+			</div>'; 
 
 	return $about;
 }

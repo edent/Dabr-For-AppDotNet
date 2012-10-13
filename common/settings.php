@@ -30,7 +30,8 @@ menu_register(array(
 	),
 ));
 
-function cookie_monster() {
+function cookie_monster() 
+{
 	$cookies = array(
 		'modes',
 		'menustyle',
@@ -46,10 +47,11 @@ function cookie_monster() {
 		setcookie($cookie, NULL, $duration);
 	}
 	return theme('page', 'Cookie Monster', 
-		'<p>The cookie monster has logged you out and cleared all settings. Try logging in again now.</p>');
+		'<p>'._(COOKIE_MONSTER_DONE).'</p>');
 }
 
-function setting_fetch($setting, $default = NULL) {
+function setting_fetch($setting, $default = NULL) 
+{
 	$settings = (array) unserialize(base64_decode($_COOKIE['settings']));
 	if (array_key_exists($setting, $settings)) {
 		return $settings[$setting];
@@ -58,12 +60,14 @@ function setting_fetch($setting, $default = NULL) {
 	}
 }
 
-function setcookie_year($name, $value) {
+function setcookie_year($name, $value) 
+{
 	$duration = time() + (3600 * 24 * 365);
 	setcookie($name, $value, $duration, '/');
 }
 
-function settings_page($args) {
+function settings_page($args) 
+{
 	if ($args[1] == 'save') {
 		$settings['modes']       = $_POST['modes'];
 		$settings['menustyle']   = $_POST['menustyle'];
@@ -85,39 +89,39 @@ function settings_page($args) {
 	}
 
 	$modes = array(
-		'bigtouch'	=> 'Big Icons <img src="images/replyL.png" alt="Big Icon"/>',
-		'touch'		=> 'Small Icons <img src="images/reply.png" alt="Small Icon"/>',
-		'text'		=> 'Text only @',
+		'bigtouch'	=> _(BIG_ICONS).' <img src="images/replyL.png" alt="Big Icon"/>',
+		'touch'		=> _(SMALL_ICONS).' <img src="images/reply.png" alt="Small Icon"/>',
+		'text'		=> _(TEXT_ONLY).' @',
 	);
 	
 	$font_size = array(
-		'0.5' => "<span style=\"font-size:50%\">Smallest</span>", 
-		'0.75' => "<span style=\"font-size:100%\">Small</span>", 
-		'1' => "<span style=\"font-size:100%\">Normal</span>", 
-		'1.5' => "<span style=\"font-size:150%\">Large</span>", 
-		'2' => "<span style=\"font-size:200%\">Huge</span>", 
+		'0.5' 	=> "<span style=\"font-size:50%\">". _(FONT_SMALLEST).	"</span>", 
+		'0.75'	=> "<span style=\"font-size:100%\">"._(FONT_SMALL).		"</span>", 
+		'1'		=> "<span style=\"font-size:100%\">"._(FONT_NORMAL).	"</span>", 
+		'1.5'	=> "<span style=\"font-size:150%\">"._(FONT_LARGE).		"</span>", 
+		'2'		=> "<span style=\"font-size:200%\">"._(FONT_HUGE).		"</span>", 
 	);
 
 	$menustyle = array(
-		'smart'	=> 'Smart Menu',
-		'old'	=> 'Old Style Menu (For older web browsers)'
+		'smart'	=> _(MENU_SMART),
+		'old'	=> _(MENU_OLD)
 	);
 
 	$perPage = array(
-		  '5'	=>   '5 Posts Per Page',
-		 '10'	=>  '10 Posts Per Page',
-		 '20'	=>  '20 Posts Per Page',
-		 '30'	=>  '30 Posts Per Page',
-		 '40'	=>  '40 Posts Per Page',
-		 '50'	=>  '50 Posts Per Page',
-		'100' 	=> '100 Posts Per Page',
-		'150' 	=> '150 Posts Per Page',
-		'200' 	=> '200 Posts Per Page',
+		  '5'	=> sprintf(_('SETTINGS_PPP %s'), 5),
+		 '10'	=> sprintf(_('SETTINGS_PPP %s'), 10),
+		 '20'	=> sprintf(_('SETTINGS_PPP %s'), 20),
+		 '30'	=> sprintf(_('SETTINGS_PPP %s'), 30),
+		 '40'	=> sprintf(_('SETTINGS_PPP %s'), 40),
+		 '50'	=> sprintf(_('SETTINGS_PPP %s'), 50),
+		'100' 	=> sprintf(_('SETTINGS_PPP %s'), 100),
+		'150' 	=> sprintf(_('SETTINGS_PPP %s'), 150),
+		'200' 	=> sprintf(_('SETTINGS_PPP %s'), 200),
 	);
 
 	$gwt = array(
-		'off' => 'direct',
-		'on' => 'via GWT',
+		'off' => _(GWT_DIRECT),
+		'on'  => _(GWT_GWT),
 	);
 	
 	$emoticons = array(
@@ -137,11 +141,11 @@ function settings_page($args) {
 	}
 
 	$fonts = array(
-			'Schoolbell' => 'Schoolbell',
-			'Droid+Sans' => 'Droid Sans',
-			'Ubuntu+Mono' => 'Ubuntu Mono',
-			'Lora'=>'Lora',
-			'Open+Sans'=>'Open Sans Light'
+			'Schoolbell'	=> 'Schoolbell',
+			'Droid+Sans'	=> 'Droid Sans',
+			'Ubuntu+Mono'	=> 'Ubuntu Mono',
+			'Lora'			=> 'Lora',
+			'Open+Sans'		=> 'Open Sans Light'
 		);
 
 	$utc_offset = setting_fetch('utc_offset', 0);
@@ -150,42 +154,41 @@ function settings_page($args) {
 		$utc_offset = '+' . $utc_offset;
 	}
 
-	$content .= '<h1>Settings</h1>';
+	$content .= '<h1>'._(SETTINGS_H1).'</h1>';
 	$content .= theme_get_logo();
-	$content .= '<br>This is where you can set your personal preferences! 
-					Have fun changing the colour schemes - my favourite is PINK!';
+	$content .= '<br>' . _(SETTINGS_1);
 
 	$content .= '<form action="settings/save" method="post" style="clear:both">
-					<h3>Colour scheme:</h3>
+					<h3>'._(SETTINGS_COLOUR).'</h3>
 						<select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
 	$content .= '		</select>
 					</h3>';
 
-	$content .= '<h3>Mode:</h3>';
+	$content .= '<h3>'._(SETTINGS_MODE).'</h3>';
 
 	$content .= theme_radio($modes, "modes", setting_fetch('modes', 'bigtouch'));
 
-	$content .= '<h3>Font Size:</h3>';
+	$content .= '<h3>'._(SETTINGS_FONT_SIZE).'</h3>';
 
 	$content .= theme_radio($font_size, "font_size", setting_fetch('font_size', '1'));
 
-	$content .= '<h3>Font:</h3>';
+	$content .= '<h3>'._(SETTINGS_FONT).'</h3>';
 
 	$content .= theme_radio($fonts, "fonts", setting_fetch('fonts', 'Lora'));
 
 
-	$content .= '	<h3>Menu Bar:</h3>
+	$content .= '	<h3>'._(SETTINGS_MENU).'</h3>
 						<select name="menustyle">';
 	$content .= theme('options', $menustyle, setting_fetch('menustyle', 'smart'));
 	$content .= '		</select>';
 
-	$content .= '	<h3>Posts Per Page:</h3>
+	$content .= '	<h3>'._(SETTINGS_PPP).'</h3>
 						<select name="perPage">';
 	$content .= theme('options', $perPage, setting_fetch('perPage', 20));
 	$content .= '		</select>';
 
-	$content .= '	<h3>Avatar Size</h3>';
+	$content .= '	<h3>'._(SETTINGS_AVATAR_SIZE).'</h3>';
 	$content .= '	<input 
 						name="avatar_size" 
 						type="range" 
@@ -221,13 +224,13 @@ function settings_page($args) {
 					}
 					</script>';
 
-	$content .= '	<h3>Work Safe</h3>';
+	$content .= '	<h3>'._(SETTINGS_WORK_SAFE).'</h3>';
 	
 	$content .= '	<p>
 						<label>
 							<input type="checkbox" name="hide_inline" value="yes" ' . 
 								(setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') . 
-							' /> Hide inline media (eg image thumbnails &amp; embedded videos)
+							' /> '._(SETTINGS_HIDE_INLINE).'
 						</label>
 					</p>';
 
@@ -235,7 +238,7 @@ function settings_page($args) {
 						<label>
 							<input type="checkbox" name="avatar_show" value="off" ' . 
 								(setting_fetch('avatar_show','on') == 'off' ? ' checked="checked" ' : '') .
-								' /> Hide avatars
+								' /> '._(SETTINGS_HIDE_AVATARS).'
 						</label>
 					</p>';
 
@@ -243,43 +246,45 @@ function settings_page($args) {
 						<label>
 							<input type="checkbox" name="emoticons" value="on" ' . 
 								(setting_fetch('emoticons','on') == 'on' ? ' checked="checked" ' : '') .
-								' /> show :-) as <img src="images/emoticons/icon_smile.gif" alt=":-)" />
+								' /> '._(SETTINGS_EMOTICONS).' <img src="images/emoticons/icon_smile.gif" alt=":-)" />
 						</label>
 					</p>';
 
-	$content .=	'	<h3>Show non-directed replies:</h3>
+	$content .=	'	<h3>'._(SETTINGS_NON_DIRECT).'</h3>
 						<label>
 							<input type="checkbox" name="nondirected" value="1" ' . 
 								(setting_fetch('nondirected') == '1' ? ' checked="checked" ' : '') .
-								' /> You follow Alice, you don\'t follow Bob. 
-								Alice sends a post to Bob - do you want to see it?
+								' /> '._(SETTINGS_NON_DIRECT_DETAIL).'
 						</label>';
 
-	$content .=	'	<h3>External links go:</h3>
+	$content .=	'	<h3>'._(SETTINGS_EXTERNAL).'</h3>
 						<select name="gwt">';
 	$content .= theme('options', $gwt, setting_fetch('gwt', 'off'));
-	$content .= '		</select>
-						Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.';
-	$content .= '	<h3>Others:</h3>
+	$content .= '		</select>'._(SETTINGS_GWT_DETAIL);
+
+	$content .= '	<h3>'._(SETTINGS_OTHERS).'</h3>
 					<p>
 						<label>
 							<input type="checkbox" name="timestamp" value="yes" ' . 
 								(setting_fetch('timestamp') == 'yes' ? ' checked="checked" ' : '') .
-								' /> Show the timestamp ' . dabr_date('H:i') . ' instead of 25 sec ago
-						</label>
+								' /> '.sprintf(_('SETTINGS_TIMESTAMP %s'), dabr_date('H:i')) .
+						'</label>
 					</p>';
 	
 	$content .= '	<p>
-						<label>The time is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . dabr_date('H:i') . '.<br>
-							It is worth adjusting this value if the time appears to be wrong.
-						</label>
+						<label>'.sprintf(_('SETTINGS_TIMESTAMP_IS %s'), dabr_date('H:i')) .'. '
+							._(SETTINGS_TIMESTAMP_OFFSET)
+							.' <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" />' 
+							.sprintf(_('SETTINGS_TIMESTAMP_DISPLAY %s'), dabr_date('H:i')) 
+							.'.<br>'._(SETTINGS_TIMESTAMP_ADJUST)
+						.'</label>
 					</p>';
 	$content .= '	<p>
-						<input type="submit" value="Save" />
+						<input type="submit" value="'._(SETTINGS_SAVE_BUTTON).'" />
 					</p>
 				</form>';
 	$content .= '<hr />
-				<p>Visit <a href="reset">Reset</a> if things go horribly wrong - it will log you out and clear all settings.</p>';
+				<p>'._(SETTINGS_RESET).'</p>';
 
 	return theme('page', 'Settings', $content);
 }
