@@ -18,7 +18,7 @@ function theme()
 	} else 
 	{
 		if (!function_exists($function))
-		return "<p>".sprintf(_('ERROR_THEME %s?'),$function)."</p>";
+		return "<p>".sprintf(_('ERROR_THEME %s'),$function)."</p>";
 	}
 	return call_user_func_array($function, $args);
 }
@@ -76,6 +76,59 @@ function theme_radio($options, $name, $selected = NULL)
 		<br>';
 	}
 	return $output;
+}
+
+function theme_rows($rows, $attributes = NULL) 
+{
+	$out = '<div'.theme_attributes($attributes).'>';
+	if (count($rows) > 0) 
+	{
+		$i = 0;
+		foreach ($rows as $row) 
+		{
+			if ($row['data']) 
+			{
+				$cells = $row['data'];
+				unset($row['data']);
+				$attributes = $row;
+			} else {
+				$cells = $row;
+				$attributes = FALSE;
+			}
+			$attributes['class'] .= ($attributes['class'] ? ' ' : '') . ($i++ %2 ? 'even' : 'odd');
+			$out .= '<div'.theme_attributes($attributes).'>';
+			foreach ($cells as $cell) 
+			{
+				if (is_array($cell)) 
+				{
+					$value = $cell['data'];
+					unset($cell['data']);
+					$attributes = $cell;
+				} else {
+					$value = $cell;
+					$attributes = false;
+				}
+				$out .= "<span".theme_attributes($attributes).">$value</span>";
+			}
+			$out .= "</div>\n";
+		}
+	}
+	$out .= '</div>';
+	return $out;
+}
+
+function theme_table_cell($contents) 
+{
+	if (is_array($contents)) 
+	{
+		$value = $contents['data'];
+		unset($contents['data']);
+		$attributes = $contents;
+	} else {
+		$value = $contents;
+		$attributes = false;
+	}
+	return "<span".theme_attributes($attributes).">$value</span>";
 }
 
 function theme_attributes($attributes) {

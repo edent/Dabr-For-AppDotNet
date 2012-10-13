@@ -1871,7 +1871,7 @@ function theme_timeline($feed)
 			$rows[] = $row;
 		}
 	}
-	$content = theme('table', array(), $rows, array('class' => 'timeline'));
+	$content = theme('rows', $rows, array('class' => 'timeline'));
 
 	//	Don't show pagination if there's only one item
 	//	Get the IDs of the first and last posts
@@ -1973,7 +1973,7 @@ function theme_users($feed, $nextPageURL=null)
 					);
 	}
 
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
+	$content = theme('rows', $rows, array('class' => 'followers'));
 
 	$content .= theme_pagination();
 	return $content;
