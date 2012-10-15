@@ -148,10 +148,10 @@ msgid "SPAM_2"
 msgstr "They will also be blocked from following you."
 
 msgid "MUTED_1 %s"
-msgstr "Shhhhhh $s! You are now <strong>muted</strong>."
+msgstr "Shhhhhh %s! You are now <strong>muted</strong>."
 
 msgid "UNMUTED_1 %s"
-msgstr "Hello again $s - you have been <strong>unmuted</strong>."
+msgstr "Hello again %s - you have been <strong>unmuted</strong>."
 
 msgid "SPAMMER_1 %s"
 msgstr "Yum! Yum! Yum! Delicious spam! Goodbye @%s."
@@ -207,8 +207,8 @@ msgstr "Mute"
 msgid "REPORT_SPAM"
 msgstr "Report Spam"
 
-msgid "SEARCH_AT $s"
-msgstr "Search @$s"
+msgid "SEARCH_AT %s"
+msgstr "Search @%s"
 
 msgid "BIO"
 msgstr "Bio:"
