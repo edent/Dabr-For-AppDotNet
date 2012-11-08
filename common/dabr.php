@@ -329,7 +329,7 @@ function dabr_parse_tags($input, $entities = false)
 					$url = $item['url'];
 				}
 				// Using ASCII controll characters so our < & > don't get eaten later
-				$linkURL = 	chr(7) . "a href=\"{$url}\" rel=\"external\" target=\"_blank\"" . chr(27) .
+				$linkURL = 	chr(7) . "a href=\"{$url}\" rel=\"external\" target=\"". get_target() . "\"" . chr(27) .
 								"{$display}" .
 							chr(7) . "/a" . chr(27);
 				
@@ -343,13 +343,17 @@ function dabr_parse_tags($input, $entities = false)
 				$hashtag = $item['name'];	//	A hashtag
 				$position = $item['pos'];
 				$length = $item['len'];
-				// Using ASCII controll characters so our < & > don't get eaten later
-				$hashtagURL = 	'#' . chr(7) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(27) .
-									$hashtag .
-								chr(7) . '/a' . chr(27);
-
 				$newPosition = ($position + $offset);
 				
+				//	Hashtags are stored case insensitive - but are written CaseSensitive
+				//	+1 to remove extra #
+				$displayHashtag = mb_substr($out, $newPosition+1, $length-1, "UTF-8");
+
+				// Using ASCII controll characters so our < & > don't get eaten later
+				$hashtagURL = 	'#' . chr(7) . 'a href="' . BASE_URL . 'hash/' . $hashtag . '"' . chr(27) .
+									$displayHashtag .
+								chr(7) . '/a' . chr(27);
+
 				$out = utf8_substr_replace($out, $hashtagURL, $newPosition, $length);
 
 				//	Calculate the new offset
@@ -1481,7 +1485,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 				function geoSuccess(position) {
 					geoStatus("<a href=\'http://maps.google.co.uk/?q=" + 
 						position.coords.latitude + "," + position.coords.longitude + 
-						"\' target=\'blank\'>'._(SHARE_MY_LOCATION).'</a>");
+						"\' target=\''. get_target() . '\'>'._(SHARE_MY_LOCATION).'</a>");
 					chkbox.value = position.coords.latitude + "," + position.coords.longitude;
 				}
 			</script>';
