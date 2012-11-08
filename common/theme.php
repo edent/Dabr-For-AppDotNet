@@ -494,7 +494,7 @@ function theme_search_form($query, $type="") {
 					$form .= 'checked="checked"';
 				}
 
-	$form .= 		 'type="radio">'._(SEARCH_POSTS).'
+	$form .= 		 'type="radio">'._(SEARCH_USERS).'
 		</label>
 		<br>
 		<input type="submit" value="'._(SEARCH_BUTTON).'" />
