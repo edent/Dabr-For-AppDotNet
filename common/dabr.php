@@ -808,8 +808,24 @@ function dabr_reposters_page($query)
 	}
 }
 
-function dabr_update() {
+function dabr_update() 
+{
 	dabr_ensure_post_action();
+
+	//	Check for double posting
+	$postedToken = $_POST['token'];
+	if(($postedToken))
+	{
+		if(isTokenValid($postedToken))
+		{
+			//	Continue as normal
+		}
+		else{
+			//	Do something about the error
+			theme_error("Double Post. Double Post.  Slow down, partner!");
+		}
+	}
+
 	$annotations = array();
 	$status = stripslashes(trim($_POST['status']));
 
@@ -1511,6 +1527,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 					</legend>
 				
 					<form method=\"post\" action=\"update\" enctype=\"multipart/form-data\">
+						<input type=\"hidden\" name=\"token\" value=\"" . getToken() . "\"/>
 						<textarea	id=\"status\" 
 									name=\"status\" 
 									rows=\"4\" 
@@ -1775,4 +1792,34 @@ function is_64bit()
 	$int = "9223372036854775807";
 	$int = intval($int);
 	return ($int == 9223372036854775807);
+}
+
+//	http://stackoverflow.com/a/4614123/1127699
+//	Generate a token.  Used to prevent double form submission
+function getToken()
+{
+	$token = sha1(mt_rand());
+	if(!isset($_SESSION['tokens']))
+	{
+		$_SESSION['tokens'] = array($token => 1);
+	}
+	else {
+		$_SESSION['tokens'][$token] = 1;
+	}
+	return $token;
+}
+
+/**
+ * Check if a token is valid. Removes it from the valid tokens list
+ * @param string $token The token
+ * @return bool
+ */
+function isTokenValid($token)
+{
+	if(!empty($_SESSION['tokens'][$token]))
+	{
+		unset($_SESSION['tokens'][$token]);
+		return true;
+	}
+	return false;
 }
