@@ -86,8 +86,10 @@ function settings_page($args)
 	
 	$font_size = array(
 		'0.5' 	=> "<span style=\"font-size:50%\">". _(FONT_SMALLEST).	"</span>", 
-		'0.75'	=> "<span style=\"font-size:100%\">"._(FONT_SMALL).		"</span>", 
-		'1'		=> "<span style=\"font-size:100%\">"._(FONT_NORMAL).	"</span>", 
+		'0.75'	=> "<span style=\"font-size:75%\">"._(FONT_SMALL).		"</span>", 
+		'0.9'	=> "<span style=\"font-size:90%\">"._(FONT_MEDIUM).		"</span>",
+		'1'		=> "<span style=\"font-size:100%\">"._(FONT_NORMAL).	"</span>",
+		'1.25'	=> "<span style=\"font-size:125%\">"._(FONT_BIG).		"</span>", 
 		'1.5'	=> "<span style=\"font-size:150%\">"._(FONT_LARGE).		"</span>", 
 		'2'		=> "<span style=\"font-size:200%\">"._(FONT_HUGE).		"</span>", 
 	);

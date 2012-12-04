@@ -303,8 +303,14 @@ msgstr "Smallest"
 msgid "FONT_SMALL"
 msgstr "Small"
 
+msgid "FONT_MEDIUM"
+msgstr "Medium"
+
 msgid "FONT_NORMAL"
 msgstr "Normal"
+
+msgid "FONT_BIG"
+msgstr "A bit bigger"
 
 msgid "FONT_LARGE"
 msgstr "Large"
