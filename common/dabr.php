@@ -1162,15 +1162,9 @@ function dabr_edit_profile_page($query)
 		global $api_time;
 		$api_start = microtime(1);
 
-		// Create the form where users can enter text
-		//$content = dabr_post_form();//theme('status_form');
-	
 		try
 		{
-			$user = $app->getUser($username, array(
-												'include_annotations' => 1
-												)
-									);
+			$user = $app->getUser($username, array('include_annotations' => 1));
 		}
 		catch (Exception $e)
 		{

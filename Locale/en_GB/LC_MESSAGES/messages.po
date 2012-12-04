@@ -447,3 +447,6 @@ msgstr "Edit Profile"
 msgid "PROFILE_UPDATED"
 msgstr "Your Profile Has Been Updated"
 
+msgid "ERROR_SCOPE"
+msgstr "You need to logout and sign-in again in order to use this new service"
+

@@ -508,81 +508,95 @@ function theme_search_form($query, $type="") {
 
 function theme_edit_profile($user, $updated = false)
 {
-	$from 		= "editprofilepage/updated";
-	$username 	= $user['username'];
-	$name 		= $user['name'];
-	$id 		= $user['id'];
-	$description = $user['description']['text'];
-	$timezone 	= $user['timezone'];
-	$locale 	= $user['locale'];
-
-	if ($user['annotations'] > 0)
+	$app = new EZAppDotNet();	
+	if ($app->getSession())
 	{
-		foreach($user['annotations'] as $annotation)
+		//	Need to make a call in order to get the scope
+		$user = $app->getUser("me", array('include_annotations' => 1));
+		
+		$from 		= "editprofilepage/updated";
+		$username 	= $user['username'];
+		$name 		= $user['name'];
+		$id 		= $user['id'];
+		$description = $user['description']['text'];
+		$timezone 	= $user['timezone'];
+		$locale 	= $user['locale'];
+
+		if ($user['annotations'] > 0)
 		{
-			if ($annotation['type'] == "net.app.core.geolocation")
+			foreach($user['annotations'] as $annotation)
 			{
-				$lat = $annotation['value']['latitude'];
-				$long = $annotation['value']['longitude'];
-			}
+				if ($annotation['type'] == "net.app.core.geolocation")
+				{
+					$lat = $annotation['value']['latitude'];
+					$long = $annotation['value']['longitude'];
+				}
 
-			if ($annotation['type'] == "net.app.core.directory.blog")
-			{
-				$blog = $annotation['value']['url'];
-			}
+				if ($annotation['type'] == "net.app.core.directory.blog")
+				{
+					$blog = $annotation['value']['url'];
+				}
 
-			if ($annotation['type'] == "net.app.core.directory.twitter")
-			{
-				$twitter = $annotation['value']['username'];
-			}
+				if ($annotation['type'] == "net.app.core.directory.twitter")
+				{
+					$twitter = $annotation['value']['username'];
+				}
 
-			if ($annotation['type'] == "net.app.core.language")
-			{
-				$language = $annotation['value']['language'];
-			}
+				if ($annotation['type'] == "net.app.core.language")
+				{
+					$language = $annotation['value']['language'];
+				}
 
-			if ($annotation['type'] == "net.app.core.directory.homepage")
-			{
-				$homepage = $annotation['value']['url'];
-			}
+				if ($annotation['type'] == "net.app.core.directory.homepage")
+				{
+					$homepage = $annotation['value']['url'];
+				}
 
-			if ($annotation['type'] == "net.app.core.directory.facebook")
-			{
-				$facebook = $annotation['value']['id'];
+				if ($annotation['type'] == "net.app.core.directory.facebook")
+				{
+					$facebook = $annotation['value']['id'];
+				}
 			}
 		}
-	}
-	
-	$full_avatar = theme_get_full_avatar($user);
-	
-	if ($updated)
-	{
-		$out .= _(PROFILE_UPDATED) . "<hr>";
-	}
+		
+		$full_avatar = theme_get_full_avatar($user);
+		
+		if ($updated)
+		{
+			$out .= _(PROFILE_UPDATED) . "<hr>";
+		}
 
-	$out .= "<div class='profile'>";
-	
-	$out .= "
-			<form name='profile' action='editprofile' method='post' enctype='multipart/form-data'>
-				<input type='hidden' name='from' value='$from' />
-				Name:		<input name='name' maxlength='50' value='" . htmlspecialchars($name, ENT_QUOTES) ."' />
-				<span class=\"avatar\">";
-	$out .=			theme('avatar', $full_avatar, $name);
-	$out .= "		<!-- <input type='file' name='image' /> -->
-				</span>
-				<br />Bio:		<textarea	id=\"description\" 
-									name=\"description\" 
-									rows=\"5\" 
-									style=\"width:95%;\">". htmlspecialchars($description, ENT_QUOTES) ."</textarea>
-				<br />Homepage:	<input name='homepage' maxlength='' size=40 value='". htmlspecialchars($homepage, ENT_QUOTES) ."' />
-				<br />Blog:		<input name='blog' maxlength='' size=40 value='". htmlspecialchars($blog, ENT_QUOTES) ."' />
-				<br />Twitter:	<input name='twitter' maxlength='' size=40 value='". htmlspecialchars($twitter, ENT_QUOTES) ."' />
-				<br />TimeZone:	<input name='timezone' maxlength='' size=40 value='". htmlspecialchars($timezone, ENT_QUOTES) ."' />				
-				<br />Locale:	<input name='locale' maxlength='' size=40 value='". htmlspecialchars($locale, ENT_QUOTES) ."' />				
-				<br /><input type='submit' value='Update Profile' />
-			</form>";
+		$out .= "<div class='profile'>";
+		
+		$out .= "
+				<form name='profile' action='editprofile' method='post' enctype='multipart/form-data'>
+					<input type='hidden' name='from' value='$from' />
+					Name:		<input name='name' maxlength='50' value='" . htmlspecialchars($name, ENT_QUOTES) ."' />
+					<span class=\"avatar\">";
+		$out .=			theme('avatar', $full_avatar, $name);
+		$out .= "		<!-- <input type='file' name='image' /> -->
+					</span>
+					<br>Bio:<br>		<textarea	id=\"description\" 
+										name=\"description\" 
+										rows=\"5\" 
+										style=\"width:95%;\">". htmlspecialchars($description, ENT_QUOTES) ."</textarea>
+					<br>Homepage:<br>	<input name='homepage' maxlength='' size=30 value='". htmlspecialchars($homepage, ENT_QUOTES) ."' />
+					<br>Blog:<br>		<input name='blog' maxlength='' 	size=30 value='". htmlspecialchars($blog, ENT_QUOTES) ."' />
+					<br>Twitter:<br>	<input name='twitter' maxlength='' 	size=30 value='". htmlspecialchars($twitter, ENT_QUOTES) ."' />
+					<br>TimeZone:<br>	<input name='timezone' maxlength='' size=30 value='". htmlspecialchars($timezone, ENT_QUOTES) ."' />				
+					<br>Locale:<br>		<input name='locale' maxlength='' 	size=30 value='". htmlspecialchars($locale, ENT_QUOTES) ."' />";
 
-	return $out;
+		if (strpos($app->getScope(), "profile") === FALSE)
+		{
+			$out .= "<br />"._(ERROR_SCOPE)." <a href='logout'>" . _(MENU_LOGOUT) . "</a>" . $app->getScope();
+		}else{
+			$out .= "<br /><input type='submit' value='Update Profile' />";		
+		}
+
+		$out .= "		</form>";
+
+		return $out;
+	}
 }
 
 function theme_external_link($url, $content = null) 
