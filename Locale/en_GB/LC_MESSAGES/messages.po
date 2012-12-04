@@ -348,8 +348,8 @@ msgstr "Choose a fun new font"
 msgid "SETTINGS_MENU"
 msgstr "Menu Bar:"
 
-msgid "SETTINGS_PPP"
-msgstr "Posts Per Page"
+msgid "SETTINGS_PPP %s"
+msgstr "%s Posts Per Page"
 
 msgid "SETTINGS_AVATAR_SIZE"
 msgstr "Avatar Size"
@@ -434,4 +434,10 @@ msgstr "Settings"
 
 msgid "MENU_HOME"
 msgstr "Home"
+
+msgid "MENU_EDITPROFILE"
+msgstr "Edit Profile"
+
+msgid "PROFILE_UPDATED"
+msgstr "Your Profile Has Been Updated"
 

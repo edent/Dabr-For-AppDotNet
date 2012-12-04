@@ -141,6 +141,9 @@ function theme_attributes($attributes) {
 
 function theme_error($message) 
 {
+	//$app = new EZAppDotNet();
+	//var_dump($app->getLastResponse());
+
 	$message = str_replace("Bad Request: ", "", $message);
 	$errorMessage = "<h3>" . theme_get_logo(57) . _(ERROR_MESSAGE) . " " . $message . "</h3>";
 
@@ -501,6 +504,85 @@ function theme_search_form($query, $type="") {
 	</form>';
 
 	return $form;
+}
+
+function theme_edit_profile($user, $updated = false)
+{
+	$from 		= "editprofilepage/updated";
+	$username 	= $user['username'];
+	$name 		= $user['name'];
+	$id 		= $user['id'];
+	$description = $user['description']['text'];
+	$timezone 	= $user['timezone'];
+	$locale 	= $user['locale'];
+
+	if ($user['annotations'] > 0)
+	{
+		foreach($user['annotations'] as $annotation)
+		{
+			if ($annotation['type'] == "net.app.core.geolocation")
+			{
+				$lat = $annotation['value']['latitude'];
+				$long = $annotation['value']['longitude'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.blog")
+			{
+				$blog = $annotation['value']['url'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.twitter")
+			{
+				$twitter = $annotation['value']['username'];
+			}
+
+			if ($annotation['type'] == "net.app.core.language")
+			{
+				$language = $annotation['value']['language'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.homepage")
+			{
+				$homepage = $annotation['value']['url'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.facebook")
+			{
+				$facebook = $annotation['value']['id'];
+			}
+		}
+	}
+	
+	$full_avatar = theme_get_full_avatar($user);
+	
+	if ($updated)
+	{
+		$out .= _(PROFILE_UPDATED) . "<hr>";
+	}
+
+	$out .= "<div class='profile'>";
+	
+	$out .= "
+			<form name='profile' action='editprofile' method='post' enctype='multipart/form-data'>
+				<input type='hidden' name='from' value='$from' />
+				Name:		<input name='name' maxlength='50' value='" . htmlspecialchars($name, ENT_QUOTES) ."' />
+				<span class=\"avatar\">";
+	$out .=			theme('avatar', $full_avatar, $name);
+	$out .= "		<!-- <input type='file' name='image' /> -->
+				</span>
+				<br />Bio:		<textarea	id=\"description\" 
+									name=\"description\" 
+									rows=\"5\" 
+									style=\"width:95%;\">". htmlspecialchars($description, ENT_QUOTES) ."</textarea>
+				<br />Homepage:	<input name='homepage' maxlength='' size=40 value='". htmlspecialchars($homepage, ENT_QUOTES) ."' />
+				<br />Blog:		<input name='blog' maxlength='' size=40 value='". htmlspecialchars($blog, ENT_QUOTES) ."' />
+				<br />Twitter:	<input name='twitter' maxlength='' size=40 value='". htmlspecialchars($twitter, ENT_QUOTES) ."' />
+				<br />TimeZone:	<input name='timezone' maxlength='' size=40 value='". htmlspecialchars($timezone, ENT_QUOTES) ."' />				
+				<br />Locale:	<input name='locale' maxlength='' size=40 value='". htmlspecialchars($locale, ENT_QUOTES) ."' />				
+				<br /><input type='submit' value='Update Profile' />
+			</form>";
+
+	return $out;
 }
 
 function theme_external_link($url, $content = null) 

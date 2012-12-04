@@ -151,6 +151,14 @@ menu_register(array(
 	'login' => array(
 		'callback' => 'user_login',
 		'hidden' => 'true',
+	),
+	'editprofilepage' => array(
+		'callback' => 'dabr_edit_profile_page',
+		'display' => _(MENU_EDITPROFILE)
+	),
+	'editprofile' => array(
+		'callback' => 'dabr_edit_profile',
+		'hidden' => 'true'
 	)
 ));
 
@@ -808,6 +816,125 @@ function dabr_reposters_page($query)
 	}
 }
 
+function dabr_edit_profile()
+{
+	dabr_ensure_post_action();
+
+	$app = new EZAppDotNet();
+
+	if ($app->getSession())
+	{
+		//	Set the array of annotations which will passed to the update
+		$annotations = array();
+
+		//	Get the posted variables
+		$name =			(string) $_POST['name'];
+		$description =	(string) $_POST['description'];
+		$timezone =		(string) $_POST['timezone'];
+		$locale =		(string) $_POST['locale'];
+		$homepage =		(string) $_POST['homepage'];
+		$blog =			(string) $_POST['blog'];
+		$twitter =		(string) $_POST['twitter'];
+		$facebook =		(string) $_POST['facebook'];
+		$description =	(string) $_POST['description'];
+		
+		//	Geolocation parameters
+		list($lat, $long) = explode(',', $_POST['location']);
+		if (is_numeric($lat) && is_numeric($long))
+		{
+			$post_data['lat'] = $lat;
+			$post_data['long'] = $long;
+		
+			$locationValues = array(
+									"latitude" => $lat,
+									"longitude" => $long,
+									"altitude" => 0,
+									"horizontal_accuracy" => 0,
+									"vertical_accuracy" => 0
+								);
+
+			$annotations[] =  array("type" => "net.app.core.geolocation",
+									"value" => $locationValues);
+		}else{
+			$annotations[] =  array("type" => "net.app.core.geolocation");
+		}
+
+		//	All the other parameters
+		if ($blog != "")
+		{
+			$annotations[] = array(	"type" => "net.app.core.directory.blog",
+						"value" => array("url" => $blog));
+		}else{
+			$annotations[] = array(	"type" => "net.app.core.directory.blog");
+		}
+
+		if ($twitter != "")
+		{
+			$annotations[] = array(	"type" => "net.app.core.directory.twitter",
+							"value" => array("username" => $twitter));
+		}else{
+			$annotations[] = array(	"type" => "net.app.core.directory.twitter");
+		}
+		
+		if ($language != "")
+		{
+			$annotations[] = array(	"type" => "net.app.core.language",
+									"value" => array("language" => $language));
+		} else {
+			$annotations[] = array(	"type" => "net.app.core.language");
+		}
+		
+		if ($homepage != "")
+		{
+			$annotations[] = array(	"type" => "net.app.core.directory.homepage",
+									"value" => array("url" => $homepage)
+								);
+		} else {
+			$annotations[] = array(	"type" => "net.app.core.directory.homepage");
+		}
+
+		if ($facebook != "")
+		{
+			$annotations[] = array(	"type" => "net.app.core.directory.facebook",
+						"value" => array("id" => $facebook)
+					);
+		} else {
+			$annotations[] = array(	"type" => "net.app.core.directory.facebook");
+		}
+
+		//	Do the update
+		try
+		{
+			$app->updateUserData(
+					array(
+						"name"			=> $name,
+						"timezone"		=> $timezone,
+						"description"	=> array("text" => $description),
+						"locale"		=> $locale,
+						"annotations"	=> $annotations
+					)
+				);
+		}
+		catch (Exception $e)
+		{
+			$response = $app->getLastResponse();
+			$response = explode("\r\n\r\n",$response,2);
+			$headers = $response[0];
+			if (isset($response[1])) {
+				$content = $response[1];
+			}
+			else {
+				$content = null;
+			}
+			$response = json_decode($content,true);
+			
+			theme_error($response['error']['message']);
+		}	
+	}
+
+	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
+}
+
 function dabr_update() 
 {
 	dabr_ensure_post_action();
@@ -1019,6 +1146,47 @@ function dabr_replies_page($query)
 		$content = sign_in();
 	}
 
+}
+
+function dabr_edit_profile_page($query)
+{
+	// Must be the logged in user.
+	$username = "me"; // NOTE! Not "@me"!
+
+	$app = new EZAppDotNet();
+
+	// check that the user is signed in
+	if ($app->getSession())
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		// Create the form where users can enter text
+		//$content = dabr_post_form();//theme('status_form');
+	
+		try
+		{
+			$user = $app->getUser($username, array(
+												'include_annotations' => 1
+												)
+									);
+		}
+		catch (Exception $e)
+		{
+			theme_error($e->getMessage());
+		}
+		
+		//	Track how long the API call took
+		$api_time += microtime(1) - $api_start;
+		
+		$content .= theme('edit_profile', $user, $query[1]=="updated");
+			
+		theme('page', _(MENU_EDITPROFILE), $content);
+	// otherwise prompt to sign in
+	} else {
+		$content = sign_in();
+	}
 }
 
 function dabr_starred_page($query)
@@ -1318,7 +1486,7 @@ function dabr_user_page($query)
 		//	Get the user's name
 		try
 		{
-			$user = $app->getUser("@".$user_name);
+			$user = $app->getUser("@".$user_name, array('include_annotations' => 1));
 		}
 		catch (Exception $e)
 		{
@@ -1645,6 +1813,66 @@ function dabr_user_bio($user)
 	$raw_date_joined = strtotime($user['created_at']);
 	$date_joined = date('jS M Y', $raw_date_joined);
 
+	if ($user['annotations'] > 0)
+	{
+		foreach($user['annotations'] as $annotation)
+		{
+			if ($annotation['type'] == "net.app.core.geolocation")
+			{
+				$lat = $annotation['value']['latitude'];
+				$long = $annotation['value']['longitude'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.blog")
+			{
+				$blog = $annotation['value']['url'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.twitter")
+			{
+				$twitter = $annotation['value']['username'];
+			}
+
+			if ($annotation['type'] == "net.app.core.language")
+			{
+				$language = $annotation['value']['language'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.homepage")
+			{
+				$homepage = $annotation['value']['url'];
+			}
+
+			if ($annotation['type'] == "net.app.core.directory.facebook")
+			{
+				$facebook = $annotation['value']['id'];
+			}
+		}
+	}
+
+	$links = "";
+
+	if ($blog != "")
+	{
+		$links .="Blog: <a href=\"$blog\" target=\"". get_target() . "\">$blog</a> ";		
+	}
+	if ($homepage != "")
+	{
+		$links .="Homepage: <a href=\"$homepage\" target=\"". get_target() . "\">$homepage</a> ";		
+	}
+	if ($twitter != "")
+	{
+		$links .="Twitter: <a href=\"https://twitter.com/".$twitter."\" target=\"". get_target() . "\">@$twitter</a> ";		
+	}
+	if ($facebook != "")
+	{
+		$links .="<a href=\"https://facebook.com/".$facebook."\" target=\"". get_target() . "\">Facebook</a> ";		
+	}
+	if ($lat != "")
+	{
+		$links = "<a href=\"http://maps.google.co.uk/?q=".$lat.",".$long."\" target=\"".get_target()."\">Location</a>";					
+	}
+
 	$bio = "";
 
 	if($user['description']['text'] != "")
@@ -1674,6 +1902,8 @@ function dabr_user_bio($user)
 	{
 		$bio .= " " . _(SH_MUTED) ." ";
 	}
+
+	$bio .= "<br>" . $links;
 
 	return $bio;
 }
