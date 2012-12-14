@@ -989,7 +989,7 @@ function dabr_update()
 		$identity_delegate_token = $response["delegate_token"];
 		
 		//	Generated from http://bli.ms/dashboard/
-		$blims_key = "b2d149e19b8ff14f28be776d4c4a4668";
+		$blims_key = "";
 
 		$image = "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
 		
