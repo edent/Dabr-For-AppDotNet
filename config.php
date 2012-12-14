@@ -13,7 +13,7 @@ define('ENCRYPTION_KEY', '');
 // Sign up at https://app.embed.ly/
 define('EMBEDLY_KEY', '');
 
-// API key for imgur image upload - sign up at https://imgur.com/register/api_anon
+//	Generated from http://bli.ms/dashboard/
 define('BLIMS_KEY', '');
 
 //	Search Key http://appnet.herokuapp.com/api

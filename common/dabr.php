@@ -987,13 +987,10 @@ function dabr_update()
 		$response = json_decode($data,true);
 
 		$identity_delegate_token = $response["delegate_token"];
-		
-		//	Generated from http://bli.ms/dashboard/
-		$blims_key = "";
-
+				
 		$image = "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
 		
-		$blims_array = array(	'app_key' => $blims_key,
+		$blims_array = array(	'app_key' => BLIMS_KEY,
 								'media' => $image,
 								'text' => " " . $status . " - from " . $user_url . " via #Dabr");
 		$timeout = 30;
