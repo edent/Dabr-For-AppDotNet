@@ -3,7 +3,7 @@
 // Image Proxy URL
 // Use http://src.sencha.io/ for regular connections
 // Use https://tinysrc.appspot.com/ for SSL connections
-define('IMAGE_PROXY_URL', 'https://tinysrc.appspot.com/');
+define('IMAGE_PROXY_URL', 'http://src.sencha.io/');
 
 // Cookie encryption key. Max 52 characters
 define('ENCRYPTION_KEY', '');
@@ -13,11 +13,11 @@ define('ENCRYPTION_KEY', '');
 // Sign up at https://app.embed.ly/
 define('EMBEDLY_KEY', '');
 
-// API key for InMobi adverts - sign up at http://inmobi.com/
-define('INMOBI_API_KEY', '');
+// API key for imgur image upload - sign up at https://imgur.com/register/api_anon
+define('BLIMS_KEY', '');
 
 //	Search Key http://appnet.herokuapp.com/api
-define('SEARCH_KEY', base64_encode("user:password"));
+define('SEARCH_KEY', base64_encode(""));
 
 // Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
 // Uncomment to enable.
@@ -60,5 +60,3 @@ function googleAnalyticsGetImageUrl() {
 	$url .= "&guid=ON";
 	return str_replace("&", "&amp;", $url);
 }
-
-?>

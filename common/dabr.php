@@ -961,30 +961,67 @@ function dabr_update()
 
 	if ($_FILES['image']['tmp_name'])
 	{
+		//	Upload the image to http://bli.ms/
+		$blims_url = "http://bli.ms/api/upload/";
+
 		$user_name = user_current_username();
 		$user_url = "http://alpha.app.net/" . $user_name;
+		
+		
+		//	Generate The Delegate Token
+		$app = new EZAppDotNet();
+		$access_token = $app->getSession();
 
-		$imgur_url = "http://api.imgur.com/2/upload.json";
+		//	bli.ms client id. Not a secret!
+		$delegate_client_id = "EJzjVeZCWKKqTSHAAVguXC6xN9aaUJHX";
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://alpha.app.net/oauth/access_token");
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer ".$access_token));
+		$params = array("grant_type" => "delegate", "delegate_client_id" => $delegate_client_id);
+		$p = http_build_query($params);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $p);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		$data = curl_exec($ch);
+		curl_close($ch);
+		$response = json_decode($data,true);
+
+		$identity_delegate_token = $response["delegate_token"];
+		
+		//	Generated from http://bli.ms/dashboard/
+		$blims_key = "b2d149e19b8ff14f28be776d4c4a4668";
 
 		$image = "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
 		
-		$imgur_key = IMGUR_API_KEY;
-
-		$imgur_array = array(	'key' => $imgur_key,
-								'image' => $image,
-								'caption' => " " . $status . " - from " . $user_url . " via #Dabr");
+		$blims_array = array(	'app_key' => $blims_key,
+								'media' => $image,
+								'text' => " " . $status . " - from " . $user_url . " via #Dabr");
 		$timeout = 30;
 		$curl = curl_init();
 
-		curl_setopt($curl, CURLOPT_URL, $imgur_url);
+		curl_setopt($curl, CURLOPT_URL, $blims_url);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, 
+			array(
+				"Identity-Delegate-Token: $identity_delegate_token",
+				"Identity-Delegate-Endpoint: https://alpha.app.net/oauth/access_token"
+			));
 		curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
 		curl_setopt($curl, CURLOPT_POST, 1);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, $imgur_array);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $blims_array);
 
-		$imgur_json = curl_exec($curl);
+		$blims_json = curl_exec($curl);
 
 		curl_close ($curl);
+
+		$blims_json = json_decode($blims_json,true);
+
+		$blims_width	= $blims_json["result"]["width"];
+		$blims_height	= $blims_json["result"]["height"];
+		$blims_title	= $blims_json["result"]["title"];
+		$blims_original	= $blims_json["result"]["url"];
+		$blims_embeddable= $blims_json["result"]["embeddable_url"];
+		$blims_short_code= $blims_json["result"]["short_code"];
 
 		/*
 		{
@@ -1005,28 +1042,20 @@ function dabr_update()
 			}
 		*/
 
-		$imgur_json = json_decode($imgur_json,true);
-
-		$imgur_width = $imgur_json["upload"]["image"]["width"];
-		$imgur_height = $imgur_json["upload"]["image"]["height"];
-		$imgur_title = $imgur_json["upload"]["image"]["title"];
-		$imgur_original = $imgur_json["upload"]["links"]["original"];
-		$imgur_page = $imgur_json["upload"]["links"]["imgur_page"];
-
 		$oembed = array(
 				"type" => "net.app.core.oembed",
 				"value" => array(
 					"version"	=> "1.0",
 					"type"		=> "photo",
-					"width"		=> $imgur_width,
-					"height"	=> $imgur_height,
-					"title"		=> $imgur_title,
-					"url"		=> $imgur_original,
+					"width"		=> $blims_width,
+					"height"	=> $blims_height,
+					"title"		=> $blims_title,
+					"url"		=> $blims_original,
 					"author_name"	=> $user_name,
 					"author_url"	=> $user_url,
 					"provider_name"	=> "imgur",
 					"provider_url"	=> "http://imgur.com/",
-					"embeddable_url"=> $imgur_page
+					"embeddable_url"=> $blims_embeddable
 				)
 			);
 
@@ -1034,13 +1063,13 @@ function dabr_update()
 
 		//	If there is space, add the string. If not, just the annotation
 		//	URL + Space
-		if (strlen($status) <= (256 - strlen($imgur_page) -1))
+		if (strlen($status) <= (256 - strlen($blims_embeddable) -1))
 		{
-			$status .= "\n" . $imgur_page;
+			$status .= "\n" . $blims_embeddable;
 		} //	Drop the http://
-		else if (strlen($status) <= (256 - (strlen($imgur_page)-7) -1))
+		else if (strlen($status) <= (256 - (strlen($blims_embeddable)-7) -1))
 		{
-			$status .= "\n" .  substr($imgur_page,7);
+			$status .= "\n" .  substr($blims_embeddable,7);
 		}
 	}
 
@@ -1074,15 +1103,40 @@ function dabr_update()
 			
 			try
 			{
-				$app->createPost($status,array(
-						'reply_to' => $in_reply_to_id, 
-						'annotations' =>$annotations
-				));
+				$adn_json = $app->createPost($status,array(
+								'reply_to' => $in_reply_to_id, 
+								'annotations' =>$annotations
+							));
+
+				$post_id = $adn_json["id"];				
 			}
 			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}	
+
+			if ($blims_short_code)
+			{
+
+				$blims_update_array = array();
+				$blims_update_array['post_id'] = $post_id;
+				$blims_update_array['short_code'] = $blims_short_code;
+
+				$blims_update_url = "http://bli.ms/api/upload/update/";
+
+				$timeout = 30;
+				$curl = curl_init();
+
+				curl_setopt($curl, CURLOPT_URL, $blims_update_url);
+				curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
+				curl_setopt($curl, CURLOPT_POST, 1);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($curl, CURLOPT_POSTFIELDS, $blims_update_array);
+
+				$blims_json = curl_exec($curl);
+
+				curl_close ($curl);
+			}
 		}
 	}
 	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
