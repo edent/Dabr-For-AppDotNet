@@ -25,6 +25,11 @@ menu_register(array(
 		'callback' => 'dabr_replies_page',
 		'display'  => _(MENU_REPLIES)
 	),
+	'messages' => array(
+		'security' => true,
+		'callback' => 'dabr_channels_page',
+		'display'  => 'Messages'
+	),
 	'global' => array(
 		'security' => true,
 		'callback' => 'dabr_global_page',
@@ -961,103 +966,37 @@ function dabr_update()
 
 	if ($_FILES['image']['tmp_name'])
 	{
-		//	Upload the image to http://bli.ms/
-		$blims_url = "http://bli.ms/api/upload/";
-
-		$user_name = user_current_username();
-		$user_url = "http://alpha.app.net/" . $user_name;
-		
-		
-		//	Generate The Delegate Token
-		$app = new EZAppDotNet();
-		$access_token = $app->getSession();
-
-		//	bli.ms client id. Not a secret!
-		$delegate_client_id = "EJzjVeZCWKKqTSHAAVguXC6xN9aaUJHX";
-		
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, "https://alpha.app.net/oauth/access_token");
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: Bearer ".$access_token));
-		$params = array("grant_type" => "delegate", "delegate_client_id" => $delegate_client_id);
-		$p = http_build_query($params);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $p);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		$data = curl_exec($ch);
-		curl_close($ch);
-		$response = json_decode($data,true);
-
-		$identity_delegate_token = $response["delegate_token"];
 				
 		$image = "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
 		
-		$blims_array = array(	'app_key' => BLIMS_KEY,
-								'media' => $image,
-								'text' => " " . $status . " - from " . $user_url . " via #Dabr");
-		$timeout = 30;
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_URL, $blims_url);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, 
-			array(
-				"Identity-Delegate-Token: $identity_delegate_token",
-				"Identity-Delegate-Endpoint: https://alpha.app.net/oauth/access_token"
-			));
-		curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
-		curl_setopt($curl, CURLOPT_POST, 1);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, $blims_array);
-
-		$blims_json = curl_exec($curl);
-
-		curl_close ($curl);
-
-		$blims_json = json_decode($blims_json,true);
-
-		$blims_width	= $blims_json["result"]["width"];
-		$blims_height	= $blims_json["result"]["height"];
-		$blims_title	= $blims_json["result"]["title"];
-		$blims_original	= $blims_json["result"]["url"];
-		$blims_embeddable= $blims_json["result"]["embeddable_url"];
-		$blims_short_code= $blims_json["result"]["short_code"];
-
-		/*
+		$app = new EZAppDotNet();
+		if ($app->getSession())
 		{
-			"type": "net.app.core.oembed",
-			"value": {
-				"version": "1.0",
-				"type": "photo",
-				"width": 240,
-				"height": 160,
-				"title": "ZB8T0193",
-				"url": "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
-				"author_name": "Bees",
-				"author_url": "http://www.flickr.com/photos/bees/",
-				"provider_name": "Flickr",
-				"provider_url": "http://www.flickr.com/",
-				"embeddable_url": "http://www.flickr.com/photos/bees/2341623661/"
-				}
-			}
-		*/
 
-		$oembed = array(
-				"type" => "net.app.core.oembed",
-				"value" => array(
-					"version"	=> "1.0",
-					"type"		=> "photo",
-					"width"		=> $blims_width,
-					"height"	=> $blims_height,
-					"title"		=> $blims_title,
-					"url"		=> $blims_original,
-					"author_name"	=> $user_name,
-					"author_url"	=> $user_url,
-					"provider_name"	=> "imgur",
-					"provider_url"	=> "http://imgur.com/",
-					"embeddable_url"=> $blims_embeddable
-				)
-			);
+			$data = array(
+						'mime-type' => $_FILES['image']['type'], 
+						'public'	=> 'true',
+						'type' 		=> 'universe.earth.here'
+					);
 
-		$annotations[] = $oembed;
+			$uploaded = $app->createFile($_FILES['image']['tmp_name'],$data);
+			$file_token = $uploaded['file_token'];
+			$file_id = $uploaded['id'];
 
+			$oembed = array(
+					"type" => "net.app.core.oembed",
+					"value" => array(
+								"+net.app.core.file" => array(
+									"file_token" => $file_token,
+									"format" => "oembed",
+									"file_id" => $file_id,
+								) 
+							)
+				);
+
+			$annotations[] = $oembed;
+		}
+/*
 		//	If there is space, add the string. If not, just the annotation
 		//	URL + Space
 		if (strlen($status) <= (256 - strlen($blims_embeddable) -1))
@@ -1068,6 +1007,7 @@ function dabr_update()
 		{
 			$status .= "\n" .  substr($blims_embeddable,7);
 		}
+*/
 	}
 
 	if ($status) {
@@ -1075,6 +1015,7 @@ function dabr_update()
 		if ($app->getSession())
 		{
 			$in_reply_to_id = (string) $_POST['in_reply_to_id'];
+			$channel_id = (string) $_POST['channel_id'];
 
 			// Geolocation parameters
 			list($lat, $long) = explode(',', $_POST['location']);
@@ -1100,43 +1041,33 @@ function dabr_update()
 			
 			try
 			{
-				$adn_json = $app->createPost($status,array(
-								'reply_to' => $in_reply_to_id, 
-								'annotations' =>$annotations
-							));
+				if ($channel_id != null)
+				{
+					$adn_json = $app->createMessage($channel_id, array(
+									'text' => $status,
+									'annotations' => $annotations
+								));
 
-				$post_id = $adn_json["id"];				
+					$post_id = $adn_json["id"];
+				} else {
+					$adn_json = $app->createPost($status,array(
+									'reply_to' => $in_reply_to_id, 
+									'annotations' =>$annotations
+								));
+
+					$post_id = $adn_json["id"];									
+				}
 			}
 			catch (Exception $e)
 			{
 				theme_error($e->getMessage());
 			}	
-
-			if ($blims_short_code)
-			{
-
-				$blims_update_array = array();
-				$blims_update_array['post_id'] = $post_id;
-				$blims_update_array['short_code'] = $blims_short_code;
-
-				$blims_update_url = "http://bli.ms/api/upload/update/";
-
-				$timeout = 30;
-				$curl = curl_init();
-
-				curl_setopt($curl, CURLOPT_URL, $blims_update_url);
-				curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
-				curl_setopt($curl, CURLOPT_POST, 1);
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-				curl_setopt($curl, CURLOPT_POSTFIELDS, $blims_update_array);
-
-				$blims_json = curl_exec($curl);
-
-				curl_close ($curl);
-			}
 		}
 	}
-	dabr_refresh($_POST['from'] ? $_POST['from'] : '');
+
+	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
+	dabr_refresh($from);
+	//dabr_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
 function dabr_replies_page($query)
@@ -1420,6 +1351,97 @@ function dabr_search($search_query)
 	return $tl['results'];
 }
 
+
+function dabr_channels_page($query)
+{
+	$channel = $query[1];
+
+	//	How many posts to get
+	$perPage = setting_fetch('perPage', 20);
+	$before_id = $_GET['before_id'];
+	$since_id = $_GET['since_id'];
+	
+	$app = new EZAppDotNet();
+
+	// check that the user is signed in
+	if ($app->getSession())
+	{
+		//	Track how long the API call took
+		global $api_time;
+		$api_start = microtime(1);
+
+		// get the latest public posts
+		
+		//	If this is a specific channel
+		if ($channel != null)
+		{
+			try
+			{
+				$stream = $app->getMessages($channel,	
+											array('count'=>$perPage,
+												'before_id'=>$before_id,
+												'since_id'=>$since_id,
+												'include_annotations'=>1
+									)
+							);	
+			}
+			catch (Exception $e)
+			{
+				theme_error($e->getMessage());
+			}
+
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+			
+			$channel_id = $stream[0]["channel_id"];
+
+			// Create the form where users can enter text
+			$content = dabr_post_form(null,null,$channel_id);
+			
+			//print_r($stream);
+			$content .= theme('timeline', $stream);
+
+				
+			theme('page', 'Messages', $content);
+		}
+		else //	Get the list of channels
+		{
+			try
+			{
+				$stream = $app->getUserSubscriptions(
+											array('count'=>$perPage,
+													'before_id'=>$before_id,
+													'since_id'=>$since_id,
+													'include_annotations'=>1
+									)
+							);
+				//var_dump($stream);
+				/*
+				foreach ($stream as $key) {
+					echo "The ID is " . $key["id"];
+				}
+				*/
+			}
+			catch (Exception $e)
+			{
+				theme_error($e->getMessage());
+			}
+
+			//	Track how long the API call took
+			$api_time += microtime(1) - $api_start;
+			
+			//print_r($stream);
+			$content .= theme('channels', $stream);
+				
+			theme('page', 'Channels', $content);
+		}
+	
+	// otherwise prompt to sign in
+	} else {
+		$content = sign_in();
+	}
+}
+
 function dabr_hashtag_page($query)
 {
 	$app = new EZAppDotNet();
@@ -1689,7 +1711,7 @@ function dabr_raw_page($query) {
 	}
 }
 
-function dabr_post_form($text = '', $in_reply_to_id = NULL)
+function dabr_post_form($text = '', $in_reply_to_id = null, $channel_id = null)
 {
 	$geoJS = '<script type="text/javascript">
 				started = false;
@@ -1744,6 +1766,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 						<textarea	id=\"status\" 
 									name=\"status\" 
 									rows=\"4\" 
+									autofocus=\"autofocus\"
 									style=\"width:95%; 
 									max-width: 400px;\">$text</textarea>
 												
@@ -1753,6 +1776,7 @@ function dabr_post_form($text = '', $in_reply_to_id = NULL)
 
 						<div>
 							<input name=\"in_reply_to_id\" value=\"$in_reply_to_id\" type=\"hidden\" />
+							<input name=\"channel_id\" value=\"$channel_id\" type=\"hidden\" />
 							<input type=\"submit\" value=\"Post\" />
 							<span id=\"remaining\">256</span>
 							<span id=\"geo\" style=\"display: none;\">
