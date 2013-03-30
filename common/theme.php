@@ -384,6 +384,55 @@ function theme_timeline($feed)
 	return $content;
 }
 
+function theme_channels($feed, $nextPageURL=null)
+{
+	$rows = array();
+	if (count($feed) == 0 || $feed == '[]') 
+	{
+		return theme_get_logo() . 
+			'<br><p>'._(NO_USERS_FOUND).'</p>';
+	}
+
+	foreach ($feed as $channel) 
+	{
+		$user 		= $channel['owner'];
+		$name 		= $user['name'];
+		$username 	= $user['username'];
+		$id 		= $channel['id'];
+		$count		= $channel['counts']['messages'];
+
+		$content = "<a href=\"messages/$id\">Messages: $count</a>
+					<br>
+					<span class='about'>";
+
+		$content .= "$name (@$username)";
+
+		//$content .= dabr_message_actions($user,false);		
+
+		$content .= 	"<br>";
+		$content .= "</span>";
+
+		$rows[] = 	array(
+						'data' =>
+							array(
+								array(
+										'data' => theme('avatar',	theme_get_full_avatar($user), $name),
+										'class' => 'avatar'
+									),
+								array(
+									'data' => $content,
+									'class' => 'status shift')
+								),
+							'class' => 'tweet'
+					);
+	}
+
+	$content = theme('rows', $rows, array('class' => 'followers'));
+
+	$content .= theme_pagination();
+	return $content;
+}
+
 function theme_users($feed, $nextPageURL=null)
 {
 	$rows = array();
